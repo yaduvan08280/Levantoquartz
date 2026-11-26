@@ -1,0 +1,31 @@
+# Try the app on your own computer:  docker compose -f docker-compose.local.yml up --build
+# Then open http://localhost:8080/admin/  (username admin, password admin1234)
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: levanto
+      POSTGRES_PASSWORD: levanto
+      POSTGRES_DB: levanto
+    volumes:
+      - localdb:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U levanto"]
+      interval: 3s
+      retries: 20
+
+  app:
+    build: .
+    depends_on:
+      db: { condition: service_healthy }
+    environment:
+      DATABASE_URL: postgres://levanto:levanto@db:5432/levanto
+      PUBLIC_URL: http://localhost:8080
+      ADMIN_PASSWORD: admin1234
+    ports: ["8080:8080"]
+    volumes:
+      - localmedia:/data
+
+volumes:
+  localdb:
+  localmedia:
