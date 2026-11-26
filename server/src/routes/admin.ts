@@ -442,6 +442,16 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     });
     if (trail.length) {
       rt.cache.clearData();
+      /* Tell the dashboard, as the sheet's edit trigger used to: a row moved
+         means reload, an edited cell means fetch that row again. */
+      try {
+        if (structural && rt.has('noteFullChange_')) await run('noteFullChange_', []);
+        else if (rt.has('noteChange_')) {
+          const rowsHit = Array.from(new Set(trail.map((f) => f!.row!))).slice(0, 80);
+          for (const r of rowsHit) rt.call('noteChange_', [t.name, r, 1]);
+          await wb.flush();
+        }
+      } catch { /* the dashboard catches up on its next rebuild */ }
       /* One line per change, up to a point; a huge paste is summarised. */
       if (trail.length <= 500) for (const f of trail) await audit(me.username, f!.detail ? 'data.rows' : 'data.edit', f);
       else await audit(me.username, 'data.bulk', { tab: t.name, detail: { cells: trail.length, sample: trail.slice(0, 50) } });

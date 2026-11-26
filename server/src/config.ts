@@ -24,6 +24,7 @@ export const config = {
   publicUrl: (process.env.PUBLIC_URL || '').replace(/\/+$/, ''),
   dataDir: path.resolve(process.env.DATA_DIR || path.join(root, 'data')),
   legacyDir: path.resolve(process.env.LEGACY_DIR || path.join(root, 'legacy')),
+  dashboardDir: path.resolve(process.env.DASHBOARD_DIR || path.join(root, 'legacy-dashboard')),
   adminDir: path.resolve(process.env.ADMIN_DIR || path.join(root, 'public', 'admin')),
   migrationsDir: path.join(root, 'migrations'),
   /** Background jobs (grade-alert scan, Telegram poll). Off in tests. */

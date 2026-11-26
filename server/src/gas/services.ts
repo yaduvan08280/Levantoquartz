@@ -128,6 +128,15 @@ export const Utilities = {
     return formatDate(d, pattern);
   },
   getUuid: () => crypto.randomUUID(),
+  computeHmacSha256Signature(value: string | number[], key: string | number[]): number[] {
+    const buf = (v: string | number[]) => typeof v === 'string' ? Buffer.from(v, 'utf8') : Buffer.from(Uint8Array.from(v.map((b) => b & 0xff)));
+    return Array.from(crypto.createHmac('sha256', buf(key)).update(buf(value)).digest()).map((b) => (b > 127 ? b - 256 : b));
+  },
+  base64EncodeWebSafe(v: string | number[]) {
+    return (typeof v === 'string' ? Buffer.from(v, 'utf8') : Buffer.from(Uint8Array.from(v.map((b) => b & 0xff))))
+      .toString('base64').replace(/\+/g, '-').replace(/\//g, '_');
+  },
+  base64DecodeWebSafe: (s: string) => Array.from(Buffer.from(String(s).replace(/-/g, '+').replace(/_/g, '/'), 'base64')).map((b) => (b > 127 ? b - 256 : b)),
   /* The one sleep in the logic slows password guessing. A sleep here would
      stall every other user for the same time, so the pause is applied to the
      sign-in response instead (routes/forms.ts). */
@@ -350,7 +359,7 @@ export function makeScriptApp(wb: Workbook) {
     _t: t
   });
   return {
-    getService: () => ({ getUrl: () => config.publicUrl + '/' }),
+    getService: () => ({ getUrl: () => config.publicUrl + '/exec' }),
     getScriptId: () => 'levanto',
     getProjectTriggers: () => listTriggers(wb).map(wrap),
     deleteTrigger(t: any) { if (t && t._t) wb.kvDelete('trigger', t._t.id); },
@@ -358,6 +367,10 @@ export function makeScriptApp(wb: Workbook) {
       let minutes = 60;
       const b: any = {
         timeBased: () => b,
+        /* Sheet-event triggers have nothing to fire them here; they are
+           recorded so the logic's own "is it installed" checks pass. */
+        forSpreadsheet() { minutes = 0; return b; },
+        onFormSubmit: () => b, onEdit: () => b, onOpen: () => b, onChange: () => b,
         everyMinutes(n: number) { minutes = n; return b; },
         everyHours(n: number) { minutes = n * 60; return b; },
         everyDays(n: number) { minutes = n * 1440; return b; },

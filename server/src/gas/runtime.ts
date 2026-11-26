@@ -22,7 +22,11 @@ import {
   makeScriptApp, Session, Logger
 } from './services.js';
 
-const SKIP = new Set(['FormsEntry.gs']);          // doGet/doPost: the web server does that job
+const SKIP = new Set(['FormsEntry.gs']);          // doGet/doPost: the dashboard's router has that job
+/* The dashboard's Apps Script project, loaded into the same scope as the
+   forms logic — the arrangement both were written to support. One file is
+   left out: it reacted to Google Forms submissions, which no longer exist. */
+const DASH_SKIP = new Set(['defectssplitter.js']);
 
 export class Runtime {
   cache = new MemoryCache();
@@ -48,13 +52,44 @@ export class Runtime {
     g.Session = Session;
     g.Logger = Logger;
     g.MimeType = { JPEG: 'image/jpeg', PNG: 'image/png', PLAIN_TEXT: 'text/plain' };
-    g.ContentService = { createTextOutput: (s: string) => ({ getContent: () => s, setMimeType() { return this; } }) };
+    const output = (kind: string, content: string) => {
+      const o: any = {
+        _kind: kind, _content: String(content), _title: '',
+        getContent: () => o._content,
+        setMimeType(m: string) { o._kind = m === 'JSON' ? 'json' : 'text'; return o; },
+        setTitle(t: string) { o._title = t; return o; },
+        addMetaTag: () => o, setXFrameOptionsMode: () => o, setFaviconUrl: () => o, setSandboxMode: () => o
+      };
+      return o;
+    };
+    g.ContentService = {
+      MimeType: { JSON: 'JSON', TEXT: 'TEXT', JAVASCRIPT: 'TEXT' },
+      createTextOutput: (s: string) => output('text', s === undefined ? '' : s)
+    };
+    g.HtmlService = {
+      XFrameOptionsMode: { ALLOWALL: 'ALLOWALL', DEFAULT: 'DEFAULT' },
+      SandboxMode: { IFRAME: 'IFRAME' },
+      createHtmlOutput: (html: string) => output('html', html || ''),
+      createHtmlOutputFromFile: (name: string) => {
+        for (const dir of [config.dashboardDir, config.legacyDir]) {
+          const f = path.join(dir, path.basename(String(name)) + '.html');
+          if (fs.existsSync(f)) return output('html', fs.readFileSync(f, 'utf8'));
+        }
+        throw new Error('No HTML file named ' + name);
+      }
+    };
 
     const files = fs.readdirSync(config.legacyDir).filter((f) => f.endsWith('.gs') && !SKIP.has(f)).sort();
     /* Configuration first: other files read it while they load. */
     files.sort((a, b) => (a === 'FormsConfig.gs' ? -1 : b === 'FormsConfig.gs' ? 1 : a.localeCompare(b)));
     this.scripts = files.map((f) => new vm.Script(
       fs.readFileSync(path.join(config.legacyDir, f), 'utf8'), { filename: path.join('legacy', f) }));
+    if (fs.existsSync(config.dashboardDir)) {
+      for (const f of fs.readdirSync(config.dashboardDir).filter((x) => /\.(js|gs)$/.test(x) && !DASH_SKIP.has(x)).sort()) {
+        this.scripts.push(new vm.Script(
+          fs.readFileSync(path.join(config.dashboardDir, f), 'utf8'), { filename: path.join('legacy-dashboard', f) }));
+      }
+    }
     this.fresh();
   }
 

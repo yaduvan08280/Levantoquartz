@@ -61,6 +61,11 @@ export async function readXlsx(input: string | Buffer): Promise<{ tabs: Tab[]; s
       row.eachCell({ includeEmpty: false }, (cell, colNo) => {
         /* A merged block holds its value in the top-left cell only. */
         if (cell.isMerged && cell.master !== cell) return;
+        if (rowNo === 1) {
+          const fill: any = cell.fill;
+          const argb = fill && fill.type === 'pattern' && fill.fgColor && fill.fgColor.argb;
+          if (typeof argb === 'string' && /^[0-9a-f]{8}$/i.test(argb)) tab.headerBg[colNo] = '#' + argb.slice(2).toLowerCase();
+        }
         const v = plain(cell.value);
         if (v === '') return;
         while (line.length < colNo - 1) line.push('');

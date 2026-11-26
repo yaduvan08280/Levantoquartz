@@ -68,6 +68,7 @@ export function App() {
         </nav>
         <div className="foot">
           <a className="nav" href="/" target="_blank" rel="noreferrer"><span className="chip">&#8599;</span>Open forms app</a>
+          <a className="nav" href="/dashboard" target="_blank" rel="noreferrer"><span className="chip">&#8599;</span>Open dashboard</a>
           <div className="who"><b>{me.display}</b><span>{me.username}</span></div>
           <button className="nav" onClick={signOut}><span className="chip">&#8592;</span>Sign out</button>
         </div>

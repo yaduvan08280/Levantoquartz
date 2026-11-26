@@ -76,6 +76,20 @@ export class Range {
     return out;
   }
 
+  /** Only header-row fills are kept; every other cell reports white. */
+  getBackgrounds(): string[][] {
+    const out: string[][] = [];
+    for (let r = 0; r < this.numRows; r++) {
+      const line: string[] = [];
+      for (let c = 0; c < this.numCols; c++) {
+        line.push(this.row + r === 1 ? (this.tab.headerBg[this.col + c] || '#ffffff') : '#ffffff');
+      }
+      out.push(line);
+    }
+    return out;
+  }
+  getBackground(): string { return this.getBackgrounds()[0][0]; }
+
   getFormula(): string { return this.tab.formulas.get(this.row + ':' + this.col) || ''; }
 
   setValue(value: unknown): this {

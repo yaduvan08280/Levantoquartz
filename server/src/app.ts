@@ -7,6 +7,7 @@ import { pool } from './db.js';
 import { Workbook } from './store/workbook.js';
 import { installComputed, refreshAll } from './store/computed.js';
 import { Runtime } from './gas/runtime.js';
+import { listTriggers } from './gas/services.js';
 
 export const wb = new Workbook(pool);
 export const rt = new Runtime(wb);
@@ -17,6 +18,26 @@ export async function boot(): Promise<void> {
   refreshAll(wb);
   rt.load();
   await firstRun();
+  await ensureJobs();
+}
+
+/**
+ * The background jobs the two Apps Script projects ran on triggers. Triggers
+ * lived in Apps Script, not in the sheet, so they do not arrive with the
+ * data: register whichever are missing.
+ */
+async function ensureJobs(): Promise<void> {
+  const have = new Set(listTriggers(wb).map((t) => t.handler));
+  try {
+    if (rt.has('setup') && rt.has('heartbeat') && !have.has('heartbeat')) rt.call('setup', []);
+    if (rt.has('installAlertTrigger') && !have.has('alertScan')) rt.call('installAlertTrigger', []);
+    if (rt.has('fTelegramToken_') && rt.call('fTelegramToken_', []) && rt.has('fTgEnsurePolling_') && !have.has('telegramPoll')) {
+      rt.call('fTgEnsurePolling_', []);
+    }
+  } catch (e: any) {
+    console.warn('could not register background jobs: ' + (e && e.message));
+  }
+  await wb.flush();
 }
 
 /**

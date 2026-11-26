@@ -7,6 +7,7 @@ import fastifyStatic from '@fastify/static';
 import { config } from './config.js';
 import { formsRoutes } from './routes/forms.js';
 import { adminRoutes } from './routes/admin.js';
+import { dashboardRoutes } from './routes/dashboard.js';
 import { wb } from './app.js';
 
 export async function buildServer(): Promise<FastifyInstance> {
@@ -29,7 +30,11 @@ export async function buildServer(): Promise<FastifyInstance> {
   fs.mkdirSync(media, { recursive: true });
   await app.register(fastifyStatic, { root: media, prefix: '/media/', index: false, decorateReply: false, maxAge: '30d' });
 
+  /* The dashboard posts JSON as text/plain (it did so to avoid a CORS preflight). */
+  app.addContentTypeParser('text/plain', { parseAs: 'string' }, (_req, body, done) => done(null, body));
+
   await app.register(formsRoutes);
+  await app.register(dashboardRoutes);
   await app.register(adminRoutes);
 
   if (fs.existsSync(config.adminDir)) {

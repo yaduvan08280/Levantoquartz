@@ -34,6 +34,8 @@ export class Tab {
   maxCols = 26;
   colFmt: Record<number, string> = {};                // 1-based column -> number format
   colWidths: Record<number, number> = {};
+  /** Fill colour of row-1 cells, 1-based column -> '#rrggbb'. */
+  headerBg: Record<number, string> = {};
   rows: Cell[][] = [];
   fmts: (RowFormats | undefined)[] = [];
 
@@ -408,6 +410,7 @@ export class Workbook {
       t.maxCols = r.max_cols;
       t.colFmt = r.col_formats || {};
       t.colWidths = r.col_widths || {};
+      t.headerBg = (r.meta && r.meta.headerBg) || {};
       list.push(t);
       byId.set(t.id!, t);
     }
@@ -504,17 +507,17 @@ export class Workbook {
         const t = w.tab;
         if (t.id === null) {
           const r = await client.query(
-            `INSERT INTO tabs(name, position, hidden, frozen_rows, frozen_cols, max_cols, col_formats, col_widths)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id`,
+            `INSERT INTO tabs(name, position, hidden, frozen_rows, frozen_cols, max_cols, col_formats, col_widths, meta)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
             [t.name, t.position, t.hidden, t.frozenRows, t.frozenCols, t.maxCols,
-             JSON.stringify(t.colFmt), JSON.stringify(t.colWidths)]);
+             JSON.stringify(t.colFmt), JSON.stringify(t.colWidths), JSON.stringify({ headerBg: t.headerBg })]);
           t.id = r.rows[0].id;
         } else if (w.meta) {
           await client.query(
             `UPDATE tabs SET name=$2, position=$3, hidden=$4, frozen_rows=$5, frozen_cols=$6,
-                    max_cols=$7, col_formats=$8, col_widths=$9, updated_at=now() WHERE id=$1`,
+                    max_cols=$7, col_formats=$8, col_widths=$9, meta=$10, updated_at=now() WHERE id=$1`,
             [t.id, t.name, t.position, t.hidden, t.frozenRows, t.frozenCols, t.maxCols,
-             JSON.stringify(t.colFmt), JSON.stringify(t.colWidths)]);
+             JSON.stringify(t.colFmt), JSON.stringify(t.colWidths), JSON.stringify({ headerBg: t.headerBg })]);
         }
         if (w.all) await client.query('DELETE FROM tab_rows WHERE tab_id = $1', [t.id]);
         if (w.deletes.length) {

@@ -17,6 +17,7 @@ async function tick(log: { warn: (o: any, m: string) => void }): Promise<void> {
     rt.cache.sweep();
     const now = Date.now();
     for (const t of listTriggers(wb)) {
+      if (!(t.everyMinutes > 0)) continue;
       const due = (lastRun.get(t.id) || 0) + t.everyMinutes * 60000 - 2000;
       if (now < due || !rt.has(t.handler)) continue;
       lastRun.set(t.id, now);

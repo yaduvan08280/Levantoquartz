@@ -7,6 +7,7 @@ panel for users and data.
 | Address | What |
 |---|---|
 | `/` | The forms app operators use. The same page as before. |
+| `/dashboard` | The production dashboard (Overview, Live, Quality, Costing, Reports…). The same page as before; admins and supervisors sign in. |
 | `/admin/` | Admin panel: users, raw data, change log, import and backup. Admin accounts only. |
 
 ## How it is put together
@@ -16,10 +17,12 @@ server/
   legacy/        The original Apps Script project, unchanged: the page (FormsPage/Css/Js.html)
                  and the production logic (form definitions, validation, duplicate rules,
                  grade alerts, Telegram).
+  legacy-dashboard/  The dashboard's Apps Script project, unchanged (Code.js, DashAuth.js,
+                 SlabworksFeedback.js, Dashboard.html). Its data routes are served at /exec.
   src/store/     The data: every tab held in memory, committed to Postgres on each request.
                  computed.ts reproduces the columns the spreadsheet filled with formulas.
   src/gas/       The platform the logic expects (sheet, cache, settings, files, HTTP, jobs).
-  src/routes/    forms.ts serves the page and its calls; admin.ts is the admin panel's API.
+  src/routes/    forms.ts and dashboard.ts serve the two pages and their calls; admin.ts is the admin panel's API.
   src/importer/  Reads a Google Sheets .xlsx export.
   migrations/    Database schema.
 admin/           Admin panel (React + TypeScript + Vite).
@@ -79,6 +82,7 @@ import it → share the new link.
 
 ```bash
 cd server
+python3 tools/verify_import.py "/path/to/New Base.xlsx"   # every imported cell vs. the source file (local database)
 npx tsx test/parity-computed.ts   # computed columns vs. the sheet's own formula results (run right after an import)
 npx tsx test/smoke.ts             # every read call, every form, with timings
 npx tsx test/lifecycle.ts         # one slab through all stages (writes test rows — dev database only)
