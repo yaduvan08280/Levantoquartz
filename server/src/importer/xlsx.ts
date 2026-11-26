@@ -59,6 +59,8 @@ export async function readXlsx(input: string | Buffer): Promise<{ tabs: Tab[]; s
       const line: Cell[] = [];
       let fmts: Record<number, string> | undefined;
       row.eachCell({ includeEmpty: false }, (cell, colNo) => {
+        /* A merged block holds its value in the top-left cell only. */
+        if (cell.isMerged && cell.master !== cell) return;
         const v = plain(cell.value);
         if (v === '') return;
         while (line.length < colNo - 1) line.push('');
