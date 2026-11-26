@@ -1,1 +1,0 @@
-This app is for stone empire pvt. ltd. 

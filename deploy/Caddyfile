@@ -1,0 +1,6 @@
+# HTTPS for the app. Caddy gets and renews the certificate by itself once the
+# domain's DNS A record points at this server.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy app:8080
+}

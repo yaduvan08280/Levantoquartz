@@ -8,7 +8,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { pool } from '../db.js';
 import { rt, wb, run, commit } from '../app.js';
 import { refreshAll, hasComputed } from '../store/computed.js';
-import { editValue, isEmpty, isTimeOnly } from '../store/values.js';
+import { editValue, formatDate, isEmpty, isTimeOnly } from '../store/values.js';
 import { Tab } from '../store/workbook.js';
 import { readXlsx } from '../importer/xlsx.js';
 import { listTriggers } from '../gas/services.js';
@@ -93,7 +93,7 @@ function listUsers() {
       forms: rt.call('fAssigned_', [assigned]) as string[],
       active: String(t.get(r, 6) || '').trim().toUpperCase() !== 'NO',
       hasPassword: !!String(t.get(r, 5) || '').trim() || !!String(t.get(r, 4) || '').trim(),
-      lastLogin: t.display(r, 7),
+      lastLogin: t.get(r, 7) instanceof Date ? formatDate(t.get(r, 7) as Date, 'dd MMM yyyy, HH:mm') : t.display(r, 7),
       role,
       telegramLinked: !!String(t.get(r, cols['Telegram Chat ID']) || '').trim()
     });

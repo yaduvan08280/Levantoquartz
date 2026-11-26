@@ -2,6 +2,7 @@
  * Process-wide singletons: the workbook, the logic runtime, and the one path
  * through which the logic is called and its changes are committed.
  */
+import crypto from 'node:crypto';
 import { pool } from './db.js';
 import { Workbook } from './store/workbook.js';
 import { installComputed, refreshAll } from './store/computed.js';
@@ -15,6 +16,28 @@ export async function boot(): Promise<void> {
   installComputed(wb);
   refreshAll(wb);
   rt.load();
+  await firstRun();
+}
+
+/**
+ * A database with nobody in it: create the users tab and one administrator,
+ * so there is a way in to import the data. The password comes from
+ * ADMIN_PASSWORD, or is generated and printed once.
+ */
+async function firstRun(): Promise<void> {
+  const name = String(rt.global('FORMS_CFG').USERS_TAB);
+  if (wb.rawTab(name)) return;
+  const password = process.env.ADMIN_PASSWORD || crypto.randomBytes(9).toString('base64url');
+  const t = wb.createTab(name);
+  rt.global<string[]>('FORMS_USER_HEADERS').forEach((h, i) => t.set(1, i + 1, h));
+  t.frozenRows = 1;
+  const row = ['admin', 'Administrator', 'ALL', '', rt.call('fHash_', [password]), 'YES', '', 'admin'];
+  row.forEach((v, i) => { if (v !== '') t.set(2, i + 1, v as string); });
+  await wb.flush();
+  console.log('\n  First run: created the administrator account.');
+  console.log('    username: admin');
+  console.log('    password: ' + (process.env.ADMIN_PASSWORD ? '(from ADMIN_PASSWORD)' : password));
+  console.log('  Sign in at /admin/ and import the workbook, or change the password under Users.\n');
 }
 
 /** Call the logic, then commit whatever it changed before returning. */
