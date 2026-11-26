@@ -4,7 +4,9 @@ export function getToken(): string | null {
   try { return JSON.parse(localStorage.getItem(TOKEN_KEY) || 'null'); } catch { return null; }
 }
 export function setToken(t: string | null): void {
-  if (t) localStorage.setItem(TOKEN_KEY, JSON.stringify(t)); else localStorage.removeItem(TOKEN_KEY);
+  if (t) { localStorage.setItem(TOKEN_KEY, JSON.stringify(t)); return; }
+  /* Signing out here signs out of the forms app and dashboard too. */
+  for (const k of [TOKEN_KEY, 'sw_tok', 'slabworksKey']) localStorage.removeItem(k);
 }
 
 export class ApiError extends Error {

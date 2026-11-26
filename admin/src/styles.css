@@ -28,8 +28,8 @@ p { margin: 4px 0 12px; }
 .who { padding: 8px 10px; } .who b { display: block; } .who span { font-size: 12px; opacity: .55; }
 
 .main { flex: 1; min-width: 0; overflow: auto; padding: 26px 32px 40px; display: flex; flex-direction: column; gap: 16px; }
-.main > * { max-width: 1120px; width: 100%; }
-.main.wide { padding: 0; overflow: hidden; } .main.wide > * { max-width: none; }
+.main > * { max-width: 1120px; width: 100%; flex-shrink: 0; }
+.main.wide { padding: 0; overflow: hidden; } .main.wide > * { max-width: none; flex-shrink: 1; }
 .head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
 .head p { margin: 2px 0 0; }
 

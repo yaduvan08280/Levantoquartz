@@ -7,6 +7,11 @@
  */
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { rt, run } from '../app.js';
+import { ssoSnippet } from './sso.js';
+
+/* Added to the page as it is served; the file itself is untouched. The style
+   lets the side menu scroll on a short screen instead of spilling out of it. */
+const HEAD_EXTRA = '<style>.side{overflow-y:auto;overscroll-behavior:contain}.side>*{flex-shrink:0}</style>' + ssoSnippet('dash');
 
 function send(reply: FastifyReply, out: any) {
   reply.header('Cache-Control', 'no-store');
@@ -20,7 +25,11 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export async function dashboardRoutes(app: FastifyInstance): Promise<void> {
   if (!rt.has('doGet') || !rt.has('page_')) return;          // dashboard source not installed
 
-  app.get('/dashboard', async (_req, reply) => send(reply, await run('doGet', [{ parameter: {} }])));
+  app.get('/dashboard', async (_req, reply) => {
+    const out: any = await run('doGet', [{ parameter: {} }]);
+    if (out && out._kind === 'html') out._content = out._content.replace(/<head([^>]*)>/i, (m: string) => m + HEAD_EXTRA);
+    return send(reply, out);
+  });
 
   app.get('/exec', async (req, reply) => {
     const q = (req.query || {}) as Record<string, string>;

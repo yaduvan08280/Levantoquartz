@@ -8,6 +8,7 @@ import { config } from './config.js';
 import { formsRoutes } from './routes/forms.js';
 import { adminRoutes } from './routes/admin.js';
 import { dashboardRoutes } from './routes/dashboard.js';
+import { ssoRoutes } from './routes/sso.js';
 import { wb } from './app.js';
 
 export async function buildServer(): Promise<FastifyInstance> {
@@ -35,6 +36,7 @@ export async function buildServer(): Promise<FastifyInstance> {
 
   await app.register(formsRoutes);
   await app.register(dashboardRoutes);
+  await app.register(ssoRoutes);
   await app.register(adminRoutes);
 
   if (fs.existsSync(config.adminDir)) {

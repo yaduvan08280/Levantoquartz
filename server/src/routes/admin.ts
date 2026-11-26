@@ -489,6 +489,8 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       refreshAll(wb);
     });
     rt.cache.clearData();
+    /* Open dashboards must drop what they hold and load the new data. */
+    try { if (rt.has('noteFullChange_')) await run('noteFullChange_', []); } catch { /* next rebuild catches up */ }
     await audit(me.username, 'import', { detail: { file: file.filename, tabs: parsed.summary } });
     return { ok: true, tabs: parsed.summary };
   });

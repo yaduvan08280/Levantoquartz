@@ -8,6 +8,22 @@
 </head>
 <body>
   <div id="root"></div>
+  <script>
+  /* Already signed in to the forms app or dashboard in this browser? Use that. */
+  (function () {
+    try {
+      if (JSON.parse(localStorage.getItem('levanto.admin.token') || 'null')) return;
+      var t = JSON.parse(localStorage.getItem('sw_tok') || 'null'), d = JSON.parse(localStorage.getItem('slabworksKey') || 'null');
+      if (!t && !(d && d.key)) return;
+      var x = new XMLHttpRequest();
+      x.open('POST', '/api/sso', false);
+      x.setRequestHeader('Content-Type', 'application/json');
+      x.send(JSON.stringify({ want: 'admin', token: t || '', key: (d && d.key) || '' }));
+      var r = JSON.parse(x.responseText || '{}');
+      if (r && r.ok && r.value) localStorage.setItem('levanto.admin.token', JSON.stringify(r.value));
+    } catch (e) {}
+  })();
+  </script>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 </html>
