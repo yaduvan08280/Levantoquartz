@@ -1,0 +1,4375 @@
+<script>
+(function () {
+'use strict';
+
+/* ============================================================ utils ===== */
+/*
+ * google.script.run, as a promise WITH A DEADLINE.
+ *
+ * The bridge is an iframe message channel, not a fetch. When a phone
+ * backgrounds the page — which is exactly what tapping "Take photo" does, since
+ * the camera app takes over — the channel can be torn down with no error event
+ * of any kind. The callback simply never arrives and the promise never settles.
+ * Before this, that left a spinner turning for ever and a form that could not
+ * be submitted. A call that has not answered by the deadline is now a failure
+ * like any other, which something can be done about.
+ */
+var GS_TIMEOUT = 90000;          // generous: some reads scan five thousand rows
+/* A save is allowed far longer. Giving up on it does not stop it — the server
+   carries on and writes the row — so a short limit only turns a slow save into
+   a "failed" one that the operator then sends again. Apps Script itself stops
+   a call at six minutes; this waits just short of that. */
+var SUBMIT_TIMEOUT = 330000;
+
+function gs(fn) {
+  var args = [].slice.call(arguments, 1);
+  return gsWait.apply(null, [GS_TIMEOUT, fn].concat(args));
+}
+
+function gsWait(ms, fn) {
+  var args = [].slice.call(arguments, 2);
+  return new Promise(function (res, rej) {
+    var settled = false;
+    var timer = setTimeout(function () {
+      if (settled) return;
+      settled = true;
+      var e = new Error('no answer in ' + Math.round(ms / 1000) + 's');
+      e.timedOut = true;
+      rej(e);
+    }, ms);
+    function ok(v) { if (settled) return; settled = true; clearTimeout(timer); res(v); }
+    function no(e) { if (settled) return; settled = true; clearTimeout(timer); rej(e); }
+    try {
+      google.script.run.withSuccessHandler(ok).withFailureHandler(no)[fn].apply(null, args);
+    } catch (e) { no(e); }
+  });
+}
+var $ = function (s) { return document.querySelector(s); };
+function el(tag, cls, txt) {
+  var n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (txt !== undefined) n.textContent = txt;
+  return n;
+}
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) {
+  return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function highlight(t, q) {
+  if (!q) return esc(t);
+  var i = t.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0) return esc(t);
+  return esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + q.length)) + '</mark>' +
+         esc(t.slice(i + q.length));
+}
+function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms || 8); } catch (e) {} }
+/* Clipboard, with the old-school fallback: the modern API needs a secure
+   context and the app is sometimes opened over plain http on the shop wifi. */
+function copyText(text, btn) {
+  function done() {
+    if (!btn) return;
+    var was = btn.dataset.was || btn.textContent;
+    btn.dataset.was = was;
+    btn.textContent = 'Copied';
+    setTimeout(function () { btn.textContent = was; }, 1600);
+  }
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { copyFallback(text, done); });
+      return;
+    }
+  } catch (e) {}
+  copyFallback(text, done);
+}
+function copyFallback(text, done) {
+  try {
+    var t = document.createElement('textarea');
+    t.value = text;
+    t.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+    document.body.appendChild(t);
+    t.select();
+    document.execCommand('copy');
+    document.body.removeChild(t);
+    done();
+  } catch (e) { toast('Copy it by hand: ' + text); }
+}
+function store(k, v) {
+  try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); }
+  catch (e) {}
+}
+function load(k) { try { var s = localStorage.getItem(k); return s ? JSON.parse(s) : null; }
+  catch (e) { return null; } }
+
+var toastT;
+function toast(msg, kind) {
+  var t = $('#toast');
+  t.textContent = msg;
+  t.className = 'toast on ' + (kind || '');
+  clearTimeout(toastT);
+  toastT = setTimeout(function () { t.className = 'toast ' + (kind || ''); }, 3600);
+}
+function busy(btn, on, label) {
+  if (!btn) return;
+  if (on) {
+    if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>' + (label || btn.dataset.label);
+  } else {
+    btn.disabled = false;
+    btn.textContent = btn.dataset.label || btn.textContent;
+  }
+}
+var isPhone = function () { return window.matchMedia('(max-width:899px)').matches; };
+/* Monospace belongs on codes (A26I01015, BN44, QG4CV, LQ-206), not on prose
+   like "Cutting / Edge Chipping". A code has no lowercase and no spaces. */
+function isCode(v) { return /^[A-Z0-9][A-Z0-9\-_.#*\/]*$/.test(String(v)); }
+
+/**
+ * What a number field is allowed to contain.
+ *
+ * `integer` fields — bag numbers, counts — take digits and nothing else: no
+ * decimal point, no minus, no letters, no punctuation, no emoji. Everything
+ * else takes digits and at most one decimal point, because a quantity is a
+ * weight. This is the ONLY place that rule is written: the keystroke guard,
+ * the prefill and the restored draft all come through here, so a value that
+ * could not be typed cannot be pasted or carried over either.
+ */
+function numClean(f, raw) {
+  var v = String(raw == null ? '' : raw);
+  /* A whole-number field stops at the decimal point rather than deleting it:
+     stripping only the "." turns an invoice weight of 3800.5 into 38005, a
+     tenfold error that looks like a perfectly good number. */
+  if (f && f.integer) return v.split('.')[0].replace(/[^0-9]/g, '');
+  return v.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+}
+
+/* ============================================================ state ===== */
+var S = { token: null, user: null, forms: [], form: null, opts: {}, sets: null,
+         values: {}, nodes: {}, sumLock: {},
+         prefilled: {}, confirmed: {}, confirmSecs: [], noteAfterLoad: '', secNodes: {} };
+var TOKEN_KEY = 'sw_tok', DRAFT_KEY = 'sw_draft', PEND_KEY = 'sw_pending';
+
+/* =========================================================== sheets ===== */
+var openSheets = [];
+function sheetOpen(sel, onClose) {
+  var n = $(sel);
+  if (!n || n.classList.contains('on')) return;
+  $('#scrim').classList.add('on');
+  n.classList.add('on');
+  document.body.classList.add('locked');
+  openSheets.push({ sel: sel, onClose: onClose });
+  try { history.pushState({ sheet: sel }, ''); } catch (e) {}
+}
+function sheetClose(sel) {
+  var i = -1;
+  for (var k = openSheets.length - 1; k >= 0; k--)
+    if (!sel || openSheets[k].sel === sel) { i = k; break; }
+  if (i < 0) return;
+  var s = openSheets.splice(i, 1)[0];
+  $(s.sel).classList.remove('on');
+  if (!openSheets.length) {
+    $('#scrim').classList.remove('on');
+    document.body.classList.remove('locked');
+  }
+  s.onClose && s.onClose();
+}
+window.addEventListener('popstate', function () { if (openSheets.length) sheetClose(); });
+$('#scrim').onclick = function () { if (openSheets.length) history.back(); };
+function closeTop() { if (openSheets.length) history.back(); }
+['#pkClose', '#fsClose', '#mnClose', '#rvClose', '#hxClose', '#ntClose']
+  .forEach(function (s) { $(s).onclick = closeTop; });
+
+/* =========================================================== picker ===== */
+/* One reusable sheet for every single- and multi-select on every form.
+   The list is windowed: 768 slab numbers must not become 768 DOM nodes. */
+var PK = { opts: [], sel: [], multi: false, onDone: null, shown: 0, filtered: [], q: '' };
+var PAGE = 60;
+
+function openPicker(cfg) {
+  PK.opts = cfg.options || [];
+  PK.multi = !!cfg.multi;
+  PK.sel = cfg.multi ? (cfg.selected || []).slice() : (cfg.selected ? [cfg.selected] : []);
+  PK.onDone = cfg.onDone;
+  PK.q = '';
+  $('#pkTitle').textContent = cfg.title || 'Select';
+  $('#pkSearch').value = '';
+  $('#pkClear').classList.remove('on');
+  $('#pkDone').style.visibility = cfg.multi ? 'visible' : 'hidden';
+  $('#pkSearch').placeholder = 'Search ' + PK.opts.length + ' option' + (PK.opts.length === 1 ? '' : 's') + '…';
+  pkFilter();
+  sheetOpen('#picker');
+  /* Do not autofocus on a phone: the keyboard would cover the list and most
+     picks are a single tap. On desktop, typing is the fastest route. */
+  if (!isPhone()) setTimeout(function () { $('#pkSearch').focus(); }, 60);
+}
+
+function pkFilter() {
+  var q = PK.q.trim();
+  PK.filtered = q ? PK.opts.filter(function (o) {
+    return o.toLowerCase().indexOf(q.toLowerCase()) !== -1;
+  }) : PK.opts.slice();
+  PK.shown = 0;
+  $('#pkList').innerHTML = '';
+  $('#pkList').scrollTop = 0;
+  pkMore();
+  pkFoot();
+}
+
+function pkMore() {
+  var list = $('#pkList');
+  if (!PK.filtered.length) {
+    if (!PK.shown) list.appendChild(el('div', 'opt-empty',
+      PK.opts.length ? 'Nothing matches “' + PK.q + '”' : 'No options available.'));
+    return;
+  }
+  var end = Math.min(PK.shown + PAGE, PK.filtered.length);
+  var frag = document.createDocumentFragment();
+  for (var i = PK.shown; i < end; i++) {
+    var o = PK.filtered[i];
+    var on = PK.sel.indexOf(o) !== -1;
+    var b = el('button', 'opt' + (on ? ' sel' : '') + (isCode(o) ? '' : ' wide'));
+    b.type = 'button';
+    if (PK.multi) b.appendChild(el('span', 'box'));
+    var t = el('span');
+    t.innerHTML = highlight(o, PK.q);
+    b.appendChild(t);
+    if (!PK.multi) b.appendChild(el('span', 'tick', '✓'));
+    b.dataset.v = o;
+    frag.appendChild(b);
+  }
+  list.appendChild(frag);
+  PK.shown = end;
+}
+
+$('#pkList').addEventListener('scroll', function () {
+  var n = this;
+  if (n.scrollTop + n.clientHeight > n.scrollHeight - 400) pkMore();
+});
+$('#pkList').addEventListener('click', function (e) {
+  var b = e.target.closest('.opt');
+  if (!b || !b.dataset.v) return;
+  var v = b.dataset.v;
+  buzz();
+  if (!PK.multi) {
+    /* tapping the option that is already chosen clears it */
+    var same = PK.sel.length && PK.sel[0] === v;
+    PK.sel = same ? [] : [v];
+    PK.onDone && PK.onDone(same ? '' : v);
+    closeTop();
+    return;
+  }
+  var i = PK.sel.indexOf(v);
+  if (i < 0) { PK.sel.push(v); b.classList.add('sel'); }
+  else { PK.sel.splice(i, 1); b.classList.remove('sel'); }
+  pkFoot();
+});
+$('#pkSearch').addEventListener('input', function () {
+  PK.q = this.value;
+  $('#pkClear').classList.toggle('on', !!this.value);
+  pkFilter();
+});
+$('#pkClear').onclick = function () {
+  $('#pkSearch').value = ''; PK.q = ''; this.classList.remove('on'); pkFilter();
+  $('#pkSearch').focus();
+};
+$('#pkDone').onclick = function () { PK.onDone && PK.onDone(PK.sel.slice()); closeTop(); };
+
+function pkFoot() {
+  var f = $('#pkFoot');
+  f.innerHTML = '';
+  if (!PK.multi) {
+    f.appendChild(el('span', null, PK.filtered.length !== PK.opts.length
+      ? PK.filtered.length + ' of ' + PK.opts.length + ' shown' : ''));
+    if (PK.sel.length) {
+      var clr = el('button', 'link', 'Clear selection');
+      clr.type = 'button';
+      clr.onclick = function () { PK.sel = []; PK.onDone && PK.onDone(''); closeTop(); };
+      f.appendChild(clr);
+    }
+    return;
+  }
+  f.appendChild(el('span', null, PK.sel.length + ' of ' + PK.opts.length + ' selected'));
+  var all = el('button', 'link', PK.sel.length === PK.opts.length ? 'Clear all' : 'Select all');
+  all.type = 'button';
+  all.onclick = function () {
+    PK.sel = (PK.sel.length === PK.opts.length) ? [] : PK.opts.slice();
+    pkFilter();
+  };
+  f.appendChild(all);
+}
+
+/* ============================================================ login ===== */
+$('#pwEye').onclick = function () {
+  var p = $('#lp');
+  p.type = p.type === 'password' ? 'text' : 'password';
+  this.textContent = p.type === 'password' ? 'Show' : 'Hide';
+};
+
+(function resume() {
+  var t = load(TOKEN_KEY);
+  if (!t) return;
+  gs('api_resume', t).then(function (r) {
+    if (!r || !r.ok) { store(TOKEN_KEY, null); return; }
+    S.token = r.token; S.user = r.user; S.forms = r.forms;
+    startApp();
+  }).catch(function () {});
+})();
+
+$('#loginForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+  var btn = $('#loginBtn'), err = $('#loginErr');
+  err.className = 'alert err';
+  busy(btn, true, 'Signing in');
+  gs('api_login', $('#lu').value.trim(), $('#lp').value).then(function (r) {
+    busy(btn, false);
+    if (!r.ok) { err.textContent = r.error; err.className = 'alert err show'; buzz(30); return; }
+    S.token = r.token; S.user = r.user; S.forms = r.forms;
+    if ($('#lr').checked) store(TOKEN_KEY, r.token);
+    startApp();
+  }).catch(function (e2) {
+    busy(btn, false);
+    err.textContent = String(e2.message || e2); err.className = 'alert err show';
+  });
+});
+
+function startApp() {
+  $('#loginWrap').style.display = 'none';
+  $('#app').classList.add('on');
+  $('#whoName').textContent = S.user.name;
+  $('#whoUser').textContent = '@' + S.user.username;
+  $('#mnWho').textContent = S.user.name;
+  $('#mnUser').textContent = '@' + S.user.username;
+
+  var nav = $('#nav'); nav.innerHTML = '';
+  var fs = $('#fsList'); fs.innerHTML = '';
+  S.forms.forEach(function (f) {
+    var b = el('button', 'navitem');
+    b.appendChild(el('span', 'chip', f.abbr));
+    b.appendChild(el('span', null, f.title.replace(/ Form$/, '')));
+    b.onclick = function () { loadForm(f.key); };
+    b.dataset.key = f.key;
+    nav.appendChild(b);
+
+    var r = el('button', 'fsrow');
+    r.appendChild(el('span', 'chip', f.abbr));
+    r.appendChild(el('b', null, f.title));
+    r.dataset.key = f.key;
+    r.onclick = function () { closeTop(); loadForm(f.key); };
+    fs.appendChild(r);
+  });
+  if (S.forms.length < 2) $('#formSwitch').style.pointerEvents = 'none';
+
+  /* Feedback is the admin's page: the reports and, more to the point, the
+     alerts nobody answered. It is hidden rather than merely refused, so an
+     operator is not shown a door that will not open. */
+  var admin = isAdmin();
+  $('#adminLabel').hidden = !admin;
+  $('#adminNav').hidden = !admin;
+  $('#mFeedback').hidden = !admin;
+  /* Notifications is for the people alerts are actually sent to. An operator
+     has nothing to connect, so the row is absent rather than disappointing. */
+  $('#mNotify').hidden = !canNotify();
+  $('#notifyBtnD').hidden = !canNotify();
+  if (canNotify()) notifyPeek();
+  if (admin) {
+    var an = $('#adminNav');
+    an.innerHTML = '';
+    var fb = el('button', 'navitem');
+    fb.appendChild(el('span', 'chip', 'FB'));
+    fb.appendChild(el('span', null, 'Feedback'));
+    fb.onclick = openFeedback;
+    an.appendChild(fb);
+  }
+
+  /* A Telegram alert links straight to one slab. */
+  var dl = window.DEEPLINK || {};
+  var wantForm = dl.form && S.forms.some(function (f) { return f.key === dl.form; })
+    ? dl.form : S.forms[0].key;
+
+  loadForm(wantForm, {}, function () {
+    if (wantForm !== 'gradeReport' || !dl.slab) return;
+    S.values.alertId = dl.alert || '';
+    applyToControl('slab', String(dl.slab).toUpperCase());
+    updateSummary();
+    toast('Reporting ' + String(dl.slab).toUpperCase() + '. Tap the sections with a problem.', 'good');
+  });
+
+  retryPending();
+  ovenStart();
+  alertStart();
+}
+
+function logout() {
+  gs('api_logout', S.token).catch(function () {});
+  store(TOKEN_KEY, null); store(DRAFT_KEY, null);
+  location.reload();
+}
+$('#logoutBtnD').onclick = logout;
+$('#mLogout').onclick = function () { closeTop(); logout(); };
+
+/* ====================================================== form loading ==== */
+/*
+ * `cached` (optional) is a form this phone already holds. It is drawn at once
+ * and the server's copy is fetched behind it, so the next entry can start the
+ * moment the last one is saved instead of after another round trip. When the
+ * fresh copy arrives it replaces the page only if nothing has been touched
+ * yet; otherwise just the option lists are swapped in under the operator.
+ */
+function loadForm(key, keep, done, cached) {
+  document.querySelectorAll('[data-key]').forEach(function (n) {
+    n.classList.toggle(n.classList.contains('fsrow') ? 'on' : 'active', n.dataset.key === key);
+  });
+  if (!cached) $('#sections').innerHTML = '<div class="center-note">Loading…</div>';
+  $('#formNote').className = 'alert warn';
+  S.prefilled = {}; S.confirmed = {}; S.confirmSecs = [];
+  S.secNodes = {};
+  delete S.values.sec;
+  var sb = $('#secBlocks');
+  if (sb) sb.remove();
+  document.querySelectorAll('.prefill').forEach(function (b) {
+    b.classList.remove('used');
+    b.disabled = false;
+    var ic = b.querySelector('.pf-ic');
+    if (ic) ic.innerHTML = '\u21BB';
+  });
+  $('#prefillSub').textContent =
+    'Repeat your last entry — everything except the slab number';
+  S.values = {}; S.nodes = {}; S.sumLock = {};
+
+  if (cached) {
+    showForm(cached, key, keep, done);
+    gs('api_getForm', S.token, key).then(function (f) {
+      if (!S.form || S.form.key !== key) return;        // they moved on
+      if (!S.touched) { showForm(f, key, {}, null); return; }
+      S.base = f;
+      S.opts = expandRepeat(f, repeatCount()).options || {}; S.sets = f.optionSets || null;
+      document.querySelectorAll('[data-ctl="multi"]').forEach(function (n) { if (n._redraw) n._redraw(); });
+    }, function () { /* the cached lists stand; Refresh lists fetches again */ });
+    return;
+  }
+  gs('api_getForm', S.token, key).then(function (f) {
+    showForm(f, key, keep, done);
+  }).catch(fail);
+}
+
+/** A copy of the form with the values just saved taken out of the slab and
+    bundle lists — what the server's next answer will say, a second early. */
+function formWithout(f, values) {
+  var g = JSON.parse(JSON.stringify(f));
+  g.sections.forEach(function (sec) {
+    sec.fields.forEach(function (fl) {
+      if (!(fl.isSlab || fl.id === 'bundle')) return;
+      var list = g.options && g.options[fl.id];
+      if (!Array.isArray(list)) return;
+      var used = [].concat(values[fl.id] || []).map(String);
+      g.options[fl.id] = list.filter(function (o) { return used.indexOf(String(o)) === -1; });
+    });
+  });
+  return g;
+}
+
+function showForm(f, key, keep, done) {
+  try {
+    /* A repeatable block (Container's materials): S.base is the form as the
+       server sent it, S.form the copy with blocks 1..n — n taken from the
+       values about to be restored, so a draft with four materials comes back
+       with four blocks. */
+    S.base = f;
+    /* Same rule as the restore below: given values win, even none. */
+    var pre = keep || null;
+    if (!pre) { var dr = load(DRAFT_KEY); if (dr && dr.key === key && dr.values) pre = dr.values; }
+    f = expandRepeat(f, (pre || {})[repeatCountId(f)]);
+    S.form = f; S.opts = f.options || {}; S.sets = f.optionSets || null;
+    S.touched = false;
+    $('#fTitle').textContent = f.title;
+    $('#barTitle').textContent = f.title;
+    $('#barAbbr').textContent = f.abbr;
+    $('#fSub').textContent = 'Everything on one page — nothing disappears when you answer.';
+    /* Some forms must never repeat the last entry — a grade, a set of measured
+       thicknesses or a bundle of slabs is different every time. */
+    var pf = f.allowPrefill !== false;
+    $('#prefillBtn').style.display = (pf && !f.prefillLines) ? '' : 'none';
+    $('#prefillPair').style.display = (pf && f.prefillLines) ? '' : 'none';
+    $('#prefillNote').textContent = '';
+    $('#prefillNote').style.display = (pf && f.prefillLines) ? '' : 'none';
+    BI.sig = ''; BI.bags = []; BI.w = {}; BI.loading = false;
+    BU.used = null; BU.hit = '';
+    renderForm();
+    /* Dispatch's slab list is thousands long and comes from a set difference,
+       so it is fetched after the form paints rather than riding along with it. */
+    if (f.multiRow) loadDispatchSlabs(false);
+    if (usedField()) loadUsedBags();
+
+    if (keep) {
+      restoreValues(keep, false);
+    } else {
+      var d = load(DRAFT_KEY);
+      if (d && d.key === key && d.values && Object.keys(d.values).length) {
+        restoreValues(d.values, true);
+      }
+    }
+    /* A restored draft brings its material, supplier and ticks back without
+       going through setVal, so the bag list is fetched here — keeping the
+       ticks that are still free. */
+    if (bagField()) loadInvoiceBags(true);
+    applyVisibility(); updateSummary();
+
+    /* Whatever the last save wanted to tell them, now that the page it would
+       have been wiped by has finished rendering. */
+    if (S.noteAfterLoad) {
+      var n = $('#formNote');
+      n.textContent = S.noteAfterLoad;
+      n.className = 'alert warn show';
+      S.noteAfterLoad = '';
+    }
+    if (done) { try { done(); } catch (e) {} }
+  } catch (e) { fail(e); }
+}
+
+function fail(e) {
+  var msg = String(e && (e.message || e) || 'Something went wrong');
+  toast(msg, 'bad');
+  if (/sign in|session/i.test(msg)) { store(TOKEN_KEY, null); setTimeout(function () { location.reload(); }, 1900); }
+}
+
+/* ================================================== repeatable block ==== */
+/*
+ * A section with `repeat` is drawn once per block: blocks 1..n, ids
+ * "design_1", labels "Design Name (1)" — exactly what the server builds in
+ * fFormForValues_, and exactly the sheet's column names. n lives in
+ * S.values[repeat.countId] and travels with the entry. Adding or removing a
+ * block redraws the form from S.base and puts every value back.
+ */
+function repeatSecOf(f) {
+  var out = null;
+  ((f && f.sections) || []).forEach(function (s) { if (s.repeat && !out) out = s; });
+  return out;
+}
+function repeatCountId(f) { var r = repeatSecOf(f); return r ? r.repeat.countId : ''; }
+function repeatCount() {
+  var b = S.form && S.form.sections.filter(function (s) { return s.rep; })[0];
+  return b ? b.rep.n : 0;
+}
+function expandRepeat(base, n) {
+  var rs = repeatSecOf(base);
+  if (!rs) return base;
+  var max = rs.repeat.max || 30;
+  n = Math.max(1, Math.min(parseInt(n, 10) || 1, max));
+  var f = {}, k;
+  for (k in base) f[k] = base[k];
+  var opts = {};
+  for (k in (base.options || {})) opts[k] = base.options[k];
+  f.options = opts;
+  f.sections = [];
+  base.sections.forEach(function (sec) {
+    if (!sec.repeat) { f.sections.push(sec); return; }
+    var ids = sec.fields.map(function (x) { return x.id; });
+    for (var b = 1; b <= n; b++) {
+      f.sections.push({
+        title: sec.title + ' ' + b, grid: sec.grid, showWhen: sec.showWhen,
+        rep: { k: b, n: n, max: max, add: sec.repeat.add, countId: sec.repeat.countId, ids: ids },
+        fields: sec.fields.map(function (fl) {
+          var c = {};
+          for (var x in fl) c[x] = fl[x];
+          c.id = fl.id + '_' + b;
+          c.label = fl.label + ' (' + b + ')';
+          if (opts[fl.id]) opts[c.id] = opts[fl.id];
+          return c;
+        })
+      });
+    }
+  });
+  return f;
+}
+/* The box being typed in commits its value on blur. Do that BEFORE the
+   blocks are counted and shifted, or the blur fires after the redraw and
+   writes the old value back under the old block number. */
+function commitFocus() {
+  var a = document.activeElement;
+  if (a && a !== document.body && a.blur) a.blur();
+}
+function rebuildRepeat(n, scrollTo) {
+  var vals = S.values, cid = repeatCountId(S.base);
+  S.values = {}; S.nodes = {};
+  S.form = expandRepeat(S.base, n);
+  S.opts = S.form.options || {};
+  vals[cid] = repeatCount() || 1;
+  /* Nothing may survive beyond the last block: a block added later starts empty. */
+  var rb = S.form.sections.filter(function (x) { return x.rep; })[0];
+  if (rb) {
+    Object.keys(vals).forEach(function (key) {
+      var m = /^(.+)_(\d+)$/.exec(key);
+      if (m && rb.rep.ids.indexOf(m[1]) !== -1 && +m[2] > rb.rep.n) delete vals[key];
+    });
+  }
+  renderForm();
+  restoreValues(vals, false);
+  S.touched = true;
+  applyVisibility(); updateSummary();
+  store(DRAFT_KEY, { key: S.form.key, values: S.values, at: Date.now() });
+  if (scrollTo) {
+    var box = document.querySelector('.sec[data-rep="' + scrollTo + '"]');
+    if (box) setTimeout(function () { box.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60);
+  }
+}
+function addBlock() {
+  commitFocus();
+  var n = repeatCount() + 1;
+  rebuildRepeat(n, n);
+}
+function removeBlock(k) {
+  commitFocus();
+  var n = repeatCount();
+  var b = S.form.sections.filter(function (s) { return s.rep; })[0];
+  if (!b || n < 2) return;
+  var ids = b.rep.ids;
+  var has = ids.some(function (id) {
+    var v = S.values[id + '_' + k];
+    return !(v === undefined || v === '' || (Array.isArray(v) && !v.length));
+  });
+  if (has && !confirm('Remove ' + b.title.replace(/\s+\d+$/, '') + ' ' + k + ' and what is filled in it?')) return;
+  /* The blocks after it move up one, so the numbers stay 1..n with no gap —
+     they are column numbers on the sheet. */
+  for (var j = k; j < n; j++) {
+    ids.forEach(function (id) {
+      var v = S.values[id + '_' + (j + 1)];
+      if (v === undefined) delete S.values[id + '_' + j]; else S.values[id + '_' + j] = v;
+    });
+  }
+  ids.forEach(function (id) { delete S.values[id + '_' + n]; });
+  rebuildRepeat(n - 1, Math.min(k, n - 1));
+}
+
+/* ================================================= admin: add to lists ==== */
+/*
+ * "+ Design name" / "+ Size" at the top of a form that names adminLists,
+ * shown to admins and supervisors (only admins get the ✕ to remove). What is added goes to the App Lists tab and is in
+ * everyone's dropdown from their next form load; on this phone it is in the
+ * dropdown at once. Entries an admin added are listed under the box with a
+ * ✕, so a typo can be taken back; the original lists cannot be touched here.
+ */
+function buildAdminLists() {
+  var box = el('div', 'adm');
+  var btns = el('div', 'adm-btns');
+  S.form.adminLists.forEach(function (a) {
+    var b = el('button', 'adm-btn' + (S.admOpen === a.list ? ' on' : ''), '+ ' + a.label);
+    b.type = 'button';
+    b.onclick = function () { S.admOpen = (S.admOpen === a.list ? '' : a.list); redrawForm(); };
+    btns.appendChild(b);
+  });
+  box.appendChild(btns);
+
+  var a = S.form.adminLists.filter(function (x) { return x.list === S.admOpen; })[0];
+  if (!a) return box;
+  var pane = el('div', 'adm-pane');
+  pane.appendChild(el('div', 'adm-h', 'Add a ' + a.label.toLowerCase() + ' — everyone will see it in the dropdown'));
+  var row = el('div', 'adm-row');
+  var inp = el('input', 'input');
+  inp.type = 'text';
+  inp.placeholder = a.label === 'Size' ? 'e.g. SKS - 138*80*30' : 'e.g. CALACATTA GOLD';
+  inp.setAttribute('autocapitalize', a.label === 'Size' ? 'characters' : 'characters');
+  var add = el('button', 'adm-add', 'Add');
+  add.type = 'button';
+  function go() {
+    var v = inp.value.replace(/\s+/g, ' ').trim();
+    if (!v) { inp.focus(); return; }
+    busy(add, true, 'Adding');
+    gs('api_addListItem', S.token, a.list, v).then(function (r) {
+      busy(add, false);
+      if (!r || !r.ok) { toast((r && r.error) || 'Could not add it.', 'bad'); return; }
+      listChanged(a, r.added, r.value, true);
+      toast('“' + r.value + '” added to ' + a.label + ' for everyone.', 'good');
+    }).catch(function (e) { busy(add, false); fail(e); });
+  }
+  add.onclick = go;
+  inp.onkeydown = function (e) { if (e.key === 'Enter') { e.preventDefault(); go(); } };
+  row.appendChild(inp);
+  row.appendChild(add);
+  pane.appendChild(row);
+
+  var added = a.added || [];
+  if (added.length) {
+    pane.appendChild(el('div', 'adm-sub', 'Added from the app'));
+    var chips = el('div', 'adm-chips');
+    added.forEach(function (v) {
+      var c = el('span', 'adm-chip' + (a.canRemove ? '' : ' ro'), v);
+      chips.appendChild(c);
+      if (!a.canRemove) return;                    // supervisors add; only admins remove
+      var x = el('button', 'adm-x', '\u2715');
+      x.type = 'button';
+      x.setAttribute('aria-label', 'Remove ' + v);
+      x.onclick = function () {
+        if (!confirm('Remove “' + v + '” from the ' + a.label + ' list for everyone?\n\nEntries already saved with it are not changed.')) return;
+        gs('api_removeListItem', S.token, a.list, v).then(function (r) {
+          if (!r || !r.ok) { toast((r && r.error) || 'Could not remove it.', 'bad'); return; }
+          listChanged(a, r.added, v, false);
+          toast('“' + v + '” removed from ' + a.label + '.', 'good');
+        }).catch(fail);
+      };
+      c.appendChild(x);
+    });
+    pane.appendChild(chips);
+  }
+  box.appendChild(pane);
+  setTimeout(function () { if (!isPhone()) inp.focus(); }, 50);
+  return box;
+}
+
+/* Put the new list into the form this phone holds and redraw it in place. */
+function listChanged(a, added, value, isAdd) {
+  var base = S.base || S.form;
+  base.options = base.options || {};
+  var list = (base.options[a.field] || []).slice();
+  if (isAdd) { if (list.indexOf(value) === -1) list.push(value); }
+  else list = list.filter(function (x) { return x !== value; });
+  base.options[a.field] = list;
+  (base.adminLists || []).forEach(function (x) { if (x.list === a.list) x.added = added || []; });
+  redrawForm();
+}
+
+/* Redraw with every answer kept — the block form already knows how. */
+function redrawForm() {
+  if (repeatSecOf(S.base)) { rebuildRepeat(repeatCount()); return; }
+  commitFocus();
+  var vals = S.values;
+  S.values = {}; S.nodes = {};
+  S.form = S.base; S.opts = S.base.options || {};
+  renderForm();
+  restoreValues(vals, false);
+  applyVisibility(); updateSummary();
+}
+
+/* ======================================================== photo field ==== */
+/*
+ * A photo question on an ordinary form (Container's "Photo of Container").
+ * It reuses the Grade Reporting uploader: the photos live in a media bag
+ * S.values.sec['P:<field id>'], each uploads to Drive the moment it is taken,
+ * and the field's own value is the list of Drive links of the ones that made
+ * it — written to the sheet comma-joined, the way the Google Form did.
+ */
+var PHOTO_LIM = { photos: 3, videos: 0, edge: 1600, quality: .72, videoSeconds: 15, videoMb: 12 };
+function photoBagKey(fid) { return 'P:' + fid; }
+function isPhotoBag(n) { return String(n).indexOf('P:') === 0; }
+function photoFields() {
+  var out = [];
+  ((S.form && S.form.sections) || []).forEach(function (s) {
+    s.fields.forEach(function (f) { if (f.type === 'photo') out.push(f); });
+  });
+  return out;
+}
+function buildPhoto(f) {
+  var n = photoBagKey(f.id);
+  var w = buildSectionMedia(n, { limits: PHOTO_LIM });
+  w.dataset.ctl = 'photo';
+  w.dataset.mbag = n;
+  return w;
+}
+function syncPhotoField(n) {
+  var fid = String(n).slice(2);
+  var b = (S.values.sec || {})[n];
+  var urls = b ? (b.photos || []).filter(function (m) { return m && m.state === 'ok' && (m.id || m.url); })
+    .map(function (m) { return m.id ? 'https://drive.google.com/open?id=' + m.id : m.url; }) : [];
+  if (urls.length) S.values[fid] = urls; else delete S.values[fid];
+  if (urls.length && S.nodes[fid]) S.nodes[fid].classList.remove('invalid');
+  applyVisibility();
+}
+/** A photo still uploading, or one that failed, holds the save back. */
+function missingUploads() {
+  var out = [];
+  activeFields().forEach(function (f) {
+    if (f.type !== 'photo') return;
+    var b = (S.values.sec || {})[photoBagKey(f.id)];
+    if (!b) return;
+    var all = (b.photos || []).concat(b.videos || []);
+    if (all.some(mediaBusy)) out.push({ f: f, what: 'the photo to finish uploading' });
+    else if (all.some(mediaBad)) out.push({ f: f, what: 'the failed photo retried (\u21BB) or removed (\u2715)' });
+  });
+  return out;
+}
+/** Whose folder in Drive an upload goes into: the slab, else the entry's key. */
+function mediaOwner() {
+  if (S.values.slab) return S.values.slab;
+  var k = S.form && S.form.keyField;
+  return (k && S.values[k]) ? S.form.abbr + ' ' + S.values[k] : (S.form ? S.form.abbr : '');
+}
+
+/* ========================================================= rendering ==== */
+function renderForm() {
+  var wrap = $('#sections');
+  wrap.innerHTML = '';
+  S.secNodes = {};
+  if (S.form.adminLists && S.form.adminLists.length && isAdmin()) wrap.appendChild(buildAdminLists());
+  S.form.sections.forEach(function (sec, si) {
+    var box = el('div', 'sec');
+    box.dataset.sec = si;
+    var h = el('div', 'sec-h');
+    h.appendChild(el('span', 'n', String(si + 1)));
+    h.appendChild(el('h2', null, sec.title));
+    if (sec.rep && sec.rep.n > 1) {
+      box.dataset.rep = sec.rep.k;
+      var rm = el('button', 'rep-rm', 'Remove');
+      rm.type = 'button';
+      rm.onclick = (function (k) { return function () { removeBlock(k); }; })(sec.rep.k);
+      h.appendChild(rm);
+    } else if (sec.rep) {
+      box.dataset.rep = sec.rep.k;
+    }
+    box.appendChild(h);
+    var cls = 'fields' + (sec.grid ? ' grid4' : (sec.fields.length > 3 ? ' two' : ''));
+    var fields = el('div', cls);
+    sec.fields.forEach(function (f) { fields.appendChild(buildField(f)); });
+    box.appendChild(fields);
+    wrap.appendChild(box);
+    /* After the last block: add another. */
+    if (sec.rep && sec.rep.k === sec.rep.n && sec.rep.n < sec.rep.max) {
+      var add = el('button', 'rep-add', '+ ' + (sec.rep.add || 'Add another'));
+      add.type = 'button';
+      add.onclick = function () { addBlock(); };
+      wrap.appendChild(add);
+    }
+  });
+  /* Grade Reporting's body is not in the schema — it is generated from the
+     slab diagram, one block per section tapped. */
+  if (S.form.multiSection) renderSectionBlocks();
+  applyVisibility(); updateSummary();
+}
+
+function buildField(f) {
+  var box = el('div', 'field');
+  box.dataset.fid = f.id;
+  /* A checkbox carries its own label to the right of the box; a second one
+     above it would print the same words twice. */
+  if (f.type !== 'toggle') {
+    var lab = el('label');
+    lab.setAttribute('for', 'f_' + f.id);
+    lab.textContent = f.label;
+    if (f.required) lab.appendChild(el('span', 'req', '*'));
+    /* Bag Invoice: the running total of the ticked bags sits beside the
+       question itself, where the eye already is while ticking. */
+    if (f.type === 'bagpick') lab.appendChild(el('span', 'lab-total'));
+    box.appendChild(lab);
+  }
+
+  var ctl;
+  if (f.type === 'radio')          ctl = buildPills(f);
+  else if (f.type === 'select')    ctl = buildPick(f);
+  else if (f.type === 'checkbox')  ctl = buildMulti(f);
+  else if (f.type === 'bagpick')   ctl = buildBagPick(f);
+  else if (f.type === 'slabgrade') ctl = buildSlabGrade(f);
+  else if (f.type === 'slabmap')   ctl = buildSlabMap(f);
+  else if (f.type === 'toggle')    ctl = buildToggle(f);
+  else if (f.type === 'photo')     ctl = buildPhoto(f);
+  else                             ctl = buildText(f, f.type === 'textarea');
+  box.appendChild(ctl);
+  if (f.uniqueLive) box.appendChild(el('div', 'dupnote'));
+  if (f.type === 'bagpick') box.appendChild(el('div', 'bagwarn'));
+  if (f.help) box.appendChild(el('div', 'help', f.help));
+  if (f.calcNote) box.appendChild(el('div', 'calcnote'));
+  S.nodes[f.id] = box;
+  return box;
+}
+
+var saveT;
+function setVal(f, v, advance) {
+  S.touched = true;
+  if (v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length))
+    delete S.values[f.id];
+  else S.values[f.id] = v;
+  S.nodes[f.id] && S.nodes[f.id].classList.remove('invalid');
+  if (S.sets) pruneDependentValues();
+  applyVisibility();
+  updateSummary();
+  clearTimeout(saveT);
+  saveT = setTimeout(function () {
+    store(DRAFT_KEY, { key: S.form.key, values: S.values, at: Date.now() });
+  }, 400);
+  if (S.form.dynamicBundle && f.id === 'bundle') loadBundleSlabs(v);
+  /* Bag Invoice: a new material or supplier is a different list of bags;
+     a new invoice weight only moves the comparison. */
+  var bf = bagField();
+  if (bf && f.id !== bf.id) {
+    if ((bf.dependsOn || []).indexOf(f.id) !== -1) loadInvoiceBags(false);
+    else if (f.id === bf.weightOf) drawBagTotals();
+  }
+  if (usedField()) checkUsedBag();
+  applyLink(f, v);
+  applySum(f);
+  applyCalcNote(f);
+  if (advance) setTimeout(function () { advanceFrom(f.id); }, 120);
+}
+
+/**
+ * A total that adds itself up.
+ *
+ * A field carrying `sumOf` holds the sum of the fields it names, recomputed as
+ * each of them is typed. It is an ordinary input, not a readonly box, because
+ * a recipe occasionally does not add up and the operator has to be able to
+ * record that — so the moment somebody types into it themselves it locks and
+ * this stops touching it. Clearing it hands it back.
+ *
+ * Only the operator reaches setVal; a draft restore and the prefill bar both
+ * go through applyToControl, so neither trips the lock and neither has its
+ * stored total overwritten by a recomputation.
+ */
+/* A sumOf entry is either a plain field id or {id, times}. */
+function sumTermId(t)    { return (t && t.id !== undefined) ? t.id : t; }
+function sumTermTimes(t) { var n = (t && t.times); return isFinite(n) && n ? n : 1; }
+function sumTermFor(target, id) {
+  for (var i = 0; i < target.sumOf.length; i++)
+    if (sumTermId(target.sumOf[i]) === id) return target.sumOf[i];
+  return null;
+}
+
+/**
+ * A field carrying calcNote shows what its value works out to, live, under the
+ * box — "White paste  30 kg  (TiO2 × 3)". It is a reminder, not an input:
+ * nothing stores it, and the sum and the Costing tab both do the arithmetic
+ * themselves. It exists so the person filling the form can see the number they
+ * are implying, rather than trusting that something downstream multiplies
+ * correctly.
+ */
+function applyCalcNote(f) {
+  if (!f || !f.calcNote) return;
+  var box = S.nodes[f.id];
+  if (!box) return;
+  var el2 = box.querySelector('.calcnote');
+  if (!el2) return;
+  var raw = S.values[f.calcNote.of || f.id];
+  var x = parseFloat(raw);
+  if (raw === undefined || raw === '' || isNaN(x)) { el2.textContent = ''; el2.classList.remove('on'); return; }
+  var v = Math.round(x * (f.calcNote.times || 1) * 1000) / 1000;
+  el2.textContent = (f.calcNote.label || 'Works out to') + ' ' + v +
+    (f.calcNote.unit ? ' ' + f.calcNote.unit : '') +
+    (f.calcNote.formula ? '  ·  ' + f.calcNote.formula : '');
+  el2.classList.add('on');
+}
+
+/** Every calcNote on the form, redrawn from the values as they stand now. */
+function refreshCalcNotes() {
+  if (!S.form) return;
+  S.form.sections.forEach(function (sec) {
+    sec.fields.forEach(function (fl) { if (fl.calcNote) applyCalcNote(fl); });
+  });
+}
+
+function applySum(f) {
+  if (f && f.sumOf) {                       // they typed in the total itself
+    var own = S.values[f.id];
+    if (own === undefined || own === '') delete S.sumLock[f.id];
+    else S.sumLock[f.id] = true;
+    return;
+  }
+  var changed = false;
+  S.form.sections.forEach(function (sec) {
+    sec.fields.forEach(function (t) {
+      if (!t.sumOf || S.sumLock[t.id]) return;
+      if (f && !sumTermFor(t, f.id)) return;
+
+      var n = 0, any = false;
+      t.sumOf.forEach(function (term) {
+        var id = sumTermId(term);
+        var raw = S.values[id];
+        if (raw === undefined || raw === '') return;
+        var x = parseFloat(raw);
+        if (isNaN(x)) return;
+        /* A term can carry a multiplier. TiO2 goes into the Formula Form's
+           total three times over, because what ends up in the slab is the
+           white paste made from it, not the powder. */
+        n += x * sumTermTimes(term); any = true;
+      });
+      /* Three decimals, then trimmed: adding 0.1 to 0.2 in binary gives
+         0.30000000000000004, and nobody wants that in a kilogram column. */
+      var out = any ? String(Math.round(n * 1000) / 1000) : '';
+      if ((S.values[t.id] || '') === out) return;
+
+      applyToControl(t.id, out);
+      if (!out) delete S.values[t.id];
+      changed = true;
+      var node = S.nodes[t.id];
+      if (!node) return;
+      node.classList.remove('invalid');
+      node.classList.add('flash');
+      setTimeout(function () { node.classList.remove('flash'); }, 900);
+    });
+  });
+  if (changed) updateSummary();
+}
+
+/**
+ * Design code and design name are two views of one choice, so picking either
+ * fills the other. Only pairs the schema is sure about are mapped; a value
+ * with no partner leaves the other field alone rather than clearing something
+ * the operator typed.
+ */
+function applyLink(f, v) {
+  if (!f.fills || !v || Array.isArray(v)) return;
+  var maps = S.form.maps || {};
+  var table = maps[f.fills.map];
+  if (!table) return;
+  var partner = table[v];
+  if (!partner) return;
+  var other = f.fills.field;
+  if (!S.nodes[other] || S.values[other] === partner) return;
+
+  applyToControl(other, partner);
+  var node = S.nodes[other];
+  node.classList.add('flash');
+  setTimeout(function () { node.classList.remove('flash'); }, 1500);
+  updateSummary();
+}
+
+/** Move the operator to the next field that still needs them. */
+function advanceFrom(id) {
+  var af = activeFields(), i = -1;
+  for (var k = 0; k < af.length; k++) if (af[k].id === id) { i = k; break; }
+  for (var j = i + 1; j < af.length; j++) {
+    var f = af[j], v = S.values[f.id];
+    var empty = v === undefined || v === '' || (Array.isArray(v) && !v.length);
+    if (!empty) continue;
+    var node = S.nodes[f.id];
+    if (!node) continue;
+    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    var inp = node.querySelector('input.input,textarea.input');
+    if (inp && !isPhone()) inp.focus();
+    return;
+  }
+}
+
+/* --- text / number / time / textarea --- */
+function buildText(f, area) {
+  var n = el(area ? 'textarea' : 'input', 'input');
+  n.id = 'f_' + f.id;
+  if (!area) {
+    n.type = f.type === 'time' ? 'time' : (f.type === 'date' ? 'date' : 'text');
+    /* A production summary is filled at the end of the shift it describes
+       nine times out of ten, so today is the right starting point — and a
+       date box left at today by accident is a far smaller problem than one
+       left empty, which the server refuses and the operator has to come back
+       to. It is still a picker: any date can be chosen. */
+    if (f.type === 'date' && f.defaultToday && !S.values[f.id]) {
+      var t0 = new Date();
+      n.value = t0.getFullYear() + '-' +
+        ('0' + (t0.getMonth() + 1)).slice(-2) + '-' + ('0' + t0.getDate()).slice(-2);
+      S.values[f.id] = n.value;
+    }
+    if (f.type === 'number') {
+      /* type=text + inputmode gives the numeric keypad without the spinner,
+         the scroll-wheel accidents, or Android's locale problems. */
+      n.inputMode = f.integer ? 'numeric' : 'decimal';
+      n.pattern = f.integer ? '[0-9]*' : '[0-9]*[.,]?[0-9]*';
+      n.classList.add('mono');
+      /* And nothing else gets in. A bag number typed as "12A" or a weight as
+         "45 kg" reaches the sheet as text and every sum built on the column
+         silently stops counting it, so the keystroke is refused here rather
+         than explained after submitting. A hardware keyboard, a paste, a
+         phone keypad and an emoji all come through this one path. */
+      n.addEventListener('input', function () {
+        var was = n.value;
+        var ok = numClean(f, was);
+        if (f.integer && was.indexOf('.') !== -1) {
+          toast(f.label + ': whole numbers only — no decimal point.', 'bad');
+        }
+        if (ok !== was) {
+          var at = n.selectionStart - (was.length - ok.length);
+          n.value = ok;
+          try { n.setSelectionRange(at, at); } catch (e) {}
+        }
+      });
+    }
+    n.enterKeyHint = 'next';
+  }
+  n.autocomplete = 'off'; n.autocapitalize = area ? 'sentences' : 'characters';
+  n.addEventListener('input', function () { setVal(f, n.value.trim()); });
+  n.addEventListener('change', function () { setVal(f, n.value.trim()); });
+  if (!area) n.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); n.blur(); advanceFrom(f.id); }
+  });
+  return n;
+}
+
+/**
+ * The list a field should offer right now.
+ *
+ * Most fields have one list. A field with `optionsWhen` has one per answer to
+ * the field it follows — Supplier Code shows grit codes for a grit bag and
+ * filler codes for a filler bag — and the sets travel with the form, so
+ * switching lists needs no round trip.
+ */
+function optsFor(f) {
+  if (f && f.optionsWhen) {
+    var def = (S.sets || {})[f.id];
+    if (!def) return [];
+    return def.sets[String(S.values[def.on] || '')] || [];
+  }
+  return S.opts[f.id] || [];
+}
+
+/**
+ * When the controlling answer changes, a value chosen from the old list is no
+ * longer a legal answer. Dropping it is the honest thing: leaving a filler code
+ * showing under Material = Grit reads as accepted.
+ */
+function pruneDependentValues() {
+  if (!S.sets || !S.form) return;
+  Object.keys(S.sets).forEach(function (id) {
+    var v = S.values[id];
+    if (!v) return;
+    var f = fieldById(id);
+    if (!f) return;
+    if (optsFor(f).indexOf(v) !== -1) return;
+    delete S.values[id];
+    var node = S.nodes[id] && S.nodes[id].querySelector('[data-ctl]');
+    if (node && node._set) node._set('');
+  });
+}
+
+/* --- radio as pills --- */
+function buildPills(f) {
+  var opts = optsFor(f);
+  var longest = opts.reduce(function (m, o) { return Math.max(m, o.length); }, 0);
+  var mode = (longest <= 4 && opts.length <= 6) ? ' seg'
+           : (longest > 12 ? ' stack' : '');
+  var wrap = el('div', 'pills' + mode);
+  opts.forEach(function (o) {
+    var p = el('button', 'pill', o);
+    p.type = 'button';
+    p.onclick = function () {
+      buzz();
+      var already = S.values[f.id] === o;
+      [].forEach.call(wrap.children, function (c) { c.classList.remove('on'); });
+      if (already && !f.required) { setVal(f, ''); return; }
+      p.classList.add('on');
+      setVal(f, o, true);
+    };
+    wrap.appendChild(p);
+  });
+  wrap.dataset.ctl = 'pills';
+  return wrap;
+}
+
+/* --- single select --- */
+function buildPick(f) {
+  var b = el('button', 'pick');
+  b.type = 'button'; b.id = 'f_' + f.id;
+  b.dataset.ctl = 'pick';
+  b.innerHTML = '<span class="ph">Tap to choose</span>';
+  b.onclick = function () {
+    var list = optsFor(f);
+    if (!list.length) {
+      var dep = f.optionsWhen && fieldById(f.optionsWhen);
+      toast(dep ? 'Choose ' + dep.label + ' first.'
+                : 'No options available for ' + f.label + ' yet.', 'bad');
+      return;
+    }
+    openPicker({
+      title: f.label, options: list, selected: S.values[f.id],
+      onDone: function (v) { b._set(v); setVal(f, v, true); }
+    });
+  };
+  b._set = function (v) {
+    if (v) { b.textContent = v; b.classList.add('set'); }
+    else { b.innerHTML = '<span class="ph">Tap to choose</span>'; b.classList.remove('set'); }
+  };
+  return b;
+}
+
+/* --- multi select: rendered straight into the form, no dialog --- */
+function buildMulti(f) {
+  var wrap = el('div', 'checklist');
+  wrap.dataset.ctl = 'multi';
+
+  var searchRow = el('div', 'ck-search');
+  var search = el('input');
+  search.type = 'text';
+  search.placeholder = 'Search…';
+  search.autocomplete = 'off';
+  search.spellcheck = false;
+  search.id = 'f_' + f.id;
+  searchRow.appendChild(search);
+
+  var list = el('div', 'ck-list');
+  var foot = el('div', 'ck-foot');
+  var cnt = el('span', 'ck-cnt');
+  var allBtn = el('button', 'link');
+  allBtn.type = 'button';
+  foot.appendChild(cnt);
+  foot.appendChild(allBtn);
+
+  wrap.appendChild(searchRow);
+  wrap.appendChild(list);
+  wrap.appendChild(foot);
+
+  var expanded = false;
+  var CAP = 30;                       // render this many before "Show all"
+
+  function opts() { return optsFor(f); }
+  function sel()  { return S.values[f.id] || []; }
+
+  function draw() {
+    var all = opts();
+    var q = search.value.trim();
+    var shown = q ? all.filter(function (o) {
+      return o.toLowerCase().indexOf(q.toLowerCase()) !== -1;
+    }) : all;
+
+    /* the search box only earns its space on a long list */
+    searchRow.style.display = all.length > 12 ? '' : 'none';
+
+    list.innerHTML = '';
+    if (!all.length) {
+      list.appendChild(el('div', 'ck-empty',
+        f.dynamic ? 'Pick a bundle first.' : 'No options available yet.'));
+    } else if (!shown.length) {
+      list.appendChild(el('div', 'ck-empty', 'Nothing matches \u201C' + q + '\u201D'));
+    } else {
+      var cut = (!expanded && !q && shown.length > CAP) ? CAP : shown.length;
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < cut; i++) {
+        var o = shown[i];
+        var on = sel().indexOf(o) !== -1;
+        var row = el('label', 'chk' + (on ? ' on' : '') + (isCode(o) ? '' : ' wide'));
+        var box = el('input');
+        box.type = 'checkbox';
+        box.checked = on;
+        box.value = o;
+        row.appendChild(box);
+        var t = el('span', 'chk-t');
+        t.innerHTML = highlight(o, q);
+        row.appendChild(t);
+        frag.appendChild(row);
+      }
+      list.appendChild(frag);
+      if (cut < shown.length) {
+        var more = el('button', 'ck-more', 'Show all ' + shown.length);
+        more.type = 'button';
+        more.onclick = function () { expanded = true; draw(); };
+        list.appendChild(more);
+      }
+    }
+
+    cnt.textContent = all.length
+      ? sel().length + ' of ' + all.length + ' selected'
+      : '';
+    allBtn.textContent = (all.length && sel().length === all.length) ? 'Clear all' : 'Select all';
+    allBtn.style.display = all.length > 1 ? '' : 'none';
+  }
+
+  list.addEventListener('change', function (e) {
+    var box = e.target;
+    if (!box || box.type !== 'checkbox') return;
+    var cur = sel().slice();
+    var i = cur.indexOf(box.value);
+    if (box.checked && i < 0) cur.push(box.value);
+    if (!box.checked && i >= 0) cur.splice(i, 1);
+    box.closest('.chk').classList.toggle('on', box.checked);
+    buzz();
+    setVal(f, cur);
+    cnt.textContent = (opts().length ? cur.length + ' of ' + opts().length + ' selected' : '');
+    allBtn.textContent = (cur.length && cur.length === opts().length) ? 'Clear all' : 'Select all';
+  });
+
+  allBtn.onclick = function () {
+    setVal(f, sel().length === opts().length ? [] : opts().slice());
+    draw();
+  };
+  search.addEventListener('input', draw);
+
+  wrap._redraw = draw;
+  wrap._set = function (v) { S.values[f.id] = v || []; draw(); };
+  draw();
+  return wrap;
+}
+
+/* ============================================== grade reporting ========= */
+/*
+ * Two things here are unlike every other form in the app.
+ *
+ * The slab is picked as a PICTURE — six boxes, two rows of three, the drawing
+ * the shop floor already uses. Asking "which section" as a dropdown of the
+ * numbers 1 to 6 would make the supervisor translate between the slab in front
+ * of them and a list, which is exactly the step that gets it wrong.
+ *
+ * And the body of the form does not exist until they tap. One block appears
+ * per section, each with its own photos, defects, responsible area, reason and
+ * solution. Untapping a section takes its block away and, with it, anything
+ * typed into it — so the tap is confirmed first if there is anything to lose.
+ *
+ * Value shape:
+ *   values.fullSlab = true            (the whole-slab block, keyed 'F')
+ *   values.sections = [1, 4]
+ *   values.sec = { 'F': {...}, '1': {photos:[], videos:[], defects:[], area,
+ *                  areaOther, reason, solution}, '4': {...} }
+ */
+
+function secBag(n) {
+  S.values.sec = S.values.sec || {};
+  if (!S.values.sec[n]) {
+    S.values.sec[n] = { photos: [], videos: [], defects: [], area: '',
+                        areaOther: '', reason: '', solution: '' };
+  }
+  return S.values.sec[n];
+}
+function secPicked() { return (S.values.sections || []).slice().sort(function (a, b) { return a - b; }); }
+
+/* The whole-slab block is a section like any other as far as the blocks, the
+   validation and the sheet are concerned — it simply has a letter for a number
+   so it cannot collide with 1-6 and sorts to the front. */
+var SEC_FULL = 'F';
+function fullOn() { return !!S.values.fullSlab; }
+function secList() {
+  return (fullOn() ? [SEC_FULL] : []).concat(secPicked());
+}
+function secTitle(n) {
+  if (isPhotoBag(n)) { var fd = fieldById(String(n).slice(2)); return fd ? fd.label : 'this question'; }
+  return n === SEC_FULL ? 'Full Slab' : 'Section ' + n;
+}
+function secChip(n)  { return n === SEC_FULL ? '\u25A0' : String(n); }
+function secHasContent(n) {
+  var d = (S.values.sec || {})[n];
+  if (!d) return false;
+  return !!(d.photos.length || d.videos.length || d.defects.length ||
+            d.area || d.areaOther || d.reason || d.solution);
+}
+
+/* ---- Full Slab ---------------------------------------------------------- */
+/*
+ * A single checkbox, not a pill pair: it is one thing that is either true or
+ * not, and a Yes/No pair for that reads as a question the supervisor has to
+ * answer before moving on. Ticking it adds a block; it locks nothing.
+ */
+function buildToggle(f) {
+  var lab = el('label', 'chk toggle');
+  lab.dataset.ctl = 'toggle';
+  var input = document.createElement('input');
+  input.type = 'checkbox';
+  input.id = 'f_' + f.id;
+  lab.appendChild(input);
+  lab.appendChild(el('span', 'chk-t', f.label));
+
+  input.onchange = function () {
+    if (!input.checked && secHasContent(SEC_FULL) &&
+        !confirm('The Full Slab block already has details filled in. Remove it?')) {
+      input.checked = true;
+      return;
+    }
+    if (!input.checked && S.values.sec) delete S.values.sec[SEC_FULL];
+    buzz();
+    setVal(f, input.checked);
+    renderSectionBlocks();
+  };
+
+  lab._paint = function () { input.checked = !!S.values[f.id]; };
+  lab._set = function (v) {
+    S.values[f.id] = !!v;
+    if (!S.values[f.id] && S.values.sec) delete S.values.sec[SEC_FULL];
+    lab._paint();
+    renderSectionBlocks();
+  };
+  lab._paint();
+  return lab;
+}
+
+/* ---- the slab diagram -------------------------------------------------- */
+function buildSlabMap(f) {
+  var wrap = el('div', 'slabmap');
+  wrap.dataset.ctl = 'slabmap';
+  wrap.id = 'f_' + f.id;
+
+  var grid = el('div', 'sm-grid');
+  [1, 2, 3, 4, 5, 6].forEach(function (n) {
+    var b = el('button', 'sm-cell');
+    b.type = 'button';
+    b.dataset.n = n;
+    b.setAttribute('aria-pressed', 'false');
+    b.appendChild(el('span', 'sm-n', String(n)));
+    b.onclick = function () { toggleSection(f, n); };
+    grid.appendChild(b);
+  });
+  wrap.appendChild(grid);
+  /* No hint of its own: the field's help line already says this, and two
+     copies of the same sentence under one control reads as a mistake. */
+
+  wrap._paint = function () {
+    var on = S.values[f.id] || [];
+    [].forEach.call(grid.children, function (c) {
+      var sel = on.indexOf(+c.dataset.n) !== -1;
+      c.classList.toggle('on', sel);
+      c.setAttribute('aria-pressed', sel ? 'true' : 'false');
+    });
+  };
+  wrap._set = function (v) {
+    S.values[f.id] = (Array.isArray(v) ? v : []).map(Number)
+      .filter(function (n) { return n >= 1 && n <= 6; });
+    wrap._paint();
+    renderSectionBlocks();
+  };
+  wrap._paint();
+  return wrap;
+}
+
+function toggleSection(f, n) {
+  var cur = (S.values[f.id] || []).slice();
+  var i = cur.indexOf(n);
+  if (i >= 0) {
+    /* Untapping throws away a block that may already hold photos and typing,
+       so it asks first rather than quietly deleting the work. */
+    if (secHasContent(n) &&
+        !confirm('Section ' + n + ' already has details filled in. Remove it?')) return;
+    cur.splice(i, 1);
+    if (S.values.sec) delete S.values.sec[n];
+  } else {
+    cur.push(n);
+  }
+  cur.sort(function (a, b) { return a - b; });
+  buzz();
+  setVal(f, cur);
+  var node = S.nodes[f.id] && S.nodes[f.id].querySelector('.slabmap');
+  if (node) node._paint();
+  renderSectionBlocks();
+}
+
+/* ---- one block per selected section ------------------------------------ */
+function renderSectionBlocks() {
+  var host = $('#secBlocks');
+  if (!host) {
+    host = el('div', null, '');
+    host.id = 'secBlocks';
+    $('#sections').appendChild(host);
+  }
+  var want = secList();
+  var sig = want.join(',');
+  if (host.dataset.sig === sig) return;      // only the shape triggers a rebuild
+  host.dataset.sig = sig;
+
+  /* Keep the blocks that are staying, so a photo uploading in section 1 is not
+     torn out of the page because section 4 was just tapped. */
+  var keep = {};
+  [].forEach.call(host.children, function (c) { keep[c.dataset.sec] = c; });
+  host.innerHTML = '';
+  want.forEach(function (n) {
+    host.appendChild(keep[n] || buildSectionBlock(n));
+  });
+  updateSummary();
+}
+
+function buildSectionBlock(n) {
+  var box = el('div', 'sec secblock' + (n === SEC_FULL ? ' fullslab' : ''));
+  box.dataset.sec = n;
+
+  var h = el('div', 'sec-h');
+  h.appendChild(el('span', 'n', secChip(n)));
+  h.appendChild(el('h2', null, secTitle(n)));
+  var x = el('button', 'sb-x', '✕');
+  x.type = 'button';
+  x.setAttribute('aria-label', 'Remove ' + secTitle(n));
+  x.onclick = function () {
+    if (n === SEC_FULL) {
+      var ft = fieldById('fullSlab');
+      var node = ft && S.nodes.fullSlab && S.nodes.fullSlab.querySelector('[data-ctl="toggle"]');
+      if (secHasContent(SEC_FULL) &&
+          !confirm('The Full Slab block already has details filled in. Remove it?')) return;
+      if (S.values.sec) delete S.values.sec[SEC_FULL];
+      if (ft) setVal(ft, false);
+      if (node) node._paint();
+      renderSectionBlocks();
+      return;
+    }
+    var f = fieldById('sections');
+    if (f) toggleSection(f, n);
+  };
+  h.appendChild(x);
+  box.appendChild(h);
+
+  var fields = el('div', 'fields');
+  (S.form.sectionTemplate || []).forEach(function (t) {
+    fields.appendChild(buildSectionField(n, t));
+  });
+  box.appendChild(fields);
+  return box;
+}
+
+function fieldById(id) {
+  var out = null;
+  S.form.sections.forEach(function (s) {
+    s.fields.forEach(function (f) { if (f.id === id) out = f; });
+  });
+  return out;
+}
+
+/** A field inside a section block. Writes into values.sec[n][id]. */
+function buildSectionField(n, t) {
+  var bag = secBag(n);
+  var box = el('div', 'field');
+  box.dataset.sfid = n + '.' + t.id;
+
+  /* "Which area?" only earns its space once Other has been chosen. */
+  if (t.id === 'areaOther') box.classList.add('sf-other');
+
+  var lab = el('label');
+  lab.textContent = t.label;
+  if (t.required) lab.appendChild(el('span', 'req', '*'));
+  box.appendChild(lab);
+
+  var ctl;
+  if (t.type === 'media')          ctl = buildSectionMedia(n, t);
+  else if (t.type === 'checkbox')  ctl = buildSectionChecks(n, t);
+  else if (t.type === 'select')    ctl = buildSectionPick(n, t);
+  else                             ctl = buildSectionText(n, t);
+  box.appendChild(ctl);
+  if (t.help) box.appendChild(el('div', 'help', t.help));
+
+  S.secNodes[n + '.' + t.id] = box;
+  return box;
+}
+
+function secChanged(n) {
+  S.values.sec = S.values.sec || {};
+  if (isPhotoBag(n)) { S.touched = true; syncPhotoField(n); }
+  clearTimeout(S.secSaveT);
+  S.secSaveT = setTimeout(function () {
+    store(DRAFT_KEY, { key: S.form.key, values: S.values, at: Date.now() });
+  }, 400);
+  /* "Which area?" appears, and becomes required, only once Other is chosen —
+     the validator already refuses a blank one, so the star has to match. */
+  var other = S.secNodes[n + '.areaOther'];
+  if (other) {
+    var on = secBag(n).area === OTHER_AREA();
+    other.classList.toggle('on', on);
+    var lab = other.querySelector('label');
+    var star = lab && lab.querySelector('.req');
+    if (on && !star) lab.appendChild(el('span', 'req', '*'));
+    if (!on && star) star.remove();
+  }
+  updateSummary();
+}
+
+function OTHER_AREA() {
+  var t = (S.form.sectionTemplate || []).filter(function (x) { return x.id === 'area'; })[0];
+  var o = (t && t.options) || [];
+  return o.length ? o[o.length - 1] : '';
+}
+
+function buildSectionText(n, t) {
+  var bag = secBag(n);
+  var i = el(t.type === 'textarea' ? 'textarea' : 'input', 'input');
+  if (t.type !== 'textarea') i.type = 'text';
+  if (t.type === 'textarea') i.rows = 2;
+  i.value = bag[t.id] || '';
+  i.placeholder = t.id === 'reason' ? 'What caused it?'
+                : t.id === 'solution' ? 'What will be done about it?' : '';
+  i.oninput = function () { bag[t.id] = this.value; secChanged(n); };
+  return i;
+}
+
+function buildSectionPick(n, t) {
+  var bag = secBag(n);
+  var b = el('button', 'pick');
+  b.type = 'button';
+  b.dataset.ctl = 'pick';
+  function paint() {
+    if (bag[t.id]) { b.textContent = bag[t.id]; b.classList.add('set'); }
+    else { b.innerHTML = '<span class="ph">Tap to choose</span>'; b.classList.remove('set'); }
+  }
+  b.onclick = function () {
+    openPicker({
+      title: secTitle(n) + ' \u2014 ' + t.label,
+      options: t.options || [],
+      selected: bag[t.id],
+      onDone: function (v) { bag[t.id] = v; paint(); secChanged(n); }
+    });
+  };
+  paint();
+  return b;
+}
+
+/*
+ * Eighteen defects rendered inline is nine hundred pixels per section, and six
+ * sections is five thousand pixels of scrolling before you reach Submit. They
+ * go in the picker sheet instead — full height, searchable, tick several, Done
+ * — and the block keeps one line showing what was chosen.
+ */
+function buildSectionChecks(n, t) {
+  var bag = secBag(n);
+  var wrap = el('div', 'chips');
+  wrap.dataset.ctl = 'chips';
+
+  var b = el('button', 'pick');
+  b.type = 'button';
+  var shown = el('div', 'chip-row');
+
+  function paint() {
+    var v = bag[t.id] || [];
+    if (v.length) {
+      b.textContent = v.length + ' of ' + (t.options || []).length + ' chosen';
+      b.classList.add('set');
+    } else {
+      b.innerHTML = '<span class="ph">Tap to choose</span>';
+      b.classList.remove('set');
+    }
+    shown.innerHTML = '';
+    v.forEach(function (d) {
+      var c = el('span', 'chip-t', d);
+      var x = el('button', 'chip-x', '✕');
+      x.type = 'button';
+      x.setAttribute('aria-label', 'Remove ' + d);
+      x.onclick = function (ev) {
+        ev.stopPropagation();
+        var i = bag[t.id].indexOf(d);
+        if (i >= 0) bag[t.id].splice(i, 1);
+        buzz(); paint(); secChanged(n);
+      };
+      c.appendChild(x);
+      shown.appendChild(c);
+    });
+  }
+
+  b.onclick = function () {
+    openPicker({
+      title: secTitle(n) + ' \u2014 ' + t.label,
+      options: t.options || [],
+      multi: true,
+      selected: bag[t.id],
+      onDone: function (v) {
+        bag[t.id] = Array.isArray(v) ? v : [];
+        paint(); secChanged(n);
+      }
+    });
+  };
+
+  wrap.appendChild(b);
+  wrap.appendChild(shown);
+  paint();
+  return wrap;
+}
+
+/* ---- photos and video -------------------------------------------------- */
+/*
+ * Each file is downscaled in the browser and uploaded on its own, straight
+ * away, rather than travelling with the submission. A 4MB phone photo becomes
+ * about 300KB; six of them in one submit request is a minute of plant wifi and
+ * a timeout that loses everything typed as well.
+ */
+/* ======================================================================== */
+/*  PHOTOS                                                                   */
+/*                                                                           */
+/*  Three rules learned the hard way:                                        */
+/*                                                                           */
+/*  1. One upload at a time. Four at once meant four simultaneous Drive       */
+/*     writes from one user, which Drive answers by going slow rather than by */
+/*     failing, and four races to create the same folder.                     */
+/*  2. Every upload can end. It succeeds, or it fails and says so with a      */
+/*     Retry on the thumbnail. "Still going" is not an end state.             */
+/*  3. The strip is found when it is painted, never captured in a closure. A  */
+/*     block rebuilt mid-upload used to leave a finished photo spinning on a  */
+/*     node no longer on the page.                                            */
+/* ======================================================================== */
+
+/* The File objects live here, not on the record: a record is serialised into
+   the saved draft, and a File would go in as {} and come back as nothing.
+   A camera file is 3-5MB, and holding four of them while the camera app also
+   wants memory is how Android decides to throw this tab away. So the moment a
+   photo has been prepared for sending, the File is released and only the
+   compressed bytes are kept — a tenth of the size, and enough to retry from. */
+var UPFILES = {};
+var UPDATA  = {};
+var UPKEY = 0;
+
+function upDrop(k) { delete UPFILES[k]; delete UPDATA[k]; }
+
+var UPQ = { jobs: [], busy: false };
+function upPush(job) { UPQ.jobs.push(job); upPump(); }
+function upPump() {
+  if (UPQ.busy || !UPQ.jobs.length) return;
+  UPQ.busy = true;
+  var job = UPQ.jobs.shift();
+  var done = function () { UPQ.busy = false; setTimeout(upPump, 0); };
+  try { job().then(done, done); } catch (e) { done(); }
+}
+
+/** Repaint one section's media strip, wherever it is on the page right now. */
+function mediaPaint(n) {
+  var box = document.querySelector('.secblock[data-sec="' + cssEsc(n) + '"] .media') ||
+            document.querySelector('.media[data-mbag="' + cssEsc(n) + '"]');
+  if (box && box._paint) box._paint();
+}
+function cssEsc(v) { return String(v).replace(/"/g, '\\"'); }
+
+function mediaBusy(m) { return m.state === 'up'; }
+function mediaBad(m)  { return m.state === 'fail'; }
+
+function buildSectionMedia(n, t) {
+  var lim = t.limits || { photos: 4, videos: 1, edge: 1600, quality: .72,
+                          videoSeconds: 15, videoMb: 12 };
+
+  var wrap = el('div', 'media');
+  var strip = el('div', 'md-strip');
+  var bar = el('div', 'md-bar');
+
+  var photoBtn = el('button', 'md-add');
+  photoBtn.type = 'button';
+  photoBtn.innerHTML = '<span class="md-ic">▣</span><b>Take photo</b>';
+  var vidBtn = el('button', 'md-add ghost');
+  vidBtn.type = 'button';
+  vidBtn.innerHTML = '<span class="md-ic">▶</span><b>Video</b>';
+
+  var photoIn = el('input');
+  photoIn.type = 'file';
+  photoIn.accept = 'image/*';
+  photoIn.capture = 'environment';
+  photoIn.multiple = true;
+  photoIn.hidden = true;
+
+  var vidIn = el('input');
+  vidIn.type = 'file';
+  vidIn.accept = 'video/*';
+  vidIn.capture = 'environment';
+  vidIn.hidden = true;
+
+  bar.appendChild(photoBtn);
+  if (lim.videos > 0) bar.appendChild(vidBtn);
+  wrap.appendChild(strip);
+  wrap.appendChild(bar);
+  wrap.appendChild(photoIn);
+  wrap.appendChild(vidIn);
+
+  photoBtn.onclick = function () { photoIn.click(); };
+  vidBtn.onclick = function () { vidIn.click(); };
+
+  function paint() {
+    /* Read the bag fresh: unticking and re-ticking a section replaces it. */
+    var bag = secBag(n);
+    strip.innerHTML = '';
+    bag.photos.concat(bag.videos).forEach(function (m) {
+      var cell = el('div', 'md-thumb' + (m.video ? ' vid' : '') +
+                             (mediaBad(m) ? ' bad' : ''));
+      if (m.thumb) {
+        var im = el('img');
+        im.src = m.thumb;
+        im.alt = '';
+        cell.appendChild(im);
+      } else {
+        cell.appendChild(el('span', 'md-play', m.video ? '▶' : '▣'));
+      }
+
+      if (mediaBusy(m)) cell.appendChild(el('span', 'md-wait', ''));
+
+      if (mediaBad(m)) {
+        var again = el('button', 'md-retry');
+        again.type = 'button';
+        again.innerHTML = '<b>↻</b><i>Retry</i>';
+        again.title = m.err || 'Upload failed';
+        again.onclick = function () { mediaRetry(n, m, lim); };
+        cell.appendChild(again);
+      }
+
+      var rm = el('button', 'md-x', '✕');
+      rm.type = 'button';
+      rm.setAttribute('aria-label', 'Remove');
+      rm.onclick = function () {
+        var arr = m.video ? bag.videos : bag.photos;
+        var i = arr.indexOf(m);
+        if (i >= 0) arr.splice(i, 1);
+        upDrop(m.k);
+        mediaPaint(n); secChanged(n);
+      };
+      cell.appendChild(rm);
+      strip.appendChild(cell);
+    });
+
+    var bad = bag.photos.filter(mediaBad).length + bag.videos.filter(mediaBad).length;
+    var note = el('div', 'md-note');
+    if (bad) {
+      note.className = 'md-note bad';
+      note.textContent = bad === 1
+        ? 'One upload did not go through — tap ↻ to send it again, or ✕ to drop it.'
+        : bad + ' uploads did not go through — tap ↻ on each, or ✕ to drop them.';
+      strip.parentNode.insertBefore(note, bar);
+    }
+    var old = wrap.querySelector('.md-note');
+    if (old && old !== note) old.parentNode.removeChild(old);
+
+    photoBtn.disabled = bag.photos.length >= lim.photos;
+    vidBtn.disabled = bag.videos.length >= lim.videos;
+    photoBtn.querySelector('b').textContent = bag.photos.length
+      ? bag.photos.length + ' of ' + lim.photos + ' photos' : 'Take photo';
+  }
+
+  photoIn.onchange = function () {
+    var files = [].slice.call(this.files || []);
+    this.value = '';
+    var bag = secBag(n);
+    var room = lim.photos - bag.photos.length;
+    if (files.length > room) {
+      toast('Only ' + room + ' more photo' + (room === 1 ? '' : 's') +
+            ' fit in ' + secTitle(n) + '.', 'bad');
+      files = files.slice(0, room);
+    }
+    files.forEach(function (file) { addPhoto(n, file, lim); });
+  };
+
+  vidIn.onchange = function () {
+    var file = (this.files || [])[0];
+    this.value = '';
+    if (file) addVideo(n, file, lim);
+  };
+
+  wrap._paint = paint;
+  paint();
+  return wrap;
+}
+
+/* ---- adding, uploading, retrying --------------------------------------- */
+
+function mediaRec(n, file, video) {
+  var rec = { k: 'u' + (++UPKEY), name: file.name || (video ? 'clip.mp4' : 'photo.jpg'),
+              video: !!video, state: 'up', err: '', thumb: '', t0: Date.now() };
+  UPFILES[rec.k] = file;
+  var bag = secBag(n);
+  (video ? bag.videos : bag.photos).push(rec);
+  return rec;
+}
+
+/** Downscale to a JPEG that will actually cross plant wifi, then upload. */
+function addPhoto(n, file, lim) {
+  var rec = mediaRec(n, file, false);
+  mediaPaint(n);
+  upPush(function () { return sendPhoto(n, rec, lim); });
+}
+
+function addVideo(n, file, lim) {
+  var mb = file.size / 1048576;
+  if (mb > lim.videoMb) {
+    toast('That video is ' + Math.round(mb) + 'MB. Keep it under ' +
+          lim.videoSeconds + ' seconds — the limit is ' + lim.videoMb + 'MB.', 'bad');
+    return;
+  }
+  var rec = mediaRec(n, file, true);
+  mediaPaint(n);
+  upPush(function () { return sendVideo(n, rec, lim); });
+}
+
+function mediaRetry(n, rec, lim) {
+  if (!UPDATA[rec.k] && !UPFILES[rec.k]) {
+    toast('That photo is no longer on this phone — remove it and take another.', 'bad');
+    return;
+  }
+  rec.state = 'up'; rec.err = ''; rec.t0 = Date.now();
+  mediaPaint(n);
+  upPush(function () {
+    return rec.video ? sendVideo(n, rec, lim) : sendPhoto(n, rec, lim);
+  });
+}
+
+function mediaFail(n, rec, e) {
+  rec.state = 'fail';
+  rec.err = String((e && e.message) || e || 'Upload failed');
+  mediaPaint(n); secChanged(n);
+  toast((rec.video ? 'Video' : 'Photo') + ' not saved: ' + rec.err +
+        ' — tap ↻ to try again.', 'bad');
+}
+
+function mediaOk(n, rec, res) {
+  rec.state = 'ok';
+  rec.url = res.url;
+  rec.id = res.id;
+  upDrop(rec.k);
+  mediaPaint(n); secChanged(n);
+}
+
+/* 45 seconds. A 25KB photo that has not landed in 45 seconds is not slow, it
+   is lost, and the operator is better served by a Retry button than by a
+   spinner that keeps its promise to nobody. */
+var UPLOAD_TIMEOUT = 45000;
+
+/*
+ * NOTE THE .catch AT THE END, AND NOT .then(ok, err).
+ *
+ * `p.then(onOk, onErr)` does not route a throw from onOk into onErr — it
+ * rejects the promise onOk returned, and with nothing after it that rejection
+ * goes nowhere. That is what the old code did, so a server that answered
+ * {ok:false} — Drive refusing the write, the file over the limit — threw into
+ * the void and left the photo marked "uploading" for the rest of the session,
+ * with no message and no way out. Two different silences, one symptom.
+ */
+/**
+ * Turn whatever the camera produced into the bytes we will send, once.
+ *
+ * Done here rather than inside the retry so a second attempt does not decode a
+ * 12-megapixel JPEG all over again, and so the File can be let go immediately.
+ */
+function mediaPrepare(n, rec, lim) {
+  if (UPDATA[rec.k]) return Promise.resolve(UPDATA[rec.k]);
+  var file = UPFILES[rec.k];
+  if (!file) return Promise.reject(new Error('the file is gone'));
+
+  var work = rec.video
+    ? readAsBase64(file).then(function (b64) {
+        return { base64: b64, mime: file.type || 'video/mp4', preview: '' };
+      })
+    : shrinkImage(file, lim.edge, lim.quality);
+
+  return work.then(function (r) {
+    UPDATA[rec.k] = { base64: r.base64, mime: r.mime };
+    delete UPFILES[rec.k];              // the big one goes now, not at the end
+    if (r.preview) { rec.thumb = r.preview; mediaPaint(n); }
+    return UPDATA[rec.k];
+  });
+}
+
+function sendMedia(n, rec, lim) {
+  return mediaPrepare(n, rec, lim)
+    .then(function (d) {
+      return gsWait(UPLOAD_TIMEOUT, 'api_uploadMedia', S.token, mediaOwner(),
+                    rec.name, d.mime, d.base64);
+    })
+    .then(function (res) {
+      if (!res || !res.ok) throw new Error((res && res.error) || 'Upload failed.');
+      mediaOk(n, rec, res);
+    })
+    .catch(function (e) { mediaFail(n, rec, e); });
+}
+
+function sendPhoto(n, rec, lim) { return sendMedia(n, rec, lim); }
+function sendVideo(n, rec, lim) { return sendMedia(n, rec, lim); }
+
+/**
+ * Draw the photo into a canvas no bigger than `edge` on its longest side and
+ * read it back as JPEG. Phone cameras produce 12 megapixels; nothing about a
+ * chipped edge needs more than about 1600px, and the difference is 4MB versus
+ * 300KB on a connection that has to carry six of them.
+ *
+ * A file that is ALREADY small is sent exactly as it is. Re-encoding a 25KB
+ * photo costs a full decode of whatever the camera produced, gains nothing,
+ * and can even make the file bigger.
+ */
+var SHRINK_SKIP_BYTES = 400 * 1024;
+var PREVIEW_EDGE = 160;          // the thumbnail is 72px; 160 covers a retina one
+
+function shrinkImage(file, edge, quality) {
+  var small = file.size && file.size <= SHRINK_SKIP_BYTES &&
+              /^image\//.test(file.type || '');
+
+  return decodeImage(file).then(function (img) {
+    var out = {};
+    if (small) {
+      /* Already small: send the original bytes. Re-encoding gains nothing and
+         can make the file bigger. */
+      out.mime = file.type || 'image/jpeg';
+      out.base64 = img.dataUrl.split(',')[1];
+    } else {
+      out.mime = 'image/jpeg';
+      out.base64 = drawTo(img.el, edge, quality).split(',')[1];
+    }
+    /* The preview is what goes on screen AND into the saved draft. Holding the
+       full-size data URL there meant roughly 300KB of base64 per photo written
+       to localStorage on a timer; at 160px it is a few KB. */
+    out.preview = drawTo(img.el, PREVIEW_EDGE, 0.6);
+    img.done();
+    return out;
+  }, function (e) {
+    /* A preview is a nicety; being unable to make one must not stop the photo
+       going up. Fall back to sending the file as it is, with no thumbnail. */
+    if (!small) throw e;
+    return readAsDataUrl(file).then(function (d) {
+      return { base64: d.split(',')[1], mime: file.type || 'image/jpeg', preview: '' };
+    });
+  });
+}
+
+function drawTo(img, edge, quality) {
+  var w = img.naturalWidth, h = img.naturalHeight;
+  var scale = Math.min(1, edge / Math.max(w, h));
+  var c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(w * scale));
+  c.height = Math.max(1, Math.round(h * scale));
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', quality);
+}
+
+/**
+ * Decode once, hand back the element and the original data URL.
+ *
+ * A decode that never finishes is the same disease as a call that never
+ * answers, and phones do it with an awkward HEIC or a corrupt frame — so it
+ * gets a deadline too.
+ */
+function decodeImage(file) {
+  return readAsDataUrl(file).then(function (dataUrl) {
+    return new Promise(function (resolve, reject) {
+      var img = new Image();
+      var giveUp = setTimeout(function () {
+        reject(new Error('the photo took too long to open'));
+      }, 20000);
+      img.onload = function () {
+        clearTimeout(giveUp);
+        resolve({ el: img, dataUrl: dataUrl, done: function () { img.src = ''; } });
+      };
+      img.onerror = function () {
+        clearTimeout(giveUp);
+        reject(new Error('That file could not be read as a photo.'));
+      };
+      img.src = dataUrl;
+    });
+  });
+}
+
+function readAsDataUrl(file) {
+  return new Promise(function (resolve, reject) {
+    var fr = new FileReader();
+    fr.onload = function () { resolve(String(fr.result)); };
+    fr.onerror = function () { reject(new Error('That file could not be read.')); };
+    fr.readAsDataURL(file);
+  });
+}
+
+function readAsBase64(file) {
+  return readAsDataUrl(file).then(function (d) { return d.split(',')[1]; });
+}
+
+/**
+ * Coming back from the camera is exactly when a callback goes missing, so that
+ * is when anything still claiming to be in flight gets looked at again.
+ */
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden || !S.form || !S.form.multiSection) return;
+  var now = Date.now();
+  secList().forEach(function (n) {
+    var bag = secBag(n);
+    bag.photos.concat(bag.videos).forEach(function (m) {
+      if (m.state !== 'up') return;
+      /* Not merely slow — the timer itself may have been frozen with the tab. */
+      if (now - m.t0 < UPLOAD_TIMEOUT) return;
+      m.state = 'fail';
+      m.err = 'the phone lost the connection while the camera was open';
+      mediaPaint(n);
+    });
+  });
+});
+
+/* ---- validation for the generated blocks ------------------------------- */
+function missingSectionFields() {
+  if (!S.form || !S.form.multiSection) return [];
+  var out = [];
+  var other = OTHER_AREA();
+  secList().forEach(function (n) {
+    var d = secBag(n);
+    var good = d.photos.filter(function (p) { return p.state === 'ok'; });
+    if (!good.length) out.push({ n: n, id: 'photos', what: 'a photo' });
+    if (d.photos.concat(d.videos).some(mediaBusy)) {
+      out.push({ n: n, id: 'photos', what: 'the upload to finish' });
+    }
+    /* A failed upload is a decision, not a wait: send it again or drop it. */
+    if (d.photos.concat(d.videos).some(mediaBad)) {
+      out.push({ n: n, id: 'photos', what: 'the failed upload retried or removed' });
+    }
+    if (!d.defects.length) out.push({ n: n, id: 'defects', what: 'a defect' });
+    if (!d.area) out.push({ n: n, id: 'area', what: 'the area responsible' });
+    if (d.area === other && !d.areaOther) out.push({ n: n, id: 'areaOther', what: 'the area name' });
+    if (!String(d.reason || '').trim()) out.push({ n: n, id: 'reason', what: 'the reason' });
+    if (!String(d.solution || '').trim()) out.push({ n: n, id: 'solution', what: 'the solution' });
+  });
+  return out;
+}
+
+/* ------------------------------------------------ slab + grade list ----- */
+/*
+ * Dispatch picks fifty or sixty slabs out of about four thousand, on a phone,
+ * by typing slab numbers. That is the whole job, so the picking gets its own
+ * FULL-SCREEN sheet (#slabSheet) and the form keeps only the review of what
+ * has been picked.
+ *
+ * Why a sheet rather than a list inside the form. With the list inline, the
+ * container number and the section headings sit above it, the keyboard covers
+ * the bottom half, and the three or four matches you were aiming for land
+ * underneath it — so every pick meant dismissing the keyboard, tapping, and
+ * bringing it back. In the sheet the search box is the second thing on the
+ * screen and everything below it is matches.
+ *
+ * The sheet is sized from window.visualViewport, not from dvh. dvh does not
+ * shrink when the keyboard opens on iOS, and a bottom-anchored sheet has its
+ * footer behind the keyboard even on Android. --vvh / --vvt (set by syncVV
+ * below) are the real visible height and offset, so the last row of the list
+ * sits exactly on top of the keyboard.
+ *
+ * Ticking a row NEVER rebuilds the list: it toggles that one row. Rebuilding
+ * re-runs the filter, resets the scroll and, on some keyboards, drops focus —
+ * which is the other half of what made this irritating.
+ *
+ * Value shape, unchanged: [{slab, grade}] in the order they were picked.
+ */
+
+/** The visible viewport, in CSS variables. The keyboard is what changes it. */
+function syncVV() {
+  var vv = window.visualViewport;
+  var r = document.documentElement.style;
+  if (!vv) { r.setProperty('--vvh', window.innerHeight + 'px'); r.setProperty('--vvt', '0px'); return; }
+  r.setProperty('--vvh', Math.round(vv.height) + 'px');
+  r.setProperty('--vvt', Math.round(vv.offsetTop) + 'px');
+}
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', syncVV);
+  window.visualViewport.addEventListener('scroll', syncVV);
+}
+window.addEventListener('resize', syncVV);
+syncVV();
+
+var SG_PAGE = 40;
+var GRADES = ['A', 'B', 'C', 'E', 'A#', 'B#'];
+
+/* ---- the card left in the form: what has been picked, and one big button -- */
+function buildSlabGrade(f) {
+  var wrap = el('div', 'sglist');
+  wrap.dataset.ctl = 'slabgrade';
+  if (f.grades && f.grades.length) GRADES = f.grades;
+
+  var add = el('button', 'sg-add');
+  add.type = 'button';
+  add.id = 'f_' + f.id;
+  /* Drawn, not a glyph: the magnifier characters render as a keyhole, a
+     circle or nothing at all depending on the phone's font. */
+  add.innerHTML = '<span class="sg-mag" aria-hidden="true">' +
+                  '<svg viewBox="0 0 24 24" width="19" height="19" fill="none" ' +
+                  'stroke="currentColor" stroke-width="2.4" stroke-linecap="round">' +
+                  '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/>' +
+                  '</svg></span>' +
+                  '<span class="sg-addt"><b>Search and add slabs</b>' +
+                  '<i id="sgAddSub">Opens full screen — type a slab number</i></span>';
+  add.onclick = function () { openSlabPicker(f); };
+  wrap.appendChild(add);
+
+  var head = el('div', 'sg-head');
+  var cnt = el('span', 'sg-cnt', '');
+  var clr = el('button', 'link', 'Clear all');
+  clr.type = 'button';
+  head.appendChild(cnt);
+  head.appendChild(clr);
+  wrap.appendChild(head);
+
+  var list = el('div', 'sg-sel');
+  wrap.appendChild(list);
+
+  function rows() { return S.values[f.id] || []; }
+  function commit(next) {
+    if (next.length) S.values[f.id] = next; else delete S.values[f.id];
+    setVal(f, next);
+    if (!next.length) delete S.values[f.id];
+  }
+
+  function draw() {
+    var r = rows();
+    cnt.textContent = r.length
+      ? r.length + ' slab' + (r.length === 1 ? '' : 's') + ' in this container'
+      : 'No slabs picked yet';
+    head.classList.toggle('empty', !r.length);
+    clr.style.display = r.length ? '' : 'none';
+    var sub = $('#sgAddSub');
+    if (sub) {
+      sub.textContent = SG.loading ? 'Loading the slab list…'
+        : SG.opts.length ? (SG.opts.length - r.length).toLocaleString() +
+                           ' still available — type a slab number'
+                         : 'No slabs are waiting to be dispatched.';
+    }
+
+    list.innerHTML = '';
+    if (!r.length) {
+      list.appendChild(el('div', 'ck-empty', 'Tap the button above to start picking.'));
+      return;
+    }
+    var frag = document.createDocumentFragment();
+    r.forEach(function (x) { frag.appendChild(sgRow(x.slab, x.grade, true, '', true)); });
+    list.appendChild(frag);
+  }
+
+  /* One tap removes a slab here; the grade select changes its grade. This is
+     the review of a finished container, so removing is the useful action. */
+  list.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('.sg-x');
+    if (!b) return;
+    var slab = b.closest('.sg-row').dataset.slab;
+    buzz();
+    commit(rows().filter(function (x) { return x.slab !== slab; }));
+    draw();
+  });
+  list.addEventListener('change', function (e) {
+    var n = e.target;
+    if (!n.classList || !n.classList.contains('sg-g')) return;
+    var slab = n.closest('.sg-row').dataset.slab;
+    commit(rows().map(function (x) {
+      return x.slab === slab ? { slab: slab, grade: n.value } : x;
+    }));
+    draw();
+  });
+  clr.onclick = function () {
+    if (!rows().length) return;
+    if (!confirm('Remove all ' + rows().length + ' slabs from this container?')) return;
+    commit([]);
+    draw();
+  };
+
+  wrap._redraw = draw;
+  wrap._set = function (v) { S.values[f.id] = v || []; draw(); };
+  wrap._field = f;
+  draw();
+  return wrap;
+}
+
+/** One row: slab, grade dropdown immediately to its right, and either a tick
+    box (in the picker) or a remove button (in the form's review list). */
+function sgRow(slab, grade, on, q, removable) {
+  var row = el('label', 'sg-row' + (on ? ' on' : ''));
+  row.dataset.slab = slab;
+
+  if (!removable) {
+    var box = el('input');
+    box.type = 'checkbox';
+    box.checked = on;
+    box.value = slab;
+    row.appendChild(box);
+  }
+
+  var t = el('span', 'sg-s');
+  t.innerHTML = highlight(slab, q || '');
+  row.appendChild(t);
+
+  var qc = SG.qc[slab] || '';
+  var sel = el('select', 'sg-g');
+  sel.appendChild(new Option('grade', ''));
+  GRADES.forEach(function (g) { sel.appendChild(new Option(g, g)); });
+  var cur = on ? (grade || '') : qc;
+  sel.value = GRADES.indexOf(cur) === -1 ? '' : cur;
+  row.appendChild(sel);
+
+  var tag = el('i', 'sg-tag', '');
+  if (on && !sel.value) { row.classList.add('nograde'); tag.textContent = 'grade needed'; }
+  else if (on && qc && sel.value !== qc) { row.classList.add('changed'); tag.textContent = 'changed'; }
+  else if (qc) tag.textContent = 'QC';
+  else tag.textContent = 'no QC grade';
+  row.appendChild(tag);
+
+  if (removable) {
+    var x = el('button', 'sg-x', '✕');
+    x.type = 'button';
+    x.setAttribute('aria-label', 'Remove ' + slab);
+    row.appendChild(x);
+  }
+  return row;
+}
+
+/* ---- the full-screen picker ------------------------------------------- */
+var SB = { field: null, filtered: [], shown: 0, q: '' };
+
+function openSlabPicker(f) {
+  SB.field = f;
+  SB.q = '';
+  $('#sbSearch').value = '';
+  $('#sbClear').classList.remove('on');
+  sbFilter();
+  sheetOpen('#slabSheet', function () { sgCard() && sgCard()._redraw(); });
+  syncVV();
+  /* Focus straight away: typing a slab number IS the task, and the sheet is
+     sized to the visible viewport so the keyboard cannot cover the list. */
+  setTimeout(function () { $('#sbSearch').focus(); syncVV(); }, 120);
+}
+
+function sgCard() { return document.querySelector('.sglist'); }
+function sbRows() { return (SB.field && S.values[SB.field.id]) || []; }
+function sbHas(slab) {
+  var r = sbRows();
+  for (var i = 0; i < r.length; i++) if (r[i].slab === slab) return true;
+  return false;
+}
+function sbCommit(next) {
+  var f = SB.field;
+  if (next.length) S.values[f.id] = next; else delete S.values[f.id];
+  setVal(f, next);
+  if (!next.length) delete S.values[f.id];
+}
+
+function sbFilter() {
+  var q = String(SB.q || '').trim().toUpperCase();
+  SB.filtered = q ? SG.opts.filter(function (sl) { return sl.indexOf(q) !== -1; })
+                  : SG.opts.slice();
+  SB.shown = 0;
+  $('#sbList').innerHTML = '';
+  $('#sbList').scrollTop = 0;
+  sbMore();
+  sbStatus();
+}
+
+function sbMore() {
+  var list = $('#sbList');
+  if (!SG.opts.length) {
+    list.innerHTML = '<div class="opt-empty">' +
+      (SG.loading ? 'Loading slabs…' : 'No slabs are waiting to be dispatched.') + '</div>';
+    return;
+  }
+  if (!SB.filtered.length) {
+    if (!SB.shown) list.innerHTML = '<div class="opt-empty">Nothing matches “' +
+      esc(String(SB.q).trim()) + '”</div>';
+    return;
+  }
+  var end = Math.min(SB.shown + SG_PAGE, SB.filtered.length);
+  var frag = document.createDocumentFragment();
+  for (var i = SB.shown; i < end; i++) {
+    var sl = SB.filtered[i];
+    frag.appendChild(sgRow(sl, sbGrade(sl), sbHas(sl), SB.q, false));
+  }
+  list.appendChild(frag);
+  SB.shown = end;
+}
+
+function sbGrade(slab) {
+  var r = sbRows();
+  for (var i = 0; i < r.length; i++) if (r[i].slab === slab) return r[i].grade;
+  return '';
+}
+
+function sbStatus() {
+  var n = sbRows().length;
+  $('#sbCount').textContent = n;
+  var q = String(SB.q).trim();
+  var strip = $('#sbStrip');
+  if (q) {
+    strip.textContent = SB.filtered.length
+      ? SB.filtered.length.toLocaleString() +
+        (SB.filtered.length === 1 ? ' match — press enter to add it' : ' matches — tap to add')
+      : 'no match';
+  } else {
+    strip.textContent = n
+      ? n + ' picked · ' + (SG.opts.length - n).toLocaleString() + ' still available'
+      : SG.opts.length.toLocaleString() + ' slabs available — type to narrow the list';
+  }
+}
+
+/* Ticking updates ONE row in place. A rebuild here would reset the scroll and
+   can cost the keyboard its focus, which is the whole thing being fixed. */
+function sbToggle(slab, on, row) {
+  var next = sbRows().slice();
+  if (on) {
+    if (!sbHas(slab)) {
+      var g = SG.qc[slab] || '';
+      if (GRADES.indexOf(g) === -1) g = '';
+      var sel = row && row.querySelector('.sg-g');
+      if (sel && sel.value) g = sel.value;
+      next.push({ slab: slab, grade: g });
+    }
+  } else {
+    next = next.filter(function (x) { return x.slab !== slab; });
+  }
+  sbCommit(next);
+  if (row) sbPaint(row, slab, on);
+  sbStatus();
+}
+
+/** Repaint one row's state without touching the rest of the list. */
+function sbPaint(row, slab, on) {
+  var sel = row.querySelector('.sg-g');
+  var tag = row.querySelector('.sg-tag');
+  var box = row.querySelector('input[type=checkbox]');
+  var qc = SG.qc[slab] || '';
+  if (box) box.checked = on;
+  row.classList.toggle('on', on);
+  if (on && sel && !sel.value) {
+    sel.value = GRADES.indexOf(qc) === -1 ? '' : qc;
+  }
+  var v = sel ? sel.value : '';
+  row.classList.toggle('nograde', on && !v);
+  row.classList.toggle('changed', !!(on && qc && v !== qc));
+  if (tag) {
+    tag.textContent = (on && !v) ? 'grade needed'
+      : (on && qc && v !== qc) ? 'changed'
+      : qc ? 'QC' : 'no QC grade';
+  }
+}
+
+$('#sbList').addEventListener('scroll', function () {
+  if (this.scrollTop + this.clientHeight > this.scrollHeight - 300 &&
+      SB.shown < SB.filtered.length) sbMore();
+});
+
+$('#sbList').addEventListener('change', function (e) {
+  var n = e.target;
+  var row = n.closest && n.closest('.sg-row');
+  if (!row) return;
+  var slab = row.dataset.slab;
+
+  if (n.type === 'checkbox') { buzz(); sbToggle(slab, n.checked, row); return; }
+
+  if (n.classList.contains('sg-g')) {
+    /* Setting a grade on a row that is not ticked is a clear intent to add it. */
+    if (!sbHas(slab)) { sbToggle(slab, true, row); return; }
+    sbCommit(sbRows().map(function (x) {
+      return x.slab === slab ? { slab: slab, grade: n.value } : x;
+    }));
+    sbPaint(row, slab, true);
+    sbStatus();
+  }
+});
+
+$('#sbSearch').addEventListener('input', function () {
+  SB.q = this.value;
+  $('#sbClear').classList.toggle('on', !!this.value);
+  sbFilter();
+});
+
+/* Typing a whole slab number and pressing enter adds it and clears the box,
+   ready for the next one — the operator never leaves the keyboard. */
+$('#sbSearch').addEventListener('keydown', function (e) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  if (SB.filtered.length !== 1) return;
+  var slab = SB.filtered[0];
+  if (!sbHas(slab)) { buzz(); sbToggle(slab, true, $('#sbList').querySelector('.sg-row')); }
+  this.value = ''; SB.q = '';
+  $('#sbClear').classList.remove('on');
+  sbFilter();
+});
+
+$('#sbClear').onclick = function () {
+  $('#sbSearch').value = ''; SB.q = '';
+  this.classList.remove('on');
+  sbFilter();
+  $('#sbSearch').focus();
+};
+$('#sbClose').onclick = closeTop;
+$('#sbDone').onclick = closeTop;
+
+/* ------------------------------------------ dispatch candidate list ----- */
+/*
+ * Four thousand slabs and their QC grades, fetched once when the form opens
+ * rather than inlined into the form payload — the form paints immediately and
+ * the list fills in a moment later.
+ */
+var SG = { opts: [], qc: {}, loading: false };
+
+function loadDispatchSlabs(force) {
+  var fld = null;
+  S.form.sections.forEach(function (s) {
+    s.fields.forEach(function (f) { if (f.type === 'slabgrade') fld = f; });
+  });
+  if (!fld) return;
+  if (SG.opts.length && !force) { redrawSlabGrade(); return; }
+
+  SG.loading = true;
+  redrawSlabGrade();
+  gs('api_dispatchSlabs', S.token).then(function (r) {
+    SG.loading = false;
+    if (!r || !r.ok) { toast((r && r.error) || 'Could not load the slab list.', 'bad'); }
+    SG.opts = (r && r.slabs) || [];
+    SG.qc = {};
+    ((r && r.grades) || []).forEach(function (g, i) { if (g) SG.qc[SG.opts[i]] = g; });
+    redrawSlabGrade();
+    updateSummary();
+  }, function (e) { SG.loading = false; redrawSlabGrade(); fail(e); });
+}
+
+function redrawSlabGrade() {
+  var n = document.querySelector('.sglist');
+  if (n && n._redraw) n._redraw();
+}
+
+/* ================================================ trolley bundle slabs == */
+function loadBundleSlabs(bundle) {
+  var fld = null;
+  S.form.sections.forEach(function (s) {
+    s.fields.forEach(function (f) { if (f.dynamic) fld = f; });
+  });
+  if (!fld) return;
+  S.opts[fld.id] = [];
+  delete S.values[fld.id];
+  var ck = S.nodes[fld.id] && S.nodes[fld.id].querySelector('.checklist');
+  if (ck) ck._redraw();
+  if (!bundle) { updateSummary(); return; }
+  if (ck) ck.querySelector('.ck-list').innerHTML =
+    '<div class="ck-empty">Loading slabs…</div>';
+
+  gs('api_bundleSlabs', S.token, bundle).then(function (slabs) {
+    S.opts[fld.id] = slabs || [];
+    if (ck) ck._redraw();
+    if (!slabs || !slabs.length) toast('No slabs listed for ' + bundle + '.', 'bad');
+    updateSummary();
+  }).catch(fail);
+}
+
+/* ===================================================== bag invoice ====== */
+/*
+ * The tick list of bags. It is fetched per material + supplier, because
+ * that pair is the whole filter: the server sends only Bag Form bags of that
+ * material and supplier that are on no invoice yet, with each bag's weight.
+ *
+ * Value shape: values.bags = ['4970', '4971', ...] — numbers only. The
+ * weights stay here in BI.w for the live total; the server reads its own
+ * from the Bag Form when it saves.
+ */
+var BI = { bags: [], w: {}, loading: false, sig: '' };
+
+function bagField() {
+  var out = null;
+  if (S.form) S.form.sections.forEach(function (s) {
+    s.fields.forEach(function (f) { if (f.type === 'bagpick') out = f; });
+  });
+  return out;
+}
+
+/** "12,840 kg" — Indian grouping, at most two decimals. */
+function kg(n) {
+  return (Math.round(Number(n) * 100) / 100).toLocaleString('en-IN') + ' kg';
+}
+
+/**
+ * keep = false: the material or supplier changed, so the old ticks are for
+ * other bags and go. keep = true: a draft, a refresh or a refused save — the
+ * ticks stay wherever the bag is still offered.
+ */
+function loadInvoiceBags(keep) {
+  var f = bagField();
+  if (!f) return;
+  var on = f.dependsOn || [];
+  var mat = S.values[on[0]] || '', sup = S.values[on[1]] || '';
+  var sig = mat + '|' + sup;
+  /* Picking the same supplier again is not a change: do not wipe the ticks. */
+  if (!keep && sig === BI.sig) return;
+  BI.sig = sig;
+  if (!keep) delete S.values[f.id];
+  BI.bags = []; BI.w = {};
+  if (!mat || !sup) { BI.loading = false; redrawBagPick(); updateSummary(); return; }
+
+  BI.loading = true;
+  redrawBagPick();
+  gs('api_invoiceBags', S.token, mat, sup).then(function (r) {
+    if (BI.sig !== sig) return;                 // the answer to an older choice
+    BI.loading = false;
+    if (!r || !r.ok) toast((r && r.error) || 'Could not load the bags.', 'bad');
+    BI.bags = ((r && r.bags) || []).map(String);
+    ((r && r.weights) || []).forEach(function (w, i) { BI.w[BI.bags[i]] = w; });
+    var cur = S.values[f.id] || [];
+    var kept = cur.filter(function (b) { return BI.w[b] !== undefined; });
+    if (kept.length !== cur.length) {
+      if (kept.length) S.values[f.id] = kept; else delete S.values[f.id];
+      toast((cur.length - kept.length) + ' ticked bag' + (cur.length - kept.length === 1 ? ' is' : 's are') +
+            ' no longer free and ' + (cur.length - kept.length === 1 ? 'was' : 'were') + ' unticked.', 'bad');
+    }
+    redrawBagPick();
+    updateSummary();
+  }, function (e) {
+    if (BI.sig !== sig) return;
+    BI.loading = false; redrawBagPick(); fail(e);
+  });
+}
+
+function redrawBagPick() {
+  var f = bagField();
+  var n = f && S.nodes[f.id] && S.nodes[f.id].querySelector('[data-ctl="bagpick"]');
+  if (n && n._redraw) n._redraw();
+}
+
+/* --- the list itself: a checklist like buildMulti, with each bag's weight --- */
+function buildBagPick(f) {
+  var wrap = el('div', 'checklist baglist');
+  wrap.dataset.ctl = 'bagpick';
+
+  var searchRow = el('div', 'ck-search');
+  var search = el('input');
+  search.type = 'text';
+  search.placeholder = 'Search bag number…';
+  search.inputMode = 'numeric';
+  search.autocomplete = 'off';
+  search.id = 'f_' + f.id;
+  searchRow.appendChild(search);
+  var list = el('div', 'ck-list');
+  var foot = el('div', 'ck-foot');
+  var cnt = el('span', 'ck-cnt');
+  var allBtn = el('button', 'link');
+  allBtn.type = 'button';
+  foot.appendChild(cnt);
+  foot.appendChild(allBtn);
+  wrap.appendChild(searchRow);
+  wrap.appendChild(list);
+  wrap.appendChild(foot);
+
+  var expanded = false;
+  var CAP = 150;                      // the list scrolls inside itself
+
+  function sel() { return S.values[f.id] || []; }
+  function shown() {
+    var q = search.value.trim();
+    return q ? BI.bags.filter(function (b) { return b.indexOf(q) !== -1; }) : BI.bags;
+  }
+  function paintFoot() {
+    var all = BI.bags, sh = shown(), s = sel();
+    cnt.textContent = all.length ? s.length + ' of ' + all.length + ' ticked' : '';
+    var allOn = sh.length && sh.every(function (b) { return s.indexOf(b) !== -1; });
+    var filtered = sh.length !== all.length;
+    allBtn.textContent = (allOn ? 'Clear ' : 'Select ') + (filtered ? 'shown' : 'all');
+    allBtn.style.display = sh.length > 1 ? '' : 'none';
+  }
+
+  function draw() {
+    var all = BI.bags, q = search.value.trim(), sh = shown();
+    searchRow.style.display = all.length > 12 ? '' : 'none';
+    list.innerHTML = '';
+    var need = (f.dependsOn || []).map(fieldById).filter(function (x) { return x && !S.values[x.id]; });
+    if (need.length) {
+      list.appendChild(el('div', 'ck-empty',
+        'Choose ' + need.map(function (x) { return x.label; }).join(' and ') + ' first.'));
+    } else if (BI.loading) {
+      list.appendChild(el('div', 'ck-empty', 'Loading bags…'));
+    } else if (!all.length) {
+      list.appendChild(el('div', 'ck-empty', 'No ' + S.values[(f.dependsOn || [])[1]] +
+        ' bags are waiting for an invoice. Bags appear here once they are on the Bag Form.'));
+    } else if (!sh.length) {
+      list.appendChild(el('div', 'ck-empty', 'No bag number contains “' + q + '”'));
+    } else {
+      var cut = (!expanded && !q && sh.length > CAP) ? CAP : sh.length;
+      var frag = document.createDocumentFragment();
+      for (var i = 0; i < cut; i++) {
+        var b = sh[i], on = sel().indexOf(b) !== -1;
+        var row = el('label', 'chk' + (on ? ' on' : ''));
+        var box = el('input');
+        box.type = 'checkbox';
+        box.checked = on;
+        box.value = b;
+        row.appendChild(box);
+        var t = el('span', 'chk-t');
+        t.innerHTML = highlight(b, q);
+        row.appendChild(t);
+        row.appendChild(el('span', 'bw', kg(BI.w[b])));
+        frag.appendChild(row);
+      }
+      list.appendChild(frag);
+      if (cut < sh.length) {
+        var more = el('button', 'ck-more', 'Show all ' + sh.length);
+        more.type = 'button';
+        more.onclick = function () { expanded = true; draw(); };
+        list.appendChild(more);
+      }
+    }
+    paintFoot();
+    drawBagTotals();
+  }
+
+  list.addEventListener('change', function (e) {
+    var box = e.target;
+    if (!box || box.type !== 'checkbox') return;
+    var cur = sel().slice();
+    var i = cur.indexOf(box.value);
+    if (box.checked && i < 0) cur.push(box.value);
+    if (!box.checked && i >= 0) cur.splice(i, 1);
+    box.closest('.chk').classList.toggle('on', box.checked);
+    buzz();
+    setVal(f, cur);
+    paintFoot();
+    drawBagTotals();
+  });
+  /* Like a sheet filter: with a search typed, it acts on what is shown. */
+  allBtn.onclick = function () {
+    var sh = shown(), cur = sel().slice();
+    var allOn = sh.every(function (b) { return cur.indexOf(b) !== -1; });
+    if (allOn) cur = cur.filter(function (b) { return sh.indexOf(b) === -1; });
+    else sh.forEach(function (b) { if (cur.indexOf(b) === -1) cur.push(b); });
+    setVal(f, cur);
+    draw();
+  };
+  search.addEventListener('input', draw);
+
+  wrap._redraw = draw;
+  wrap._set = function (v) {
+    if (v && v.length) S.values[f.id] = v; else delete S.values[f.id];
+    draw();
+  };
+  draw();
+  return wrap;
+}
+
+function bagTotal() {
+  var f = bagField();
+  var t = 0, n = 0;
+  if (f) (S.values[f.id] || []).forEach(function (b) { t += Number(BI.w[b]) || 0; n++; });
+  return { n: n, total: Math.round(t * 100) / 100 };
+}
+
+/** {total, inv, diff} when the ticked bags outweigh the invoice, else null. */
+function bagOver() {
+  var f = bagField();
+  if (!f) return null;
+  var t = bagTotal(), inv = parseFloat(S.values[f.weightOf]);
+  if (!t.n || isNaN(inv)) return null;
+  var d = Math.round((t.total - inv) * 100) / 100;
+  return d > 0 ? { total: t.total, inv: inv, diff: d } : null;
+}
+
+/** The total beside the question, and the line under the list. */
+function drawBagTotals() {
+  var f = bagField();
+  if (!f || !S.nodes[f.id]) return;
+  var box = S.nodes[f.id];
+  var lab = box.querySelector('.lab-total'), warn = box.querySelector('.bagwarn');
+  var t = bagTotal(), inv = parseFloat(S.values[f.weightOf]), over = bagOver();
+  if (lab) {
+    lab.textContent = t.n ? 'Total ' + kg(t.total) + ' · ' + t.n + ' bag' + (t.n === 1 ? '' : 's') : '';
+    lab.classList.toggle('over', !!over);
+  }
+  if (!warn) return;
+  if (over) {
+    warn.className = 'bagwarn over';
+    warn.textContent = '⚠ The ticked bags weigh ' + kg(over.total) + ' — ' + kg(over.diff) +
+                       ' more than the invoice weight (' + kg(over.inv) + ').';
+  } else if (t.n && !isNaN(inv)) {
+    var left = Math.round((inv - t.total) * 100) / 100;
+    warn.className = 'bagwarn ok';
+    warn.textContent = left === 0 ? '✓ Exactly the invoice weight.'
+      : kg(left) + ' below the invoice weight of ' + kg(inv) + '.';
+  } else {
+    warn.className = 'bagwarn';
+    warn.textContent = '';
+  }
+}
+
+function bagSummaryText() {
+  var t = bagTotal();
+  return t.n + ' bag' + (t.n === 1 ? '' : 's') + ' — ' + kg(t.total);
+}
+
+/* ============================================ bag form: used numbers ==== */
+/*
+ * The Bag Form refuses a Material + Bag Number that is already on its tab —
+ * the server guard (FDUP_KEYS.bag) always has. This tells the operator the
+ * moment the number is typed instead of after Submit: the box turns red,
+ * says where the bag already is, and Submit stays shut until it is changed.
+ *
+ * The list is fetched once per form load. If it cannot be fetched, nothing
+ * here blocks, and the server guard still refuses the repeat on Submit.
+ */
+var BU = { used: null, hit: '' };
+
+function usedField() {
+  var out = null;
+  if (S.form) S.form.sections.forEach(function (s) {
+    s.fields.forEach(function (f) { if (f.uniqueLive) out = f; });
+  });
+  return out;
+}
+
+function loadUsedBags() {
+  gs('api_usedBags', S.token).then(function (r) {
+    if (!r || !r.ok) { if (r && r.error) toast(r.error, 'bad'); return; }
+    BU.used = r.used || {};
+    checkUsedBag();
+  }, function () { /* offline: the server guard still decides on Submit */ });
+}
+
+/* Same rule as the server's fDupNorm_: case and spacing never make two bags.
+   A bag is unique within its MATERIAL — Grit 101 and Filler 101 are two bags. */
+function bagKeyJs(material, bag) {
+  function n(v) { return String(v == null ? '' : v).trim().toUpperCase().replace(/\s+/g, ''); }
+  return n(material) + '|' + n(bag);
+}
+
+function checkUsedBag() {
+  var f = usedField();
+  if (!f || !S.nodes[f.id]) return;
+  var box = S.nodes[f.id], note = box.querySelector('.dupnote');
+  var v = S.values[f.id], m = S.values.material;
+  var info = (BU.used && v && m) ? BU.used[bagKeyJs(m, v)] : undefined;
+  var was = BU.hit;
+  BU.hit = info !== undefined ? (info || 'already recorded') : '';
+  box.classList.toggle('invalid', !!BU.hit);
+  if (note) {
+    note.textContent = BU.hit
+      ? m + ' bag ' + v + ' is already on the Bag Form (' + BU.hit + '). Use another number.'
+      : '';
+    note.classList.toggle('on', !!BU.hit);
+  }
+  if (was !== BU.hit) updateSummary();
+}
+
+/* ============================ prefill confirmation (one per section) ==== */
+/* Carried-over values are the easy way to record the previous slab's numbers
+   against this one. Every section that received them must be ticked before
+   the entry can be submitted. */
+function renderConfirms() {
+  var want = [];
+  S.form.sections.forEach(function (sec, si) {
+    if (!condOK(sec.showWhen)) return;
+    var any = sec.fields.some(function (f) {
+      return S.prefilled[f.id] && condOK(f.showWhen);
+    });
+    if (any) want.push(si);
+  });
+
+  var sig = want.join(',');
+  if (sig === S.confirmSecs.join(',') && document.querySelector('.confirmbox')) {
+    S.confirmSecs = want;
+    return;                                   // nothing structural changed
+  }
+  S.confirmSecs = want;
+
+  document.querySelectorAll('.confirmbox').forEach(function (n) { n.remove(); });
+  want.forEach(function (si) {
+    var box = document.querySelector('.sec[data-sec="' + si + '"]');
+    if (!box) return;
+    var lab = el('label', 'confirmbox' + (S.confirmed[si] ? ' ok' : ''));
+    var cb = el('input');
+    cb.type = 'checkbox';
+    cb.checked = !!S.confirmed[si];
+    cb.onchange = function () {
+      S.confirmed[si] = cb.checked;
+      lab.classList.toggle('ok', cb.checked);
+      buzz();
+      updateSummary();
+    };
+    lab.appendChild(cb);
+    lab.appendChild(el('span', null,
+      'I have checked the carried-over values in this section against this slab'));
+    box.appendChild(lab);
+  });
+}
+
+function missingConfirms() {
+  return S.confirmSecs.filter(function (si) { return !S.confirmed[si]; });
+}
+
+/* ======================================================== visibility ==== */
+function condOK(c) {
+  if (!c) return true;
+  var v = S.values[c.field];
+  if (c['in']) return c['in'].indexOf(v) !== -1;
+  return v === c.eq;
+}
+function applyVisibility() {
+  var n = 0;
+  S.form.sections.forEach(function (sec, si) {
+    var box = document.querySelector('.sec[data-sec="' + si + '"]');
+    if (!box) return;
+    var secOK = condOK(sec.showWhen);
+    var wasHidden = box.style.display === 'none';
+    box.style.display = secOK ? '' : 'none';
+    if (secOK && wasHidden) {
+      box.classList.add('revealed');
+      setTimeout(function () { box.classList.remove('revealed'); }, 500);
+    }
+    var vis = 0, filled = 0;
+    sec.fields.forEach(function (f) {
+      var fb = S.nodes[f.id];
+      if (!fb) return;
+      var ok = secOK && condOK(f.showWhen);
+      fb.style.display = ok ? '' : 'none';
+      if (!ok) return;
+      vis++;
+      var v = S.values[f.id];
+      if (!(v === undefined || v === '' || (Array.isArray(v) && !v.length))) filled++;
+    });
+    if (secOK && !vis) box.style.display = 'none';
+    if (box.style.display !== 'none') {
+      n++;
+      box.querySelector('.sec-h .n').textContent = String(n);
+      box.classList.toggle('done', vis > 0 && filled === vis);
+    }
+  });
+  if (Object.keys(S.prefilled).length) renderConfirms();
+}
+function activeFields() {
+  var out = [];
+  S.form.sections.forEach(function (sec) {
+    if (!condOK(sec.showWhen)) return;
+    sec.fields.forEach(function (f) { if (condOK(f.showWhen)) out.push(f); });
+  });
+  return out;
+}
+/**
+ * Slabs that are in the container but carry no grade. The server refuses these
+ * too, but catching them here means the operator is scrolled to the offending
+ * row instead of reading a list of slab numbers in a toast.
+ */
+function missingGrades() {
+  var out = [];
+  activeFields().forEach(function (f) {
+    if (f.type !== 'slabgrade') return;
+    (S.values[f.id] || []).forEach(function (r) {
+      if (r && r.slab && !r.grade) out.push(r.slab);
+    });
+  });
+  return out;
+}
+
+function missingRequired() {
+  return activeFields().filter(function (f) {
+    if (!f.required) return false;
+    /* "Sections" stops being required once Full Slab is ticked — the report
+       still describes somewhere, just not a numbered part. */
+    if (f.requiredUnless && S.values[f.requiredUnless]) return false;
+    var v = S.values[f.id];
+    return v === undefined || v === null || v === '' || (Array.isArray(v) && !v.length);
+  });
+}
+
+/* =========================================================== summary ==== */
+/** How one field's value reads in the review panel. */
+function summaryText(v) {
+  if (v === true) return 'yes';
+  if (v === false) return 'no';
+  if (!Array.isArray(v)) return String(v);
+  if (v.length && typeof v[0] === 'number') {
+    return v.length === 1 ? 'section ' + v[0] : 'sections ' + v.join(', ');
+  }
+  if (v.length && v[0] && v[0].slab) {
+    /* dispatch: "57 slabs — 41 A, 12 B, 4 C" is what an operator checks
+       before submitting, far more than a list of 57 numbers would be */
+    var by = {};
+    v.forEach(function (x) { var g = x.grade || '(no grade)'; by[g] = (by[g] || 0) + 1; });
+    var parts = Object.keys(by).sort().map(function (g) { return by[g] + ' ' + g; });
+    return v.length + ' slab' + (v.length === 1 ? '' : 's') + ' — ' + parts.join(', ');
+  }
+  return v.length > 2 ? v.length + ' selected' : v.join(', ');
+}
+
+function updateSummary() {
+  var af = activeFields(), filled = 0;
+  var rowsD = document.createDocumentFragment(), rowsM = document.createDocumentFragment();
+
+  af.forEach(function (f) {
+    var v = S.values[f.id];
+    var has = !(v === undefined || v === null || v === '' || v === false ||
+                (Array.isArray(v) && !v.length));
+    if (has) filled++;
+    if (!has && !f.required) return;
+    var txt = has ? (f.type === 'bagpick' ? bagSummaryText(v)
+                   : f.type === 'photo' ? v.length + ' photo' + (v.length === 1 ? '' : 's')
+                   : summaryText(v)) : 'still needed';
+    if (f.uniqueLive && BU.hit) { has = false; txt = 'already used'; }
+    [rowsD, rowsM].forEach(function (frag) {
+      var r = el('button', 'srow' + (has ? '' : ' miss'));
+      r.type = 'button';
+      r.appendChild(el('span', 'sk', f.label));
+      r.appendChild(el('span', 'sv', txt));
+      r.onclick = function () {
+        if (openSheets.length) closeTop();
+        setTimeout(function () {
+          var n = S.nodes[f.id];
+          if (!n) return;
+          n.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          var i = n.querySelector('input.input,textarea.input');
+          if (i && !isPhone()) setTimeout(function () { i.focus(); }, 300);
+        }, openSheets.length ? 260 : 0);
+      };
+      frag.appendChild(r);
+    });
+  });
+
+  var miss = missingRequired().length + missingConfirms().length + missingGrades().length +
+             missingSectionFields().length + missingUploads().length + (BU.hit ? 1 : 0);
+  var sd = $('#summaryD'), sm = $('#summaryM');
+  sd.innerHTML = ''; sm.innerHTML = '';
+  if (!af.length) { sd.appendChild(el('div', 'empty', '—')); }
+  sd.appendChild(rowsD);
+  var head = el('div', 'rvhead');
+  head.appendChild(el('span', null, filled + ' of ' + af.length + ' filled'));
+  head.appendChild(el('span', null, miss ? miss + ' required left' : 'ready to submit'));
+  head.lastChild.style.color = miss ? 'var(--danger)' : 'var(--ok)';
+  sm.appendChild(head);
+  sm.appendChild(rowsM);
+  missingConfirms().forEach(function (si) {
+    var r = el('button', 'srow miss');
+    r.type = 'button';
+    r.appendChild(el('span', 'sk', S.form.sections[si].title));
+    r.appendChild(el('span', 'sv', 'confirm carried values'));
+    r.onclick = function () {
+      if (openSheets.length) closeTop();
+      setTimeout(function () {
+        var box = document.querySelector('.sec[data-sec="' + si + '"] .confirmbox');
+        box && box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, openSheets.length ? 260 : 0);
+    };
+    sm.appendChild(r);
+  });
+  if (!filled) sm.appendChild(el('div', 'empty', 'Nothing filled in yet.'));
+
+  var pct = af.length ? Math.round(filled / af.length * 100) : 0;
+  $('#progBar').style.width = pct + '%';
+  $('#barProg').style.width = pct + '%';
+  $('#progText').textContent = filled + ' of ' + af.length + ' filled';
+  $('#reqText').textContent = miss ? miss + ' required left' : 'ready';
+  $('#reqText').style.color = miss ? 'var(--danger)' : 'var(--ok)';
+  $('#reviewCount').textContent = miss ? String(miss) : String(filled);
+  $('#reviewLbl').textContent = miss ? 'to fill' : 'filled';
+  $('#reviewBtn').classList.toggle('missing', !!miss);
+
+  /* keep the entry's identity visible in the top bar while scrolling —
+     the slab, the bundle, or whatever the form nominates */
+  var keyVal = S.values.slab || S.values.slabA || S.values.slabB || S.values.bundle ||
+               (S.form.keyField ? (S.values[S.form.keyField] || '') : '') || '';
+  $('#barCtx').textContent = keyVal || (S.forms.length > 1 ? 'tap to switch form' : '');
+}
+
+/* ============================================================ menu ====== */
+$('#formSwitch').onclick = function () { if (S.forms.length > 1) sheetOpen('#formSheet'); };
+$('#menuBtn').onclick = function () { sheetOpen('#menuSheet'); };
+$('#reviewBtn').onclick = function () { sheetOpen('#review'); };
+$('#rvSubmit').onclick = function () { closeTop(); setTimeout(doSubmit, 260); };
+
+/** `which` is the button that was pressed: #prefillBtn, #prefillA or #prefillB. */
+function pfBusy(on, msg, which) {
+  var b = $(which || '#prefillBtn');
+  /* Both line buttons go dead together — two lookups at once would race each
+     other into the same fields. */
+  ['#prefillBtn', '#prefillA', '#prefillB'].forEach(function (sel) {
+    var n = $(sel);
+    if (n) n.disabled = on;
+  });
+  var ic = b && b.querySelector('.pf-ic');
+  if (ic) ic.innerHTML = on ? '<span class="spinner"></span>' : '\u21BB';
+  if (msg) pfSay(msg, which);
+}
+
+/** Where the running commentary goes: under the one button, or under the pair. */
+function pfSay(msg, which) {
+  if (S.form && S.form.prefillLines) { $('#prefillNote').textContent = msg; return; }
+  $('#prefillSub').textContent = msg;
+}
+
+/**
+ * `line` is '' on forms with one button, or 'A'/'B' on Batching and Resin.
+ * Those two run a different recipe per line, so the lookup has to be per line
+ * as well — see api_previousValues.
+ */
+function fillPrevious(line) {
+  var which = line === 'A' ? '#prefillA' : line === 'B' ? '#prefillB' : '#prefillBtn';
+  pfBusy(true, line ? 'Looking up your last ' + line + ' line entry…'
+                    : 'Looking up your last entry…', which);
+
+  gs('api_previousValues', S.token, S.form.key, line || '').then(function (r) {
+    pfBusy(false, '', which);
+    if (!r.ok) { pfSay(r.error, which); toast(r.error, 'bad'); return; }
+
+    var n = 0;
+    S.prefilled = {}; S.confirmed = {}; S.confirmSecs = [];
+    Object.keys(r.values).forEach(function (id) {
+      if (!S.nodes[id]) return;
+      applyToControl(id, r.values[id]);
+      S.prefilled[id] = true;
+      n++;
+      var node = S.nodes[id];
+      node.classList.add('flash');
+      setTimeout(function () { node.classList.remove('flash'); }, 1600);
+    });
+
+    /* Batching's Line radio is set from the button, not carried over — the
+       operator chose it by which one they pressed — so it is applied without
+       being marked prefilled, and does not drag a confirmation tick onto a
+       section whose slab is still blank. */
+    if (r.lineField && S.nodes[r.lineField]) {
+      applyToControl(r.lineField, r.line);   // sets the pill and S.values both
+    }
+
+    applyVisibility(); renderConfirms(); updateSummary(); buzz(12);
+    document.querySelectorAll('.prefill').forEach(function (b) { b.classList.remove('used'); });
+    $(which).classList.add('used');
+
+    var msg = 'Filled ' + n + ' field' + (n === 1 ? '' : 's') +
+      (line ? ' from the last ' + line + ' line entry' : '') +
+      (r.when ? (line ? ' (' + r.when + ')' : ' from your entry on ' + r.when) : '') +
+      ' — tap again to redo';
+    pfSay(msg, which);
+    toast('Filled ' + n + ' field' + (n === 1 ? '' : 's') +
+          '. Slab number left blank.', 'good');
+  }).catch(function (e) { pfBusy(false, '', which); fail(e); });
+}
+$('#prefillBtn').onclick = function () { fillPrevious(''); };
+$('#prefillA').onclick = function () { fillPrevious('A'); };
+$('#prefillB').onclick = function () { fillPrevious('B'); };
+
+function refreshLists(btn) {
+  busy(btn, true, 'Refreshing');
+  gs('api_refreshLists', S.token, S.form.key).then(function (o) {
+    busy(btn, false);
+    S.opts = o || {};
+    if (S.form.dynamicBundle && S.values.bundle) loadBundleSlabs(S.values.bundle);
+    if (S.form.multiRow) loadDispatchSlabs(true);   // force: skip the cached copy
+    if (bagField()) loadInvoiceBags(true);
+    if (usedField()) loadUsedBags();
+    toast('Lists refreshed from the sheet.', 'good');
+  }).catch(function (e) { busy(btn, false); fail(e); });
+}
+$('#refreshBtnD').onclick = function () { refreshLists(this); };
+$('#mRefresh').onclick = function () { closeTop(); refreshLists(null); };
+
+function clearForm() {
+  if (!confirm('Clear everything on this form?')) return;
+  store(DRAFT_KEY, null);
+  loadForm(S.form.key, {});
+}
+$('#clearBtnD').onclick = clearForm;
+$('#mClear').onclick = function () { closeTop(); setTimeout(clearForm, 260); };
+
+/**
+ * Put a saved entry back on the page.
+ *
+ * applyToControl only knows how to fill a CONTROL, and returns immediately for
+ * a key that has no control. Two of Grade Reporting's most important keys have
+ * none: `sec`, which holds every section's photos, defects, reason and
+ * solution, and `alertId`, which ties the report to the alert it answers. Both
+ * were therefore dropped on every restore — the slab came back, the section
+ * came back, and the block underneath was empty. On a phone that is the whole
+ * report gone, because Android reloads the tab while the camera is open.
+ *
+ * The bags go in FIRST: filling the `sections` control renders the blocks, and
+ * the blocks read their values out of the bags as they are built.
+ */
+function restoreValues(vals, announce) {
+  var ids = Object.keys(vals);
+  var plain = ids.filter(function (id) { return !S.nodes[id]; });
+  var fields = ids.filter(function (id) { return !!S.nodes[id]; });
+
+  plain.forEach(function (id) { S.values[id] = vals[id]; });
+  var lost = S.form && (S.form.multiSection || photoFields().length) ? pruneLostMedia() : 0;
+  fields.forEach(function (id) { applyToControl(id, vals[id]); });
+  /* The photo fields' links are re-derived from what actually survived. */
+  photoFields().forEach(function (f) {
+    syncPhotoField(photoBagKey(f.id));
+    var c = S.nodes[f.id] && S.nodes[f.id].querySelector('[data-ctl="photo"]');
+    if (c && c._paint) c._paint();
+  });
+  /* applyToControl writes the value without going through setVal, so the live
+     notes under the boxes would keep showing the last thing typed. */
+  refreshCalcNotes();
+
+  if (!announce) return;
+  if (lost) {
+    toast('Restored your entry — but ' + lost + ' photo' + (lost === 1 ? '' : 's') +
+          ' had not finished uploading and must be taken again.', 'bad');
+  } else {
+    toast('Restored your unsaved entry.', 'good');
+  }
+}
+
+/**
+ * A photo that had not reached Drive before the page went away cannot be
+ * recovered: the file lived in this tab's memory and the tab is gone. Keeping
+ * a dead record would block the form with a Retry that cannot work, so they
+ * are dropped and counted, and the operator is told to take them again.
+ */
+function pruneLostMedia() {
+  var bags = S.values.sec || {};
+  var lost = 0;
+  Object.keys(bags).forEach(function (k) {
+    var d = bags[k];
+    if (!d) return;
+    ['photos', 'videos'].forEach(function (which) {
+      var arr = d[which];
+      if (!Array.isArray(arr)) { d[which] = []; return; }
+      d[which] = arr.filter(function (m) {
+        var keep = m && m.state === 'ok' && m.url;
+        if (!keep) lost++;
+        return keep;
+      });
+    });
+    d.defects = Array.isArray(d.defects) ? d.defects : [];
+  });
+  return lost;
+}
+
+function applyToControl(id, v) {
+  var box = S.nodes[id];
+  if (!box) return;
+  S.values[id] = v;
+  var ctl = box.querySelector('[data-ctl]');
+  var kind = ctl && ctl.dataset.ctl;
+  if (kind === 'pills') {
+    [].forEach.call(ctl.children, function (c) { c.classList.toggle('on', c.textContent === v); });
+  } else if (kind === 'pick') {
+    ctl._set(v);
+  } else if (kind === 'multi') {
+    if (!Array.isArray(v)) S.values[id] = v = String(v).split(/\s*,\s*/).filter(String);
+    ctl._set(v);
+  } else if (kind === 'toggle') {
+    ctl._set(!!v);
+  } else if (kind === 'photo') {
+    if (ctl._paint) ctl._paint();
+  } else if (kind === 'slabmap') {
+    ctl._set(Array.isArray(v) ? v : []);
+  } else if (kind === 'bagpick') {
+    ctl._set(Array.isArray(v) ? v.map(String) : []);
+  } else if (kind === 'slabgrade') {
+    /* A restored draft can predate a grade being added, so anything that is
+       not a {slab, grade} pair is dropped rather than written as a blank. */
+    ctl._set((Array.isArray(v) ? v : []).filter(function (x) { return x && x.slab; }));
+  } else {
+    var i = box.querySelector('.input');
+    if (!i) return;
+    /* Fill previous values and a restored draft both land here. An old entry
+       may hold something this field would no longer accept — a bag number
+       recorded as "B-4471" before the rule existed — and writing it in would
+       leave the operator staring at a value the server is about to refuse. */
+    var fd = fieldById(id);
+    if (fd && fd.type === 'number') {
+      var cleaned = numClean(fd, v);
+      S.values[id] = cleaned;
+      i.value = cleaned;
+      return;
+    }
+    i.value = v;
+  }
+}
+
+/* ========================================================= oven timer ==== */
+/* Oven In records a slab, its shelf and an estimated curing time; Oven Out
+   ends it. Between the two this counts down, and once a slab passes its
+   estimate the banner turns red and stays on screen on EVERY form until the
+   Oven Out entry is made. Overcooked material is expensive. */
+var OV = { items: [], skew: 0, enabled: false, stale: 0, noEst: [], timer: null, poll: null };
+
+function ovenStart() {
+  ovenFetch();
+  clearInterval(OV.timer); clearInterval(OV.poll);
+  OV.timer = setInterval(ovenRender, 1000);           // the countdown itself
+  OV.poll  = setInterval(ovenFetch, 45000);           // fresh data from the sheet
+}
+
+function ovenFetch() {
+  if (!S.token) return;
+  gs('api_ovenStatus', S.token).then(function (r) {
+    if (!r || !r.ok) return;
+    /* Not an oven user: the answer will be "nothing" every time, and each ask
+       is a server execution competing with everybody's saves. Stop asking. */
+    if (!r.enabled) { clearInterval(OV.poll); OV.poll = null; }
+    OV.enabled = !!r.enabled;
+    OV.items = r.items || [];
+    OV.stale = r.stale || 0;
+    OV.noEst = r.noEst || [];
+    /* trust the server's clock, not the phone's — a tablet with a wrong time
+       would otherwise show every slab as hours overdue */
+    OV.skew = (r.now || Date.now()) - Date.now();
+    ovenRender();
+  }).catch(function () {});
+}
+
+function ovenNow() { return Date.now() + OV.skew; }
+
+function fmtDur(msLeft) {
+  var t = Math.max(0, Math.round(Math.abs(msLeft) / 1000));
+  var h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+  function p(n) { return (n < 10 ? '0' : '') + n; }
+  return h ? h + ':' + p(m) + ':' + p(s) : p(m) + ':' + p(s);
+}
+
+var OV_OPEN = false;
+
+function ovenRender() {
+  var dock = $('#ovenDock');
+  if (!OV.enabled || (!OV.items.length && !OV.stale && !OV.noEst.length)) {
+    dock.innerHTML = '';
+    setOvenHeight();
+    return;
+  }
+
+  var now = ovenNow();
+  var late = [], curing = [];
+  OV.items.forEach(function (it) { (now >= it.dueMs ? late : curing).push(it); });
+
+  /* Redrawing the whole strip every second would fight the operator's finger
+     and reset the scroll inside it, so only the clocks are rewritten unless
+     the shape of the thing has actually changed. */
+  var sig = late.map(function (i) { return i.slab; }).join(',') + '|' +
+            curing.map(function (i) { return i.slab; }).join(',') + '|' +
+            OV.noEst.map(function (i) { return i.slab; }).join(',') + '|' +
+            OV.stale + '|' + (OV_OPEN ? 1 : 0);
+
+  if (dock.dataset.sig === sig) { ovenTick(now, late, curing); return; }
+  dock.dataset.sig = sig;
+
+  dock.innerHTML = '';
+  var box = el('div', 'odock' + (late.length ? ' late' : '') + (OV_OPEN ? ' open' : ''));
+
+  /* --- the one collapsed line --- */
+  var head = el('button', 'od-head');
+  head.type = 'button';
+  if (late.length) head.appendChild(el('span', 'od-dot'));
+  var lead;
+  if (late.length) {
+    lead = late.length === 1 ? '1 slab past its curing time'
+                             : late.length + ' slabs past their curing time';
+  } else if (curing.length) {
+    lead = curing.length + (curing.length === 1 ? ' slab curing' : ' slabs curing');
+  } else {
+    lead = OV.noEst.length + (OV.noEst.length === 1 ? ' slab in the oven' : ' slabs in the oven') +
+           ' — no curing time entered';
+  }
+  head.appendChild(el('span', 'od-lead', lead));
+
+  var peek = el('div', 'od-peek');
+  var first = late.length ? late[0] : curing[0];
+  if (first) {
+    peek.appendChild(el('span', 'slab', first.slab));
+    peek.appendChild(el('span', 'clock', ''));
+  }
+  peek.appendChild(el('span', 'od-chev'));
+  head.appendChild(peek);
+  head.onclick = function () {
+    OV_OPEN = !OV_OPEN;
+    box.classList.toggle('open', OV_OPEN);
+    dock.dataset.sig = '';               // force a rebuild on the next tick
+    buzz();
+    setOvenHeight();
+  };
+  box.appendChild(head);
+
+  /* --- the expanded list --- */
+  var body = el('div', 'od-body');
+  late.forEach(function (it) { body.appendChild(ovenRow(it, true)); });
+  curing.forEach(function (it) { body.appendChild(ovenRow(it, false)); });
+
+  /* In the oven but nothing to count down to — worth seeing, not hiding. */
+  OV.noEst.forEach(function (it) {
+    var r = el('div', 'od-row');
+    r.appendChild(el('span', 's', it.slab));
+    if (it.shelf) r.appendChild(el('span', 'sh', 'Shelf ' + it.shelf));
+    var t = el('span', 't');
+    t.appendChild(el('i', null, 'no time set'));
+    r.appendChild(t);
+    body.appendChild(r);
+  });
+
+  if (OV.stale) {
+    body.appendChild(el('div', 'od-sub', OV.stale + ' slab' + (OV.stale === 1 ? '' : 's') +
+      ' logged in over a day ago with no Oven Out entry — not counted here, ' +
+      'tell your supervisor so the record can be closed.'));
+  }
+  box.appendChild(body);
+
+  dock.appendChild(box);
+  ovenTick(now, late, curing);
+  setOvenHeight();
+}
+
+function ovenRow(it, over) {
+  var r = el('div', 'od-row ' + (over ? 'over' : 'left'));
+  r.dataset.slab = it.slab;
+  r.appendChild(el('span', 's', it.slab));
+  if (it.shelf) r.appendChild(el('span', 'sh', 'Shelf ' + it.shelf));
+  var t = el('span', 't');
+  t.appendChild(el('span', 'v', ''));
+  t.appendChild(el('i', null, over ? 'over' : 'left'));
+  r.appendChild(t);
+  return r;
+}
+
+/** Only the numbers change on a tick — never the layout. */
+function ovenTick(now, late, curing) {
+  var lead = late.length ? late[0] : curing[0];
+  var clock = document.querySelector('#ovenDock .od-peek .clock');
+  if (clock && lead) {
+    clock.textContent = fmtDur(late.length ? now - lead.dueMs : lead.dueMs - now);
+  }
+  late.concat(curing).forEach(function (it) {
+    var cell = document.querySelector('#ovenDock .od-row[data-slab="' +
+      it.slab.replace(/"/g, '') + '"] .t .v');
+    if (cell) cell.textContent = fmtDur(now >= it.dueMs ? now - it.dueMs : it.dueMs - now);
+  });
+}
+
+/* Both fixed strips are measured together — see setDockHeights in the alert
+   section. Kept as a name because the oven code calls it from five places. */
+function setOvenHeight() { setDockHeights(); }
+window.addEventListener('resize', setOvenHeight);
+
+/* =========================================================== history ==== */
+/* The last 100 entries on THIS form by ANYONE — read from the form's own tab,
+   so entries made through the old Google Forms appear here too. */
+var HX = { entries: [], q: '', open: {} };
+
+function openHistory() {
+  sheetOpen('#history');
+  $('#hxTitle').textContent = S.form.title.replace(/ Form$/, '') + ' history';
+  loadHistory();
+}
+$('#mHistory').onclick = function () { closeTop(); setTimeout(openHistory, 260); };
+$('#historyBtnD').onclick = openHistory;
+$('#hxReload').onclick = function () { loadHistory(true); };
+
+function loadHistory(force) {
+  var list = $('#hxList');
+  list.innerHTML = '<div class="ck-empty">Loading the last 100 entries…</div>';
+  $('#hxFoot').innerHTML = '';
+  HX.open = {};
+  gs('api_history', S.token, S.form.key, 100).then(function (r) {
+    if (!r || !r.ok) {
+      list.innerHTML = '';
+      list.appendChild(el('div', 'ck-empty', (r && r.error) || 'Could not load history.'));
+      return;
+    }
+    HX.entries = r.entries || [];
+    drawHistory();
+    var f = $('#hxFoot');
+    f.innerHTML = '';
+    f.appendChild(el('span', null, HX.entries.length + ' entr' +
+      (HX.entries.length === 1 ? 'y' : 'ies')));
+    if (r.duplicates) {
+      var d = el('span', null, r.duplicates + ' slab' + (r.duplicates === 1 ? '' : 's') +
+        ' entered more than once');
+      d.style.color = 'var(--danger)';
+      d.style.fontWeight = '600';
+      f.appendChild(d);
+    }
+  }).catch(function (e) {
+    list.innerHTML = '';
+    list.appendChild(el('div', 'ck-empty', String(e.message || e)));
+  });
+}
+
+function drawHistory() {
+  var list = $('#hxList');
+  list.innerHTML = '';
+  var q = HX.q.trim().toLowerCase();
+
+  var rows = !q ? HX.entries : HX.entries.filter(function (e) {
+    if ((e.key || '').toLowerCase().indexOf(q) !== -1) return true;
+    if ((e.who || '').toLowerCase().indexOf(q) !== -1) return true;
+    for (var i = 0; i < e.fields.length; i++) {
+      if (String(e.fields[i][1]).toLowerCase().indexOf(q) !== -1) return true;
+    }
+    return false;
+  });
+
+  if (!rows.length) {
+    list.appendChild(el('div', 'ck-empty',
+      HX.entries.length ? 'Nothing matches “' + HX.q + '”' : 'No entries on this form yet.'));
+    return;
+  }
+
+  var frag = document.createDocumentFragment();
+  rows.forEach(function (e) {
+    var t = el('button', 'tile' + (e.dup ? ' dup' : ''));
+    t.type = 'button';
+
+    var head = el('div', 'tile-h');
+    head.appendChild(el('span', 'tile-k', e.key || '(no slab number)'));
+    if (e.dup) head.appendChild(el('span', 'dupflag', 'duplicate'));
+    if (e.who) head.appendChild(el('span', 'tile-who', e.who));
+    if (e.when) head.appendChild(el('span', 'tile-when', e.when));
+    t.appendChild(head);
+
+    var open = !!HX.open[e.row];
+    var show = open ? e.fields : e.fields.slice(0, 6);
+    var body = el('div', 'tile-b');
+    show.forEach(function (p) {
+      var r = el('div', 'tile-r');
+      r.appendChild(el('b', null, p[0]));
+      var v = el('span', isCode(p[1]) ? 'mono' : null, p[1]);
+      r.appendChild(v);
+      body.appendChild(r);
+    });
+    t.appendChild(body);
+
+    if (e.fields.length > 6) {
+      t.appendChild(el('div', 'tile-more',
+        open ? 'Show less' : 'Show all ' + e.fields.length + ' values'));
+      t.onclick = function () { HX.open[e.row] = !open; drawHistory(); };
+    }
+    frag.appendChild(t);
+  });
+  list.appendChild(frag);
+}
+
+$('#hxSearch').addEventListener('input', function () {
+  HX.q = this.value;
+  $('#hxClear').classList.toggle('on', !!this.value);
+  drawHistory();
+});
+$('#hxClear').onclick = function () {
+  $('#hxSearch').value = ''; HX.q = ''; this.classList.remove('on'); drawHistory();
+};
+
+/* ============================================================ submit ==== */
+function doSubmit() {
+  var unconfirmed = missingConfirms();
+  if (unconfirmed.length) {
+    var first = document.querySelector('.sec[data-sec="' + unconfirmed[0] + '"] .confirmbox');
+    if (first) {
+      first.classList.add('shake');
+      setTimeout(function () { first.classList.remove('shake'); }, 700);
+      first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    buzz([20, 60, 20]);
+    toast('Confirm the carried-over values in ' +
+      (unconfirmed.length === 1 ? '“' + S.form.sections[unconfirmed[0]].title + '”'
+                                : unconfirmed.length + ' sections') + ' first.', 'bad');
+    return;
+  }
+  var badSec = missingSectionFields();
+  if (badSec.length) {
+    var first = badSec[0];
+    var node = S.secNodes[first.n + '.' + first.id];
+    if (node) {
+      node.classList.add('invalid');
+      setTimeout(function () { node.classList.remove('invalid'); }, 1800);
+      node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    buzz([20, 60, 20]);
+    toast(secTitle(first.n) + ' still needs ' + first.what +
+          (badSec.length > 1 ? ' (' + badSec.length + ' things left)' : '') + '.', 'bad');
+    return;
+  }
+  var up = missingUploads();
+  if (up.length) {
+    var un0 = S.nodes[up[0].f.id];
+    if (un0) {
+      un0.classList.add('invalid');
+      setTimeout(function () { un0.classList.remove('invalid'); }, 1800);
+      un0.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    buzz([20, 60, 20]);
+    toast(up[0].f.label + ': waiting for ' + up[0].what + '.', 'bad');
+    return;
+  }
+  var noGrade = missingGrades();
+  if (noGrade.length) {
+    var row = document.querySelector('.sg-sel .sg-row.nograde');
+    if (row) {
+      row.classList.add('shake');
+      setTimeout(function () { row.classList.remove('shake'); }, 700);
+      row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    buzz([20, 60, 20]);
+    toast(noGrade.length === 1
+      ? 'Set a grade for ' + noGrade[0] + ' before submitting.'
+      : noGrade.length + ' slabs still need a grade — starting with ' + noGrade[0] + '.', 'bad');
+    return;
+  }
+  var miss = missingRequired();
+  if (miss.length) {
+    miss.forEach(function (f) { S.nodes[f.id] && S.nodes[f.id].classList.add('invalid'); });
+    buzz([20, 60, 20]);
+    toast(miss.length + ' still needed — starting with ' + miss[0].label + '.', 'bad');
+    S.nodes[miss[0].id].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  /* Bag Form: a bag number already on the tab never leaves the phone. */
+  var uf = usedField();
+  if (uf && BU.hit) {
+    var un = S.nodes[uf.id];
+    un.classList.add('invalid');
+    un.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    buzz([20, 60, 20]);
+    toast(uf.label + ' ' + S.values[uf.id] + ' is already on the Bag Form — use another number.', 'bad');
+    return;
+  }
+  /* Bag Invoice: heavier than the invoice is allowed, but only on purpose. */
+  var over = bagOver();
+  if (over && !confirm('The ticked bags weigh ' + kg(over.total) + ', which is ' + kg(over.diff) +
+                       ' more than the invoice weight of ' + kg(over.inv) + '.\n\nSubmit anyway?')) {
+    var bn = S.nodes[bagField().id];
+    bn && bn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  var payload = JSON.parse(JSON.stringify(S.values));
+  /* Only Grade Reporting reads the media bags; elsewhere the photo field
+     already holds its Drive links, and the bags (thumbnails) are weight. */
+  if (!S.form.multiSection) delete payload.sec;
+  send(S.form.key, payload, true);
+}
+$('#submitBtn').onclick = doSubmit;
+$('#submitBtnD').onclick = doSubmit;
+
+function newId() {
+  return Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+}
+
+function send(key, values, interactive, submitId) {
+  var btns = [$('#submitBtn'), $('#submitBtnD')];
+  if (interactive) btns.forEach(function (b) { busy(b, true, 'Saving'); });
+  submitId = submitId || newId();
+  /* Past twenty seconds, say so: a button that just spins looks hung, and a
+     hung-looking button is the one that gets pressed again. */
+  var slowT = interactive ? setTimeout(function () {
+    btns.forEach(function (b) { if (b && b.disabled) busy(b, true, 'Still saving — please wait'); });
+  }, 20000) : 0;
+
+  /* Two handlers, not .then().catch(): with a single catch, an exception
+     thrown while HANDLING a success is indistinguishable from the server
+     never answering, and the app tells the operator "no connection" about an
+     entry that is already saved. */
+  gsWait(SUBMIT_TIMEOUT, 'api_submit', S.token, key, values, submitId).then(function (r) {
+    clearTimeout(slowT);
+    try { onSaved(r, key, values, btns); }
+    catch (uiErr) {
+      btns.forEach(function (b) { busy(b, false); });
+      store(PEND_KEY, null);                    // it IS saved; do not queue it
+      $('#pendingNote').className = 'alert err';
+      toast('Saved — but the screen could not refresh: ' +
+            String(uiErr && uiErr.message || uiErr), 'bad');
+    }
+  }, function (e) {
+    clearTimeout(slowT);
+    btns.forEach(function (b) { busy(b, false); });
+    var msg = String(e && e.message || e || 'No connection');
+    /* The entry is held with the SAME id, so a retry cannot produce a second
+       row if the first attempt did in fact land. */
+    store(PEND_KEY, { key: key, values: values, at: Date.now(), id: submitId });
+    buzz([30, 80, 30]);
+    /* A twelve-hour shift outlasts the session. Retrying against a dead token
+       will fail forever, so send them to sign in — the queued entry survives
+       the reload and goes up by itself once they are back. */
+    if (/session expired/i.test(msg)) {
+      toast('Your session expired — sign in again and this entry will be sent.', 'bad');
+      store(TOKEN_KEY, null);
+      setTimeout(function () { location.reload(); }, 1600);
+      return;
+    }
+    showPending();
+    toast(msg + ' — your entry is saved on this phone. Tap Retry.', 'bad');
+  });
+}
+
+/**
+ * Everything that happens once the server has confirmed the write. Kept out of
+ * send() so that an exception in here is reported as what it is — a screen that
+ * failed to refresh — and never as a lost connection for a saved entry.
+ */
+function onSaved(r, key, values, btns) {
+  btns.forEach(function (b) { busy(b, false); });
+  if (!r.ok) {
+    /* A block is the server saying the entry is ALREADY in the sheet. Leaving
+       it in the queue would park an entry that can never be sent behind a
+       Retry button somebody taps all shift. */
+    if (r.blocked) {
+      store(PEND_KEY, null);
+      $('#pendingNote').className = 'alert err';
+      store(DRAFT_KEY, null);
+      alertBox(r.error);
+      buzz([30, 80, 30]);
+      return;
+    }
+    toast(r.error, 'bad'); buzz(40);
+    /* Some ticked bags went onto another invoice meanwhile: show the list as
+       it is now, keeping the ticks that are still free. */
+    if (r.refreshBags && bagField()) {
+      var nb = $('#formNote');
+      nb.textContent = r.error;
+      nb.className = 'alert err show';
+      loadInvoiceBags(true);
+    }
+    return;
+  }
+  store(PEND_KEY, null);
+  $('#pendingNote').className = 'alert err';
+  /* Held, not shown yet. loadForm below clears #formNote as part of resetting
+     the page, so a note set here would flash and vanish — and the note is the
+     only place the operator is told what the server did differently. */
+  S.noteAfterLoad = r.note || '';
+  buzz([15, 40, 15]);
+  toast((r.duplicate ? 'Already saved' : 'Saved') + (r.key ? ' — ' + r.key : '') + '.', 'good');
+
+  /* The form comes back completely empty. Carrying values over silently is
+     how the previous slab's numbers end up recorded against the next one —
+     if the operator wants them, Fill previous values is one tap away and
+     makes them tick a box to say they checked. */
+  store(DRAFT_KEY, null);
+  /* Those slabs have left the candidate list, so the cached copy is wrong. */
+  if (S.form && S.form.multiRow) { SG.opts = []; SG.qc = {}; }
+  /* The empty form comes back at once from the copy this phone holds, with
+     what was just saved taken out of its lists; the server's fresh lists
+     follow a moment later (see loadForm). */
+  loadForm(key, {}, null, (S.form && S.form.key === key) ? formWithout(S.base || S.form, values) : null);
+  if (key === 'ovenIn' || key === 'ovenOut') setTimeout(ovenFetch, 400);
+  $('#submitHint').textContent = 'Saved. Fill previous values if this entry repeats the last one.';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * A message that stays on the screen.
+ *
+ * A toast fades after a few seconds, which is right for "Saved" and wrong for
+ * "this slab is already entered and here is where" — that one is read, thought
+ * about, and acted on, so it stays until it is dismissed.
+ */
+function alertBox(text) {
+  var box = $('#pendingNote');
+  box.innerHTML = '';
+  box.appendChild(el('b', null, 'Already entered. '));
+  box.appendChild(document.createTextNode(text));
+  var b = el('button', 'btn sm', 'OK');
+  b.type = 'button';
+  b.style.marginLeft = '8px';
+  b.onclick = function () { box.className = 'alert err'; };
+  box.appendChild(b);
+  box.className = 'alert err show';
+  box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function showPending() {
+  var p = load(PEND_KEY);
+  var box = $('#pendingNote');
+  if (!p) { box.className = 'alert err'; return; }
+  box.innerHTML = '';
+  box.appendChild(el('b', null, 'One entry is waiting to be sent. '));
+  box.appendChild(document.createTextNode(
+    (p.values.slab || p.values.slabA || p.values.slabB || p.values.bundle || '') + ' '));
+  var b = el('button', 'btn sm', 'Retry now');
+  b.type = 'button';
+  b.style.marginLeft = '6px';
+  b.onclick = function () { retryPending(true); };
+  box.appendChild(b);
+  /* Entries queued by a build before submit ids carry no id, so the server
+     cannot recognise a repeat. Say so rather than let someone tap Retry on a
+     row that is already in the sheet. */
+  if (!p.id) {
+    box.appendChild(el('i', 'pend-warn',
+      ' Queued by an older version — check the sheet first; Retry could write it twice.'));
+  }
+  box.className = 'alert err show';
+}
+function retryPending(manual) {
+  var p = load(PEND_KEY);
+  if (!p) return;
+  if (!manual) showPending();
+  gsWait(SUBMIT_TIMEOUT, 'api_submit', S.token, p.key, p.values, p.id).then(function (r) {
+    if (r && r.ok) {
+      store(PEND_KEY, null);
+      $('#pendingNote').className = 'alert err';
+      toast(r.duplicate ? 'That entry had already been saved — no duplicate written.'
+                        : 'The waiting entry was sent.', 'good');
+    } else if (r && r.blocked) {
+      /* Already in the sheet — the queue is wrong, not the server. */
+      store(PEND_KEY, null);
+      $('#pendingNote').className = 'alert err';
+      alertBox(r.error);
+    } else if (manual) {
+      toast((r && r.error) || 'Still could not send.', 'bad');
+    }
+  }, function (e) {
+    if (manual) toast('Still cannot reach the server: ' +
+                      String(e && e.message || e), 'bad');
+  });
+}
+window.addEventListener('online', function () { retryPending(); });
+
+/* ============================================== alert dock ============== */
+/*
+ * The same fixed, self-measuring strip as the oven timer, so the two stack
+ * rather than fight for the top of the screen. Red, counting down, and every
+ * row opens Grade Reporting with that slab already chosen — the point is that
+ * a supervisor who has just read the Telegram message does not then have to
+ * find the slab in a list of four thousand.
+ */
+var AL = { items: [], skew: 0, enabled: false, canReport: false, timer: null, poll: null };
+var AL_OPEN = false;
+
+function alertStart() {
+  alertFetch();
+  clearInterval(AL.timer); clearInterval(AL.poll);
+  AL.timer = setInterval(alertRender, 1000);
+  AL.poll  = setInterval(alertFetch, 60000);
+}
+
+function alertFetch() {
+  if (!S.token) return;
+  gs('api_alerts', S.token).then(function (r) {
+    if (!r || !r.ok) return;
+    /* Operators never see alerts; stop polling for them (see ovenFetch). */
+    if (!r.enabled) { clearInterval(AL.poll); AL.poll = null; }
+    AL.enabled = !!r.enabled;
+    AL.canReport = !!r.canReport;
+    AL.items = r.items || [];
+    AL.skew = (r.now || Date.now()) - Date.now();
+    alertRender();
+  }, function () {});
+}
+
+function alertNow() { return Date.now() + AL.skew; }
+
+function alertRender() {
+  var dock = $('#alertDock');
+  if (!dock) return;
+  if (!AL.enabled || !AL.items.length) {
+    if (dock.innerHTML) { dock.innerHTML = ''; dock.dataset.sig = ''; setDockHeights(); }
+    return;
+  }
+  var now = alertNow();
+  var live = AL.items.filter(function (a) { return !a.dueMs || a.dueMs > now; });
+  if (!live.length) {
+    if (dock.innerHTML) { dock.innerHTML = ''; dock.dataset.sig = ''; setDockHeights(); }
+    return;
+  }
+
+  var sig = live.map(function (a) { return a.id; }).join(',') + '|' + (AL_OPEN ? 1 : 0);
+  if (dock.dataset.sig === sig) { alertTick(now, live); return; }
+  dock.dataset.sig = sig;
+
+  dock.innerHTML = '';
+  var box = el('div', 'adock' + (AL_OPEN ? ' open' : ''));
+
+  var head = el('button', 'ad-head');
+  head.type = 'button';
+  head.appendChild(el('span', 'ad-dot'));
+  head.appendChild(el('span', 'ad-lead', live.length === 1
+    ? '1 slab needs a grade report'
+    : live.length + ' slabs need a grade report'));
+  var peek = el('div', 'ad-peek');
+  peek.appendChild(el('span', 'slab', live[0].slab));
+  peek.appendChild(el('span', 'gr', live[0].grade));
+  peek.appendChild(el('span', 'clock', ''));
+  peek.appendChild(el('span', 'ad-chev'));
+  head.appendChild(peek);
+  head.onclick = function () {
+    AL_OPEN = !AL_OPEN;
+    box.classList.toggle('open', AL_OPEN);
+    dock.dataset.sig = '';
+    buzz();
+    setDockHeights();
+  };
+  box.appendChild(head);
+
+  var body = el('div', 'ad-body');
+  live.forEach(function (a) {
+    var row = el('button', 'ad-row');
+    row.type = 'button';
+    row.dataset.alert = a.id;
+    row.appendChild(el('span', 's', a.slab));
+    row.appendChild(el('span', 'g', a.grade));
+    var t = el('span', 't');
+    t.appendChild(el('span', 'v', ''));
+    t.appendChild(el('i', null, 'left'));
+    row.appendChild(t);
+    row.onclick = function () { openGradeReport(a); };
+    body.appendChild(row);
+  });
+  if (!AL.canReport) {
+    body.appendChild(el('div', 'ad-sub',
+      'Grade Reporting is not assigned to you — ask your administrator to add it.'));
+  }
+  box.appendChild(body);
+
+  dock.appendChild(box);
+  alertTick(now, live);
+  setDockHeights();
+}
+
+function alertTick(now, live) {
+  var clock = document.querySelector('#alertDock .ad-peek .clock');
+  if (clock && live[0]) clock.textContent = fmtDur(live[0].dueMs - now);
+  live.forEach(function (a) {
+    var cell = document.querySelector('#alertDock .ad-row[data-alert="' +
+      String(a.id).replace(/"/g, '') + '"] .t .v');
+    if (cell) cell.textContent = fmtDur(a.dueMs - now);
+  });
+}
+
+/** Open the form with the slab already chosen. */
+function openGradeReport(a) {
+  if (!AL.canReport) {
+    toast('Grade Reporting is not assigned to you.', 'bad');
+    return;
+  }
+  if (openSheets.length) closeTop();
+  AL_OPEN = false;
+  loadForm('gradeReport', {}, function () {
+    S.values.alertId = a.id;
+    applyToControl('slab', a.slab);
+    updateSummary();
+    var n = S.nodes.sections;
+    if (n) setTimeout(function () {
+      n.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 350);
+  });
+}
+
+/**
+ * Both fixed strips measure themselves into CSS variables, and .main starts
+ * below their total. Sticky elements whose height is guessed are how the top
+ * of a form ends up permanently under a banner.
+ */
+function setDockHeights() {
+  var a = $('#alertDock'), o = $('#ovenDock');
+  var ah = a && a.firstChild ? a.getBoundingClientRect().height : 0;
+  var oh = o && o.firstChild ? o.getBoundingClientRect().height : 0;
+  document.documentElement.style.setProperty('--alert', Math.round(ah) + 'px');
+  document.documentElement.style.setProperty('--oven', Math.round(oh) + 'px');
+}
+
+/* ============================================ notifications (Telegram) == */
+/*
+ * The whole linking flow, on the phone the supervisor already has in their
+ * hand. Connect opens Telegram with the code carried in the link, so the
+ * message they send is "/start ABC123" rather than a bare "/start" that
+ * identifies nobody — which is what made the old arrangement need an
+ * administrator in the editor issuing codes by hand.
+ */
+var NT = { st: null, poll: 0, tries: 0, loading: false };
+
+function canNotify() {
+  var r = S.user && S.user.role;
+  return r === 'supervisor' || r === 'admin';
+}
+
+function openNotify() {
+  sheetOpen('#notify', notifyStopPoll);
+  loadNotify();
+}
+$('#mNotify').onclick = function () { closeTop(); setTimeout(openNotify, 260); };
+$('#notifyBtnD').onclick = openNotify;
+$('#ntReload').onclick = function () { loadNotify(); };
+
+/**
+ * One cheap read at sign-in, so a supervisor who has never connected is
+ * nudged by the dot in the sidebar and the line under the menu row instead of
+ * having to open the page to find out.
+ */
+function notifyPeek() {
+  gs('api_telegramCheck', S.token).then(function (r) {
+    if (!r || !r.eligible) return;
+    notifyMark(!!r.linked);
+  }, function () {});
+}
+function notifyMark(linked) {
+  var d = $('#ntDotD');
+  if (d) d.className = 'nav-dot ' + (linked ? 'on' : 'off');
+  var mn = $('#mnNotify');
+  if (mn) mn.textContent = linked ? 'Connected to Telegram'
+                                  : 'Not connected — tap to set it up';
+}
+
+function notifyOpen() { return $('#notify').classList.contains('on'); }
+
+function loadNotify() {
+  if (NT.loading) return;
+  NT.loading = true;
+  if (!NT.st) $('#ntBody').innerHTML = '<div class="opt-empty">Loading&hellip;</div>';
+  gs('api_telegramStatus', S.token).then(function (r) {
+    NT.loading = false;
+    NT.st = r || {};
+    renderNotify();
+  }, function (e) {
+    NT.loading = false;
+    $('#ntBody').innerHTML = '<div class="opt-empty">' +
+      esc(String(e && e.message || e)) + '</div>';
+  });
+}
+
+/* ---- polling while the user is over in Telegram ------------------------- */
+function notifyStartPoll() {
+  notifyStopPoll();
+  NT.tries = 0;
+  NT.poll = setInterval(notifyTick, 3000);
+}
+function notifyStopPoll() { if (NT.poll) { clearInterval(NT.poll); NT.poll = 0; } }
+function notifyTick() {
+  if (!notifyOpen()) { notifyStopPoll(); return; }
+  if (++NT.tries > 80) { notifyStopPoll(); return; }   // four minutes, then rest
+  gs('api_telegramCheck', S.token).then(function (r) {
+    if (!r || !r.linked) return;
+    notifyStopPoll();
+    buzz(30);
+    toast('Connected. Alerts will reach you on Telegram.', 'good');
+    loadNotify();
+  }, function () {});
+}
+/* Coming back from Telegram is the moment to look, poll or no poll. */
+document.addEventListener('visibilitychange', function () {
+  if (document.hidden || !notifyOpen()) return;
+  if (NT.st && NT.st.linked) return;
+  notifyTick();
+});
+
+/* ---- drawing ------------------------------------------------------------ */
+function renderNotify() {
+  var st = NT.st || {};
+  if (st.eligible) notifyMark(!!st.linked);
+  var b = $('#ntBody');
+  b.innerHTML = '';
+  var wrap = el('div', 'nt-wrap');
+  b.appendChild(wrap);
+
+  if (!st.eligible) {
+    wrap.appendChild(ntCard([ntState('off', 'Not available'),
+      ntP('Grade alerts go to supervisors. Ask your administrator if you should ' +
+          'be one.')]));
+    return;
+  }
+
+  if (st.enabled === false) {
+    wrap.appendChild(ntCard([ntState('off', 'Alerts are switched off'),
+      ntP('Telegram alerting is turned off for the whole app ' +
+          '(<b>FORMS_ALERT.TELEGRAM_ENABLED</b>).')]));
+    return;
+  }
+
+  /* ---- the bot has no token yet ---- */
+  if (!st.configured) {
+    if (!st.admin) {
+      wrap.appendChild(ntCard([ntState('off', 'Not set up yet'),
+        ntP(st.error ? esc(st.error)
+                     : 'The Telegram bot has not been set up. Your administrator ' +
+                       'needs to do that once, then this page will connect you.')]));
+      return;
+    }
+    wrap.appendChild(ntTokenCard(st));
+    return;
+  }
+
+  /* ---- connected ---- */
+  if (st.linked) {
+    var okc = ntCard([
+      ntState('on', 'Connected'),
+      ntP('You will get a Telegram message the moment Q.C. Final grades a slab <b>' +
+          esc(st.grades) + '</b>, with a link that opens Grade Reporting with the ' +
+          'slab already filled in. Alerts stay live for ' + esc(String(st.hours)) +
+          ' hours.')
+    ]);
+    var row = el('div', 'nt-row');
+    var t = el('button', 'btn ghost', 'Send a test message');
+    t.onclick = function () {
+      busy(t, true, 'Sending');
+      gs('api_telegramTest', S.token).then(function (r) {
+        busy(t, false);
+        toast(r && r.ok ? 'Sent — check Telegram.'
+                        : (r && r.error) || 'Could not send it.', r && r.ok ? 'good' : 'bad');
+      }, function (e) { busy(t, false); toast(String(e && e.message || e), 'bad'); });
+    };
+    var d = el('button', 'btn ghost', 'Disconnect');
+    d.onclick = function () {
+      busy(d, true, 'Disconnecting');
+      gs('api_telegramUnlink', S.token).then(function () {
+        busy(d, false); NT.st = null; loadNotify();
+      }, function (e) { busy(d, false); toast(String(e && e.message || e), 'bad'); });
+    };
+    row.appendChild(t); row.appendChild(d);
+    okc.appendChild(row);
+    wrap.appendChild(okc);
+    if (st.admin) ntAdminCards(wrap, st);
+    return;
+  }
+
+  /* ---- not connected: the one button that matters ---- */
+  var c = ntCard([
+    ntState('wait', 'Not connected'),
+    ntP('Tap the button. Telegram opens with your code already in the message — ' +
+        'press <b>START</b> and you are done. The bot answers within a minute ' +
+        'and this page turns green by itself.')
+  ]);
+
+  if (st.link) {
+    var a = document.createElement('a');
+    a.className = 'btn amber block lg';
+    a.href = st.link;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.textContent = 'Connect to Telegram';
+    a.onclick = function () { notifyStartPoll(); };
+    c.appendChild(a);
+    wrap.appendChild(c);
+
+    /* The deep link only carries the code into a chat you have never opened.
+       Once you have messaged the bot even once, tapping it just opens the chat
+       and sends nothing — so the code has to be pastable, and that path has to
+       be visible rather than buried as a footnote. */
+    var c2 = ntCard([
+      el('p', 'nt-h', 'If Telegram just opens the chat'),
+      ntP('That happens when you have messaged <b>@' + esc(st.bot) + '</b> ' +
+          'before — there is no START button left to press. Send it this code ' +
+          'as an ordinary message instead:')
+    ]);
+    var line = el('div', 'nt-row');
+    line.style.alignItems = 'center';
+    var codeEl = el('span', 'nt-code big', st.code);
+    line.appendChild(codeEl);
+    var cp = el('button', 'btn ghost', 'Copy code');
+    cp.style.flex = '0 0 auto';
+    cp.onclick = function () { copyText(st.code, cp); };
+    line.appendChild(cp);
+    c2.appendChild(line);
+    c2.appendChild(ntP('Nothing else — just the six characters. The bot checks for ' +
+                       'messages once a minute, so give it up to that long to ' +
+                       'answer; this page turns green by itself when it does.'));
+    wrap.appendChild(c2);
+  } else {
+    c.appendChild(ntP(esc(st.error || 'No link could be made.')));
+    wrap.appendChild(c);
+  }
+
+  if (st.polling === false) {
+    wrap.appendChild(ntCard([
+      el('p', 'nt-h', 'One thing to know'),
+      ntP('The app could not start the minute-by-minute check that reads ' +
+          'messages sent to the bot, so nothing will answer your code. An ' +
+          'administrator needs to run <b>installTelegramPoll()</b> once from ' +
+          'the Apps Script editor.')
+    ], 'nt-warn'));
+  }
+
+  if (st.admin) ntAdminCards(wrap, st);
+}
+
+/* ---- pieces ------------------------------------------------------------- */
+function ntCard(kids, extra) {
+  var c = el('div', 'nt-card' + (extra ? ' ' + extra : ''));
+  (kids || []).forEach(function (k) { c.appendChild(k); });
+  return c;
+}
+function ntState(kind, text) {
+  var d = el('div', 'nt-state');
+  d.appendChild(el('span', 'nt-dot ' + kind));
+  d.appendChild(el('b', null, text));
+  return d;
+}
+function ntP(html) { var p = el('p', 'nt-p'); p.innerHTML = html; return p; }
+
+/** Admin only: paste the @BotFather token here instead of in Project Settings. */
+function ntTokenCard(st) {
+  var c = ntCard([
+    ntState('off', 'The bot is not set up'),
+    ntP('One time, and only you can do it:')
+  ]);
+  var ol = el('ol', 'nt-steps');
+  [ 'In Telegram, message <b>@BotFather</b> and send <b>/newbot</b>.',
+    'Answer its two questions (a name, then a username ending in <i>bot</i>).',
+    'It replies with a token. Paste it below.'
+  ].forEach(function (t) { var li = document.createElement('li'); li.innerHTML = t; ol.appendChild(li); });
+  c.appendChild(ol);
+
+  var inp = document.createElement('input');
+  inp.className = 'nt-input';
+  inp.placeholder = '8123456789:AAH-…';
+  inp.autocomplete = 'off'; inp.spellcheck = false;
+  inp.autocapitalize = 'off'; inp.autocorrect = 'off';
+  c.appendChild(inp);
+
+  var save = el('button', 'btn amber block lg', 'Save the token');
+  save.onclick = function () {
+    var v = inp.value.trim();
+    if (!v) { toast('Paste the token first.', 'bad'); return; }
+    busy(save, true, 'Checking');
+    gs('api_telegramSaveToken', S.token, v).then(function (r) {
+      busy(save, false);
+      if (!r || r.ok === false) { toast((r && r.error) || 'Telegram refused it.', 'bad'); return; }
+      inp.value = '';
+      NT.st = r; renderNotify();
+      toast('Saved. The bot is @' + (r.bot || '') + '.', 'good');
+    }, function (e) { busy(save, false); toast(String(e && e.message || e), 'bad'); });
+  };
+  c.appendChild(save);
+  c.appendChild(ntP('It is stored in the project’s own settings, not in the ' +
+                    'sheet and not in any file.'));
+  if (st && st.error) c.appendChild(ntP('<b>' + esc(st.error) + '</b>'));
+  return c;
+}
+
+/** Admin only: is anything actually watching Q.C., and who is linked. */
+function ntAdminCards(wrap, st) {
+  if (!st.scanning) {
+    var w = ntCard([
+      ntState('off', 'Nothing is watching Q.C. Final'),
+      ntP('Alerts are raised by a check that runs every five minutes. It is not ' +
+          'running, so no alert will ever be raised. This also creates the ' +
+          '<b>Grade Alerts</b> and <b>Feedback Response</b> tabs if they are missing.')
+    ], 'nt-warn');
+    var go = el('button', 'btn amber block lg', 'Turn on alert checking');
+    go.onclick = function () {
+      busy(go, true, 'Setting up');
+      gs('api_alertSetup', S.token).then(function (r) {
+        busy(go, false); NT.st = r; renderNotify();
+        toast('Q.C. Final is being watched now.', 'good');
+      }, function (e) { busy(go, false); toast(String(e && e.message || e), 'bad'); });
+    };
+    w.appendChild(go);
+    wrap.appendChild(w);
+  } else {
+    wrap.appendChild(ntCard([ntState('on', 'Q.C. Final is being watched'),
+      ntP('Checked every five minutes. A <b>' + esc(st.grades) +
+          '</b> reaches Telegram within five minutes of Q.C. saving it.')]));
+  }
+
+  var fix = ntCard([
+    el('p', 'nt-h', 'If the bot starts repeating itself'),
+    ntP('This throws away anything Telegram is still holding and makes sure the ' +
+        'minute-by-minute check is running. Reach for it if the bot goes quiet ' +
+        'or starts repeating itself.')
+  ]);
+  var rb = el('button', 'btn ghost block', 'Reset the bot connection');
+  rb.onclick = function () {
+    busy(rb, true, 'Clearing');
+    gs('api_telegramReset', S.token).then(function (r) {
+      busy(rb, false); NT.st = r; renderNotify();
+      toast('Reset. The bot is being checked every minute.', 'good');
+    }, function (e) { busy(rb, false); toast(String(e && e.message || e), 'bad'); });
+  };
+  fix.appendChild(rb);
+  wrap.appendChild(fix);
+
+  var team = st.team || [];
+  var card = ntCard([el('p', 'nt-h', 'Who alerts reach')]);
+  if (!team.length) {
+    card.appendChild(ntP('Nobody has the supervisor role yet. Set <b>Role</b> to ' +
+      '<b>supervisor</b> on the App Users tab for the people who should be told.'));
+  } else {
+    var ul = el('ul', 'nt-team');
+    team.forEach(function (p) {
+      var li = document.createElement('li');
+      li.appendChild(el('span', null, p.name));
+      li.appendChild(el('span', 'r', p.role));
+      li.appendChild(el('span', 's ' + (p.linked ? 'y' : 'n'),
+        p.linked ? 'connected' : 'not yet'));
+      ul.appendChild(li);
+    });
+    card.appendChild(ul);
+    var n = team.filter(function (p) { return p.linked; }).length;
+    card.appendChild(ntP(n === team.length
+      ? 'Everyone is connected.'
+      : (team.length - n) + ' of ' + team.length + ' still need to open ' +
+        'Menu › Notifications on their own phone and tap Connect.'));
+  }
+  wrap.appendChild(card);
+}
+
+/* ============================================== feedback (admin) ======== */
+var FB = { entries: [], unattended: [], tab: 'reported', q: '', open: 0 };
+
+function isAdmin() { return S.user && S.user.role === 'admin'; }
+
+function openFeedback() {
+  sheetOpen('#feedback');
+  if (!FB.entries.length && !FB.unattended.length) loadFeedback();
+  else drawFeedback();
+}
+
+function loadFeedback() {
+  $('#fbList').innerHTML = '<div class="opt-empty">Loading…</div>';
+  gs('api_feedback', S.token, 150).then(function (r) {
+    if (!r || !r.ok) { $('#fbList').innerHTML = '<div class="opt-empty">Could not load.</div>'; return; }
+    FB.entries = r.entries || [];
+    FB.unattended = r.unattended || [];
+    FB.open = r.open || 0;
+    drawFeedback();
+  }, function (e) {
+    $('#fbList').innerHTML = '<div class="opt-empty">' + esc(String(e && e.message || e)) + '</div>';
+  });
+}
+
+function drawFeedback() {
+  var list = $('#fbList');
+  list.innerHTML = '';
+  var q = FB.q.trim().toLowerCase();
+
+  document.querySelectorAll('.fb-tab').forEach(function (b) {
+    b.classList.toggle('on', b.dataset.tab === FB.tab);
+  });
+
+  if (FB.tab === 'unattended') {
+    var un = FB.unattended.filter(function (u) {
+      return !q || (u.slab + ' ' + u.grade).toLowerCase().indexOf(q) !== -1;
+    });
+    if (!un.length) {
+      list.appendChild(el('div', 'opt-empty',
+        FB.unattended.length ? 'Nothing matches.' : 'Nothing has gone unattended. Good.'));
+    }
+    un.forEach(function (u) {
+      var t = el('div', 'fbtile un');
+      var h = el('div', 'fb-h');
+      h.appendChild(el('b', null, u.slab));
+      h.appendChild(el('span', 'fb-g g' + u.grade.replace(/[^A-Za-z]/g, ''), u.grade));
+      h.appendChild(el('span', 'fb-when', u.when));
+      t.appendChild(h);
+      t.appendChild(el('div', 'fb-sub',
+        'Raised ' + u.when + ' — nobody reported it within ' + ALERT_HOURS() + ' hours.' +
+        (u.notified ? '  (' + u.notified + ')' : '')));
+      list.appendChild(t);
+    });
+  } else {
+    var ent = FB.entries.filter(function (e) {
+      if (!q) return true;
+      var hay = (e.slab + ' ' + e.grade + ' ' + e.who + ' ' +
+        e.sections.map(function (s) { return s.defects + ' ' + s.area; }).join(' ')).toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+    if (!ent.length) {
+      list.appendChild(el('div', 'opt-empty',
+        FB.entries.length ? 'Nothing matches.' : 'No grade reports yet.'));
+    }
+    ent.forEach(function (e) { list.appendChild(feedbackTile(e)); });
+  }
+
+  $('#fbFoot').innerHTML = '';
+  $('#fbFoot').appendChild(el('span', null,
+    FB.entries.length + ' reported · ' + FB.unattended.length + ' unattended · ' +
+    FB.open + ' live'));
+}
+
+function ALERT_HOURS() { return 3; }
+
+function feedbackTile(e) {
+  var t = el('div', 'fbtile');
+  var h = el('button', 'fb-h');
+  h.type = 'button';
+  h.appendChild(el('b', null, e.slab));
+  h.appendChild(el('span', 'fb-g g' + String(e.grade).replace(/[^A-Za-z]/g, ''), e.grade));
+  h.appendChild(el('span', 'fb-when', e.when));
+  h.appendChild(el('span', 'fb-cnt', e.sections.length +
+    (e.sections.length === 1 ? ' section' : ' sections')));
+  h.appendChild(el('span', 'caret'));
+  t.appendChild(h);
+
+  var body = el('div', 'fb-body');
+  body.appendChild(el('div', 'fb-sub', 'Reported by ' + (e.who || '—')));
+  e.sections.forEach(function (sec) {
+    var b = el('div', 'fb-sec');
+    var sh = el('div', 'fb-sech');
+    sh.appendChild(el('span', 'n', String(sec.n)));
+    sh.appendChild(el('b', null, /^\d+$/.test(String(sec.n)) ? 'Section ' + sec.n
+                                                             : String(sec.n)));
+    sh.appendChild(el('span', 'fb-area', sec.area || '—'));
+    b.appendChild(sh);
+    [['Defects', sec.defects], ['Reason', sec.reason], ['Solution', sec.solution]]
+      .forEach(function (pair) {
+        if (!pair[1]) return;
+        var r = el('div', 'fb-kv');
+        r.appendChild(el('span', 'k', pair[0]));
+        r.appendChild(el('span', 'v', pair[1]));
+        b.appendChild(r);
+      });
+    if (sec.photos.length || sec.videos.length) {
+      var links = el('div', 'fb-media');
+      sec.photos.forEach(function (u, i) { links.appendChild(mediaLink(u, 'Photo ' + (i + 1))); });
+      sec.videos.forEach(function (u, i) { links.appendChild(mediaLink(u, 'Video ' + (i + 1))); });
+      b.appendChild(links);
+    }
+    body.appendChild(b);
+  });
+  t.appendChild(body);
+
+  h.onclick = function () { t.classList.toggle('open'); buzz(); };
+  return t;
+}
+
+function mediaLink(url, label) {
+  var a = el('a', 'fb-mlink', label);
+  a.href = url;
+  a.target = '_blank';
+  a.rel = 'noopener';
+  return a;
+}
+
+$('#fbClose').onclick = closeTop;
+$('#fbReload').onclick = loadFeedback;
+$('#fbSearch').addEventListener('input', function () {
+  FB.q = this.value;
+  $('#fbClear').classList.toggle('on', !!this.value);
+  drawFeedback();
+});
+$('#fbClear').onclick = function () {
+  $('#fbSearch').value = ''; FB.q = ''; this.classList.remove('on'); drawFeedback();
+};
+document.querySelectorAll('.fb-tab').forEach(function (b) {
+  b.onclick = function () { FB.tab = b.dataset.tab; drawFeedback(); };
+});
+$('#mFeedback').onclick = function () { closeTop(); setTimeout(openFeedback, 260); };
+
+/* ====================================================== safety nets ===== */
+window.addEventListener('beforeunload', function (e) {
+  if (S.form && Object.keys(S.values).length) { e.preventDefault(); e.returnValue = ''; }
+});
+document.addEventListener('keydown', function (e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && S.form) doSubmit();
+  if (e.key === 'Escape' && openSheets.length) closeTop();
+});
+/* iOS: double-tap-to-zoom fires a 350ms click delay and mis-taps on pills */
+document.addEventListener('dblclick', function (e) { e.preventDefault(); }, { passive: false });
+
+})();
+</script>

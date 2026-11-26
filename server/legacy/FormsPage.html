@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#121110">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="format-detection" content="telephone=no">
+  <?!= formsInclude('FormsCss'); ?>
+  <script>window.DEEPLINK = <?!= deepLink ?>;</script>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login">
+    <div class="brand">
+      <div class="mark">//</div>
+      <div><b>Slabworks</b><span>Production Control</span></div>
+    </div>
+    <div class="card">
+      <h1>Sign in</h1>
+      <p class="sub">Use the username your supervisor gave you.</p>
+      <div class="alert err" id="loginErr"></div>
+      <form id="loginForm">
+        <div class="field">
+          <label for="lu">Username</label>
+          <input class="input" id="lu" name="username" autocapitalize="none"
+                 autocorrect="off" spellcheck="false" autocomplete="username"
+                 enterkeyhint="next" required>
+        </div>
+        <div class="field">
+          <label for="lp">Password</label>
+          <div class="pw">
+            <input class="input" id="lp" name="password" type="password"
+                   autocomplete="current-password" enterkeyhint="go" required>
+            <button class="pw-eye" id="pwEye" type="button" aria-label="Show password">Show</button>
+          </div>
+        </div>
+        <label class="remember"><input type="checkbox" id="lr" checked> Keep me signed in on this phone</label>
+        <button class="btn block lg" id="loginBtn" type="submit">Sign in</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ================= APP ================= -->
+<div class="app" id="app">
+
+  <!-- top bar (mobile) -->
+  <header class="appbar">
+    <button class="formsw" id="formSwitch">
+      <span class="chip" id="barAbbr">--</span>
+      <span class="fname"><b id="barTitle">&nbsp;</b><i id="barCtx">tap to switch form</i></span>
+      <span class="caret"></span>
+    </button>
+    <button class="iconbtn" id="menuBtn" aria-label="Menu"><span></span><span></span><span></span></button>
+    <div class="barprog"><i id="barProg"></i></div>
+  </header>
+
+  <!-- grade alerts: the same fixed, self-measuring strip as the oven timer,
+       so the two stack instead of fighting for the same space -->
+  <div id="alertDock"></div>
+
+  <!-- oven strip: fixed under the app bar, reserves its own height so it
+       never covers the form; tap to expand -->
+  <div id="ovenDock"></div>
+
+  <!-- desktop sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="mark">//</div>
+      <div><b>Slabworks</b><span>Production Control</span></div>
+    </div>
+    <div class="sb-scroll">
+      <div class="navlabel">Your forms</div>
+      <nav id="nav"></nav>
+      <div class="navlabel" id="adminLabel" hidden>Admin</div>
+      <nav id="adminNav" hidden></nav>
+    </div>
+    <div class="foot">
+      <div class="who"><b id="whoName"></b><span id="whoUser"></span></div>
+      <button class="navitem" id="notifyBtnD" hidden><span class="chip">TG</span>Notifications<i
+        class="nav-dot" id="ntDotD"></i></button>
+      <button class="navitem" id="logoutBtnD"><span class="chip">&#8592;</span>Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="fTitle">&nbsp;</h1>
+        <p class="sub" id="fSub"></p>
+      </div>
+      <div class="acts">
+        <button class="btn ghost sm" id="historyBtnD">History</button>
+        <button class="btn ghost sm" id="refreshBtnD">Refresh lists</button>
+        <button class="btn ghost sm" id="clearBtnD">Clear</button>
+      </div>
+    </div>
+
+    <div class="alert warn" id="formNote"></div>
+    <div class="alert err" id="pendingNote"></div>
+
+    <div class="layout">
+      <div>
+        <button class="prefill" id="prefillBtn" type="button">
+          <span class="pf-ic" aria-hidden="true">&#8635;</span>
+          <span class="pf-t">
+            <b>Fill previous values</b>
+            <i id="prefillSub">Repeat your last entry — everything except the slab number</i>
+          </span>
+          <span class="pf-go" aria-hidden="true">&#8250;</span>
+        </button>
+
+        <!-- Batching and Resin: one button per line. The two lines run
+             different recipes, so "the last entry" has to mean the last entry
+             on that line. -->
+        <div class="prefill-pair" id="prefillPair">
+          <button class="prefill line" id="prefillA" type="button" data-line="A">
+            <span class="pf-ic" aria-hidden="true">&#8635;</span>
+            <span class="pf-t"><b>Previous A line</b><i>Last A entry</i></span>
+          </button>
+          <button class="prefill line" id="prefillB" type="button" data-line="B">
+            <span class="pf-ic" aria-hidden="true">&#8635;</span>
+            <span class="pf-t"><b>Previous B line</b><i>Last B entry</i></span>
+          </button>
+        </div>
+        <div class="pf-note" id="prefillNote"></div>
+
+        <div id="sections"><div class="center-note">Loading&hellip;</div></div>
+        <div class="deskbar">
+          <button class="btn amber lg" id="submitBtnD">Submit entry</button>
+          <span class="sub" id="submitHint"></span>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="card">
+          <h3>This entry</h3>
+          <div class="progress"><i id="progBar"></i></div>
+          <div class="pmeta"><span id="progText">0 filled</span><span id="reqText"></span></div>
+          <div id="summaryD" style="margin-top:10px"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- bottom action bar (mobile) -->
+  <div class="actionbar">
+    <button class="review" id="reviewBtn">
+      <b id="reviewCount">0</b><span id="reviewLbl">filled</span>
+      <span class="caret up"></span>
+    </button>
+    <button class="btn amber grow lg" id="submitBtn">Submit</button>
+  </div>
+</div>
+
+<!-- ================= SHEETS ================= -->
+<div class="scrim" id="scrim"></div>
+
+<!-- generic picker -->
+<section class="sheet picker" id="picker" role="dialog" aria-modal="true">
+  <div class="sheet-h">
+    <button class="sheet-x" id="pkClose" aria-label="Close">&#10005;</button>
+    <b id="pkTitle">Select</b>
+    <button class="sheet-do" id="pkDone">Done</button>
+  </div>
+  <div class="sheet-search">
+    <input id="pkSearch" placeholder="Search…" autocomplete="off" autocorrect="off"
+           spellcheck="false" enterkeyhint="search">
+    <button class="clr" id="pkClear" aria-label="Clear">&#10005;</button>
+  </div>
+  <div class="sheet-body" id="pkList"></div>
+  <div class="sheet-f" id="pkFoot"></div>
+</section>
+
+<!-- form switcher -->
+<section class="sheet short" id="formSheet" role="dialog" aria-modal="true">
+  <div class="sheet-h"><button class="sheet-x" id="fsClose">&#10005;</button><b>Switch form</b><span></span></div>
+  <div class="sheet-body" id="fsList"></div>
+</section>
+
+<!-- menu -->
+<section class="sheet short" id="menuSheet" role="dialog" aria-modal="true">
+  <div class="sheet-h"><button class="sheet-x" id="mnClose">&#10005;</button><b id="mnWho">Menu</b><span></span></div>
+  <div class="sheet-body">
+    <button class="menurow" id="mFeedback"><b>Feedback</b><i>Grade reports and unattended alerts</i></button>
+    <button class="menurow" id="mHistory"><b>History</b><i>The last 100 entries on this form</i></button>
+    <button class="menurow" id="mNotify"><b>Notifications</b><i id="mnNotify">Grade alerts on Telegram</i></button>
+    <button class="menurow" id="mRefresh"><b>Refresh lists</b><i>Reload slabs and bundles from the sheet</i></button>
+    <button class="menurow" id="mClear"><b>Clear this form</b><i>Start the entry again</i></button>
+    <button class="menurow danger" id="mLogout"><b>Sign out</b><i id="mnUser"></i></button>
+  </div>
+</section>
+
+<!-- history -->
+<section class="sheet" id="history" role="dialog" aria-modal="true">
+  <div class="sheet-h">
+    <button class="sheet-x" id="hxClose">&#10005;</button>
+    <b id="hxTitle">History</b>
+    <button class="sheet-do" id="hxReload">Reload</button>
+  </div>
+  <div class="sheet-search">
+    <input id="hxSearch" placeholder="Search slab, value or person&hellip;" autocomplete="off"
+           autocorrect="off" spellcheck="false" enterkeyhint="search">
+    <button class="clr" id="hxClear" aria-label="Clear">&#10005;</button>
+  </div>
+  <div class="sheet-body" id="hxList"></div>
+  <div class="sheet-f" id="hxFoot"></div>
+</section>
+
+<!-- slab picker (Dispatch): full screen, and sized to the VISIBLE viewport so
+     the list is never hidden behind the phone keyboard -->
+<section class="sheet full" id="slabSheet" role="dialog" aria-modal="true">
+  <div class="sheet-h">
+    <button class="sheet-x" id="sbClose" aria-label="Close">&#10005;</button>
+    <b>Add slabs</b>
+    <button class="sheet-do" id="sbDone">Done <i id="sbCount">0</i></button>
+  </div>
+  <div class="sheet-search">
+    <input id="sbSearch" placeholder="Type a slab number&hellip;" autocomplete="off"
+           autocorrect="off" autocapitalize="characters" spellcheck="false"
+           enterkeyhint="done" inputmode="text">
+    <button class="clr" id="sbClear" aria-label="Clear">&#10005;</button>
+  </div>
+  <div class="sb-strip" id="sbStrip"></div>
+  <div class="sheet-body" id="sbList"></div>
+</section>
+
+<!-- Feedback (admin): reported slabs, and the alerts nobody got to -->
+<section class="sheet" id="feedback" role="dialog" aria-modal="true">
+  <div class="sheet-h">
+    <button class="sheet-x" id="fbClose" aria-label="Close">&#10005;</button>
+    <b id="fbTitle">Feedback</b>
+    <button class="sheet-do" id="fbReload">Reload</button>
+  </div>
+  <div class="fb-tabs">
+    <button class="fb-tab on" id="fbTabRep" data-tab="reported">Reported</button>
+    <button class="fb-tab" id="fbTabUn" data-tab="unattended">Unattended</button>
+  </div>
+  <div class="sheet-search">
+    <input id="fbSearch" placeholder="Search slab, defect or person&hellip;" autocomplete="off"
+           autocorrect="off" spellcheck="false" enterkeyhint="search">
+    <button class="clr" id="fbClear" aria-label="Clear">&#10005;</button>
+  </div>
+  <div class="sheet-body" id="fbList"></div>
+  <div class="sheet-f" id="fbFoot"></div>
+</section>
+
+<!-- notifications: connect this account to the Telegram bot -->
+<section class="sheet" id="notify" role="dialog" aria-modal="true">
+  <div class="sheet-h">
+    <button class="sheet-x" id="ntClose" aria-label="Close">&#10005;</button>
+    <b>Notifications</b>
+    <button class="sheet-do" id="ntReload">Refresh</button>
+  </div>
+  <div class="sheet-body" id="ntBody"></div>
+</section>
+
+<!-- review drawer -->
+<section class="sheet" id="review" role="dialog" aria-modal="true">
+  <div class="sheet-h"><button class="sheet-x" id="rvClose">&#10005;</button><b>This entry</b><span></span></div>
+  <div class="sheet-body" id="summaryM"></div>
+  <div class="sheet-f"><button class="btn amber block lg" id="rvSubmit">Submit entry</button></div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<?!= formsInclude('FormsJs'); ?>
+</body>
+</html>
