@@ -331,7 +331,18 @@ body[data-mode="sheet"] .ms-scroll{height:auto;flex:1;min-height:200px}
 body[data-theme="dark"] .mono-cell:hover{background:#2e2b27}
 
 /* ===== Mono Sheets — editable grid (Phase 1) ===== */
-.ms{display:flex;flex-direction:column;gap:6px}
+.ms{display:flex;flex-direction:column;gap:6px;position:relative}
+/* Ctrl+F find bar - floats over the top-right of the grid, like Sheets, so it
+   never covers the data you are searching. The full Find & replace dialog is
+   still one click away on the three-dot button. */
+.ms-findbar{position:absolute;right:16px;z-index:30;display:flex;align-items:center;gap:1px;padding:4px 5px 4px 11px;background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:var(--shadow-lift)}
+.ms-findbar input{width:190px;border:0;outline:none;background:transparent;font-size:13px;color:var(--ink);padding:3px 0}
+.ms-findbar input::placeholder{color:var(--ink-faint)}
+.ms-fb-stat{font-size:11px;color:var(--ink-faint);white-space:nowrap;padding:0 6px 0 2px}
+.ms-fb-btn{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:0;background:transparent;border-radius:6px;cursor:pointer;color:var(--ink-faint)}
+.ms-fb-btn:hover{background:var(--bg);color:var(--ink)}
+.ms-fb-up svg{transform:rotate(180deg)}
+.ms-fb-more svg{transform:rotate(90deg)}
 .ms-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .ms-name{font-weight:800;font-size:15px}
 .ms-spacer{flex:1}

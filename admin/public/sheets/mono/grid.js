@@ -1065,7 +1065,7 @@ export class MonoGrid {
     if (ctrl && !shift && (k === '`' || k === '~' || code === 'Backquote')) { e.preventDefault(); return this.toggleShowFormulas(); } // Ctrl+`: show formulas
 
     /* ---- find / goto ---- */
-    if (ctrl && (k === 'f' || k === 'F')) { e.preventDefault(); return this.openFindReplace(); }                // Ctrl+F: Find
+    if (ctrl && (k === 'f' || k === 'F')) { e.preventDefault(); return this.openFindBar(); }                     // Ctrl+F: find bar
     if (ctrl && (k === 'h' || k === 'H')) { e.preventDefault(); return this.openFindReplace(); }                // Ctrl+H: Find & Replace
     if (ctrl && (k === 'g' || k === 'G')) { e.preventDefault(); return this.jumpToCell(); }                     // Ctrl+G: Go To
 
@@ -2091,17 +2091,63 @@ export class MonoGrid {
     this.engine.recalcAll(); this.save(); this.render();
   }
   modal(html) { const back = document.createElement('div'); back.className = 'modal-backdrop'; back.innerHTML = `<div class="modal">${html}</div>`; document.body.appendChild(back); back.addEventListener('mousedown', (e) => { if (e.target === back) back.remove(); }); return back; }
-  openFindReplace() {
-    const m = this.modal(`<h3>Find &amp; replace</h3><div class="form-row"><label>Find</label><input id="frFind"></div><div class="form-row"><label>Replace with</label><input id="frRepl"></div><div class="form-row"><label style="font-weight:400"><input type="checkbox" id="frCase"> Match case</label></div><div id="frStat" class="muted"></div><div class="modal-actions"><button class="btn btn-ghost" id="frFindBtn">Find next</button><button class="btn btn-ghost" id="frAll">Replace all</button><button class="btn btn-primary" id="frClose">Done</button></div>`);
+  /* ---------- Ctrl+F: find bar ----------
+     Ctrl+F used to throw up the whole Find & replace modal, which covers the
+     data you are trying to look at and asks for a replacement you did not
+     want. Sheets puts a small bar over the top-right of the grid instead:
+     type, Enter or the chevrons to walk the matches, and the three-dot button
+     to escalate to Find & replace carrying the text across. Ctrl+H and
+     Ctrl+Shift+F still go straight to the dialog. */
+  openFindBar() {
+    const host = this.host.querySelector('.ms');
+    if (!host || !this.scrollEl) return this.openFindReplace();
+    const open = host.querySelector('#msFindBar');
+    // A second Ctrl+F selects what is already there rather than stacking bars.
+    if (open) { const i = open.querySelector('input'); i.focus(); i.select(); return; }
+    const bar = document.createElement('div');
+    bar.id = 'msFindBar'; bar.className = 'ms-findbar';
+    bar.innerHTML = `<input id="fbQ" placeholder="Find in sheet" spellcheck="false" autocomplete="off" aria-label="Find in sheet">`
+      + `<span class="ms-fb-stat" id="fbStat"></span>`
+      + `<button class="ms-fb-btn ms-fb-up" id="fbPrev" title="Previous match (Shift+Enter)" aria-label="Previous match">${icon('chevron-down', { size: 14 })}</button>`
+      + `<button class="ms-fb-btn" id="fbNext" title="Next match (Enter)" aria-label="Next match">${icon('chevron-down', { size: 14 })}</button>`
+      + `<button class="ms-fb-btn ms-fb-more" id="fbMore" title="Find and replace" aria-label="Find and replace">${icon('more-horizontal', { size: 14 })}</button>`
+      + `<button class="ms-fb-btn" id="fbClose" title="Close (Esc)" aria-label="Close find">${icon('x', { size: 13 })}</button>`;
+    host.appendChild(bar);
+    bar.style.top = (this.scrollEl.offsetTop + 8) + 'px';
+    const q = bar.querySelector('#fbQ'), stat = bar.querySelector('#fbStat');
+    const close = () => { bar.remove(); this.focusGrid(); };
+    const step = (dir) => {
+      if (!q.value) { stat.textContent = ''; return; }
+      stat.textContent = this.findNext(q.value, false, dir) ? '' : 'No results';
+    };
+    // Searching as you type is a full sheet scan whenever nothing matches -
+    // ~110,000 getDisplay calls on a 3,600 x 31 sheet. Debounced so holding a
+    // key down cannot queue one scan per character.
+    let t = 0;
+    q.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => step(1), 150); });
+    q.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); clearTimeout(t); step(e.shiftKey ? -1 : 1); }
+      else if (e.key === 'Escape') { e.preventDefault(); close(); }
+      else if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); q.select(); }
+    });
+    bar.querySelector('#fbNext').onclick = () => step(1);
+    bar.querySelector('#fbPrev').onclick = () => step(-1);
+    bar.querySelector('#fbClose').onclick = close;
+    bar.querySelector('#fbMore').onclick = () => { const v = q.value; bar.remove(); this.openFindReplace(v); };
+    q.focus();
+  }
+  openFindReplace(prefill = '') {
+    const m = this.modal(`<h3>Find &amp; replace</h3><div class="form-row"><label>Find</label><input id="frFind" value="${escH(prefill)}"></div><div class="form-row"><label>Replace with</label><input id="frRepl"></div><div class="form-row"><label style="font-weight:400"><input type="checkbox" id="frCase"> Match case</label></div><div id="frStat" class="muted"></div><div class="modal-actions"><button class="btn btn-ghost" id="frFindBtn">Find next</button><button class="btn btn-ghost" id="frAll">Replace all</button><button class="btn btn-primary" id="frClose">Done</button></div>`);
     const find = m.querySelector('#frFind'); find.focus();
     m.querySelector('#frClose').onclick = () => m.remove();
     m.querySelector('#frFindBtn').onclick = () => { const ok = this.findNext(find.value, m.querySelector('#frCase').checked); m.querySelector('#frStat').textContent = ok ? '' : 'No match'; };
     m.querySelector('#frAll').onclick = () => { const k = this.replaceAll(find.value, m.querySelector('#frRepl').value, m.querySelector('#frCase').checked); m.querySelector('#frStat').textContent = k + ' replaced'; };
   }
-  findNext(q, matchCase) {
+  /** dir 1 searches forward from the active cell, -1 backward; both wrap. */
+  findNext(q, matchCase, dir = 1) {
     if (!q) return false; const sh = this.sheet(); const sid = sh.id; const norm = (s) => matchCase ? s : s.toLowerCase(); const Q = norm(q); const tot = sh.rows * sh.cols;
-    const start = this.active.r * sh.cols + this.active.c + 1;
-    for (let i = 0; i < tot; i++) { const idx = (start + i) % tot; const r = Math.floor(idx / sh.cols), c = idx % sh.cols; const d = this.engine.getDisplay(sid, r, c); if (d && norm(String(d)).includes(Q)) { this.select(r, c); return true; } }
+    const start = this.active.r * sh.cols + this.active.c + dir;
+    for (let i = 0; i < tot; i++) { const idx = (((start + i * dir) % tot) + tot) % tot; const r = Math.floor(idx / sh.cols), c = idx % sh.cols; const d = this.engine.getDisplay(sid, r, c); if (d && norm(String(d)).includes(Q)) { this.select(r, c); return true; } }
     return false;
   }
   replaceAll(q, repl, matchCase) {
