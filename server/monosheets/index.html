@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MONO AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="theme.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <!-- U2: the topbar's markup is owned entirely by shell.js — one place both
+       Dashboard and Sheets pull their global chrome from (logo, mode switch,
+       workspace name, sync status, settings, account). Mode-specific actions
+       render into the #modeActions slot below, never a competing bar. -->
+  <div class="topbar" id="topbar"></div>
+
+  <div class="body">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main" id="main"></main>
+  </div>
+</div>
+
+<div class="chat" id="chat">
+  <div class="head">
+    <div class="ic" id="chatIcon"></div>
+    <div><div style="font-weight:700" id="chatTitle">Dashboard Assistant</div><div class="muted" id="chatProvider">AI</div></div>
+    <button class="btn btn-ghost" id="chatCloseBtn" style="margin-left:auto;padding:4px 9px" onclick="window.toggleChat()"></button>
+  </div>
+  <div class="body" id="chatBody"></div>
+  <div class="foot">
+    <input id="chatInput" placeholder="ask about your data…" />
+    <button class="btn btn-primary" onclick="window.sendChat()">Send</button>
+  </div>
+</div>
+<div class="fab" id="fab" onclick="window.toggleChat()" title="Assistant"></div>
+<div class="toast" id="toast"></div>
+
+<script type="module" src="chat.js"></script>
+<script type="module" src="shell.js"></script>
+</body>
+</html>

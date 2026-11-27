@@ -6,8 +6,8 @@
 import ExcelJS from 'exceljs';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { pool } from '../db.js';
-import { rt, wb, run, commit } from '../app.js';
-import { refreshAll, hasComputed } from '../store/computed.js';
+import { rt, wb, run, commit, bridge } from '../app.js';
+import { refreshAll } from '../store/computed.js';
 import { editValue, formatDate, isEmpty, isTimeOnly } from '../store/values.js';
 import { Tab } from '../store/workbook.js';
 import { readXlsx } from '../importer/xlsx.js';
@@ -154,39 +154,6 @@ async function audit(actor: string, action: string, f: {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
     [actor, action, f.tab ?? null, f.row ?? null, f.col ?? null, f.old ?? null, f.neu ?? null,
      f.detail === undefined ? null : JSON.stringify(f.detail)]);
-}
-
-/* ------------------------------------------------------------- data -- */
-
-function tabInfo(t: Tab) {
-  return {
-    id: t.id, name: t.name, hidden: t.hidden, rows: t.lastRow(), cols: t.lastCol(),
-    frozenRows: t.frozenRows, frozenCols: t.frozenCols, computed: t.computed.length > 0
-  };
-}
-
-function structKey(t: Tab): string { return wb.loadedAt + ':' + t.structVersion; }
-
-function tabData(t: Tab) {
-  const cols = Math.max(t.lastCol(), 1);
-  const rows: string[][] = new Array(t.rows.length);
-  for (let r = 0; r < t.rows.length; r++) {
-    const src = t.rows[r] || [];
-    let n = Math.min(src.length, cols);
-    while (n > 0 && isEmpty(src[n - 1])) n--;
-    const line: string[] = new Array(n);
-    for (let c = 0; c < n; c++) line[c] = editValue(src[c]);
-    rows[r] = line;
-  }
-  return {
-    ...tabInfo(t), struct: structKey(t), computedRanges: t.computed, rowsData: rows,
-    colWidths: t.colWidths
-  };
-}
-
-interface Op {
-  op: 'set' | 'insertRows' | 'deleteRows';
-  row: number; col?: number; value?: string; expect?: string; n?: number;
 }
 
 export async function adminRoutes(app: FastifyInstance): Promise<void> {
@@ -348,118 +315,6 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     return { ok: true, users: listUsers() };
   });
 
-  /* -------------------------------------------------------------- data */
-  app.get('/api/admin/tabs', async (req) => {
-    await requireAdmin(req);
-    return { ok: true, tabs: wb.tabs.map((t) => tabInfo(wb.tab(t.name)!)) };
-  });
-
-  app.get('/api/admin/tabs/:id', async (req) => {
-    await requireAdmin(req);
-    const t = wb.tabById(parseInt((req.params as any).id, 10));
-    if (!t) throw new HttpError(404, 'That tab no longer exists.');
-    return { ok: true, tab: tabData(t) };
-  });
-
-  app.post('/api/admin/tabs', async (req) => {
-    const me = await requireAdmin(req);
-    const name = String(((req.body || {}) as any).name || '').trim();
-    if (!name || name.length > 80) throw new HttpError(400, 'Give the tab a name (up to 80 characters).');
-    if (wb.rawTab(name)) throw new HttpError(409, 'A tab named "' + name + '" already exists.');
-    const t = await commit(() => wb.createTab(name));
-    await audit(me.username, 'tab.create', { tab: name });
-    return { ok: true, tab: tabInfo(t) };
-  });
-
-  app.patch('/api/admin/tabs/:id', async (req) => {
-    const me = await requireAdmin(req);
-    const t = wb.tabById(parseInt((req.params as any).id, 10));
-    if (!t) throw new HttpError(404, 'That tab no longer exists.');
-    const b = (req.body || {}) as any;
-    const old = t.name;
-    await commit(() => {
-      if (b.hidden !== undefined) { t.hidden = !!b.hidden; t.dirtyMeta = true; }
-      if (b.name !== undefined && String(b.name).trim() !== t.name) {
-        if (hasComputed(t.name)) throw new HttpError(400, 'The forms read this tab by name, so it cannot be renamed.');
-        try { wb.renameTab(t, String(b.name)); } catch (e: any) { throw new HttpError(400, e.message); }
-      }
-    });
-    rt.cache.clearData();
-    await audit(me.username, 'tab.update', { tab: old, detail: { name: t.name, hidden: t.hidden } });
-    return { ok: true, tab: tabInfo(t) };
-  });
-
-  /**
-   * Apply edits from the raw-data grid. Cell edits carry the value the admin
-   * was looking at; if the cell has changed since (an operator's entry, or
-   * another admin), that edit is refused and reported instead of overwriting.
-   */
-  app.post('/api/admin/tabs/:id/ops', async (req) => {
-    const me = await requireAdmin(req);
-    const t = wb.tabById(parseInt((req.params as any).id, 10));
-    if (!t) throw new HttpError(404, 'That tab no longer exists.');
-    const b = (req.body || {}) as { struct?: string; ops?: Op[] };
-    const ops = Array.isArray(b.ops) ? b.ops : [];
-    if (ops.length > 200000) throw new HttpError(413, 'Too many changes in one save.');
-    const structural = ops.some((o) => o.op !== 'set');
-    if (b.struct !== structKey(t)) {
-      throw new HttpError(409, 'Rows were added or removed on this tab since you opened it. Reload the tab and make the change again.');
-    }
-
-    const applied: { row: number; col: number; value: string }[] = [];
-    const conflicts: { row: number; col: number; value: string }[] = [];
-    const trail: Parameters<typeof audit>[2][] = [];
-    await commit(() => {
-      for (const o of ops) {
-        const row = Math.floor(Number(o.row));
-        if (!(row >= 1) || row > 2000000) continue;
-        if (o.op === 'set') {
-          const col = Math.floor(Number(o.col));
-          if (!(col >= 1) || col > 2000) continue;
-          const now = editValue(t.get(row, col));
-          if (t.isComputed(row, col)) { conflicts.push({ row, col, value: now }); continue; }
-          if (o.expect !== undefined && String(o.expect) !== now) { conflicts.push({ row, col, value: now }); continue; }
-          const value = o.value === undefined || o.value === null ? '' : String(o.value);
-          if (value === now) continue;
-          t.setEntered(row, col, value);
-          const after = editValue(t.get(row, col));
-          applied.push({ row, col, value: after });
-          trail.push({ tab: t.name, row, col, old: now, neu: after });
-        } else if (o.op === 'insertRows') {
-          const n = Math.min(Math.max(Math.floor(Number(o.n) || 1), 1), 1000);
-          t.insertRows(row, n);
-          trail.push({ tab: t.name, row, detail: { inserted: n } });
-        } else if (o.op === 'deleteRows') {
-          const n = Math.min(Math.max(Math.floor(Number(o.n) || 1), 1), 100000);
-          const gone: string[][] = [];
-          for (let r = row; r < row + n && r <= t.lastRow() && gone.length < 200; r++) {
-            gone.push((t.rows[r - 1] || []).map(editValue));
-          }
-          t.deleteRows(row, n);
-          trail.push({ tab: t.name, row, detail: { deleted: n, rows: gone } });
-        }
-      }
-    });
-    if (trail.length) {
-      rt.cache.clearData();
-      /* Tell the dashboard, as the sheet's edit trigger used to: a row moved
-         means reload, an edited cell means fetch that row again. */
-      try {
-        if (structural && rt.has('noteFullChange_')) await run('noteFullChange_', []);
-        else if (rt.has('noteChange_')) {
-          const rowsHit = Array.from(new Set(trail.map((f) => f!.row!))).slice(0, 80);
-          for (const r of rowsHit) rt.call('noteChange_', [t.name, r, 1]);
-          await wb.flush();
-        }
-      } catch { /* the dashboard catches up on its next rebuild */ }
-      /* One line per change, up to a point; a huge paste is summarised. */
-      if (trail.length <= 500) for (const f of trail) await audit(me.username, f!.detail ? 'data.rows' : 'data.edit', f);
-      else await audit(me.username, 'data.bulk', { tab: t.name, detail: { cells: trail.length, sample: trail.slice(0, 50) } });
-    }
-    const fresh = wb.tabById(t.id!)!;
-    return { ok: true, applied, conflicts, struct: structKey(fresh), structural, rows: fresh.lastRow(), cols: fresh.lastCol() };
-  });
-
   app.get('/api/admin/audit', async (req) => {
     await requireAdmin(req);
     const q = (req.query || {}) as any;
@@ -489,6 +344,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       refreshAll(wb);
     });
     rt.cache.clearData();
+    bridge.reloadAll();
     /* Open dashboards must drop what they hold and load the new data. */
     try { if (rt.has('noteFullChange_')) await run('noteFullChange_', []); } catch { /* next rebuild catches up */ }
     await audit(me.username, 'import', { detail: { file: file.filename, tabs: parsed.summary } });
@@ -543,6 +399,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     await wb.load();
     refreshAll(wb);
     rt.cache.clearData();
+    bridge.reloadAll();
     await audit(me.username, 'reload');
     return { ok: true, tabs: wb.tabs.length };
   });

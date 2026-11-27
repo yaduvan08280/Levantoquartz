@@ -38,16 +38,7 @@ export function App() {
   if (checking) return <div className="center muted">Loading…</div>;
   if (!me) return <Login onDone={setMe} />;
 
-  /* Leaving the data page with a save still in flight would lose it. */
-  const go = async (p: Page) => {
-    const frame = document.querySelector<HTMLIFrameElement>('iframe.sheet');
-    const w = frame?.contentWindow as any;
-    if (w?.levantoFlush) {
-      const clean = await w.levantoFlush().catch(() => false);
-      if (!clean && !confirm('Some changes on this tab have not been saved. Leave anyway?')) return;
-    }
-    location.hash = '#/' + p;
-  };
+  const go = (p: Page) => { location.hash = '#/' + p; };
 
   const signOut = async () => {
     try { await api('/logout', { method: 'POST' }); } catch { /* already gone */ }

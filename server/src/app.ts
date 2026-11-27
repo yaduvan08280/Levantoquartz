@@ -7,10 +7,12 @@ import { pool } from './db.js';
 import { Workbook } from './store/workbook.js';
 import { installComputed, refreshAll } from './store/computed.js';
 import { Runtime } from './gas/runtime.js';
+import { Bridge } from './mono/bridge.js';
 import { listTriggers } from './gas/services.js';
 
 export const wb = new Workbook(pool);
 export const rt = new Runtime(wb);
+export const bridge = new Bridge(wb, () => String((rt.global('FORMS_CFG') || {}).LOG_TAB || ''));
 
 export async function boot(): Promise<void> {
   await wb.load();
@@ -19,6 +21,7 @@ export async function boot(): Promise<void> {
   rt.load();
   await firstRun();
   await ensureJobs();
+  bridge.settle();
 }
 
 /**
@@ -70,6 +73,7 @@ export async function run<T = any>(fn: string, args: unknown[] = []): Promise<T>
     /* Committed even when the call threw: it may have written before failing,
        and the logic's own error paths expect those writes to stand. */
     await wb.flush();
+    bridge.publish();                 // open sheets hear about it
   }
   return out;
 }
@@ -77,6 +81,6 @@ export async function run<T = any>(fn: string, args: unknown[] = []): Promise<T>
 /** Run server-side work against the store, then commit. */
 export async function commit<T>(work: () => T): Promise<T> {
   let out: T;
-  try { out = work(); } finally { await wb.flush(); }
+  try { out = work(); } finally { await wb.flush(); bridge.publish(); }
   return out;
 }

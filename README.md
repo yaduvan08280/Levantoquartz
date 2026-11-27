@@ -9,6 +9,7 @@ panel for users and data.
 | `/` | The forms app operators use. The same page as before. |
 | `/dashboard` | The production dashboard (Overview, Live, Quality, Costing, Reports…). The same page as before; admins and supervisors sign in. |
 | `/admin/` | Admin panel: users, raw data, change log, import and backup. Admin accounts only. |
+| `/sheets/` | Mono Sheets on the live data (also shown inside the admin panel under Raw data). Admins only. |
 
 ## How it is put together
 
@@ -25,8 +26,10 @@ server/
   src/routes/    forms.ts and dashboard.ts serve the two pages and their calls; admin.ts is the admin panel's API.
   src/importer/  Reads a Google Sheets .xlsx export.
   migrations/    Database schema.
-admin/           Admin panel (React + TypeScript + Vite).
-  public/sheets/ Raw-data editor: the Mono Sheets grid with a save adapter (editor.js).
+  monosheets/    Mono Sheets, copied unchanged from the monosheets project (its public/ folder).
+  src/mono/      The bridge: answers Mono Sheets' own save and live-update calls from the
+                 data store, in both directions.
+admin/           Admin panel (React + TypeScript + Vite). Its "Raw data" page is Mono Sheets.
 ```
 
 **Why the original logic is run rather than rewritten.** The requirement was
@@ -40,6 +43,30 @@ milliseconds.
 rows — in two tables (`tabs`, `tab_rows`), so the raw-data view shows exactly
 what the Google Sheet held. `kv` holds settings and sign-in sessions;
 `audit_log` records every change made from the admin panel.
+
+## Raw data: Mono Sheets and the database
+
+Mono Sheets runs unmodified. Its server calls (`/api/workbook…`, `/api/live`, `/api/me`)
+are answered by `server/src/mono/bridge.ts` from the same store the forms use:
+
+- **Sheet to database.** An edit is saved the way Mono Sheets always saves — a patch of
+  changed cells — and written into the tab cell by cell. Values are read as typed input
+  ("5" is a number, "1/2/2026" a date); if the store keeps something different from what
+  was typed, the sheet is sent the stored value. Columns the app calculates are locked,
+  and an attempt to overwrite one is put back.
+- **Database to sheet.** Every change to a tab — an operator's entry, a recalculated
+  column, another admin — is pushed to open sheets over Mono Sheets' live stream, so
+  rows appear without reloading.
+- "New Base" is one workbook with every tab; the App Submission Log is a second
+  workbook (it is large), opened from the workbook list.
+- A sheet added in Mono Sheets becomes a new tab in the database. Deleting a data
+  sheet is refused. Inserting, deleting or sorting rows is accepted only on the latest
+  data, so it can never undo an entry that arrived meanwhile.
+- Layout and formatting done in Mono Sheets (widths, filters, colours) is kept per tab.
+  A formula typed into a cell is stored as its text: Mono Sheets shows the result, the
+  forms and dashboard see the text.
+
+To take a newer Mono Sheets: `tools/update-monosheets.sh /path/to/monosheets`, then rebuild.
 
 ## Run it locally
 

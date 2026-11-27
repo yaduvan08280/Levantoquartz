@@ -19,9 +19,9 @@ function describe(e: AuditEntry) {
   }
   if (e.action === 'data.rows') {
     const d = e.detail || {};
-    return <><b>{e.tab}</b> {d.inserted ? d.inserted + ' row(s) inserted at row ' + e.row_no : (d.deleted || 0) + ' row(s) deleted from row ' + e.row_no}</>;
+    return <><b>{e.tab}</b> {d.note || (d.inserted ? d.inserted + ' row(s) inserted at row ' + e.row_no : (d.deleted || 0) + ' row(s) deleted from row ' + e.row_no)}</>;
   }
-  if (e.action === 'data.bulk') return <><b>{e.tab}</b> {e.detail?.cells} cells changed in one paste</>;
+  if (e.action === 'data.bulk') return <><b>{e.tab}</b> {e.detail?.cells} cells changed in one go</>;
   if (e.action.startsWith('user.')) {
     const { username, ...rest } = e.detail || {};
     const bits = Object.keys(rest).map((k) => k + (rest[k] === true || rest[k] === 'changed' ? '' : ': ' + String(rest[k])));

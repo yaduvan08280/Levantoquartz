@@ -1,0 +1,9048 @@
+[
+ {
+  "id": "fn:ABS",
+  "type": "Formula Function",
+  "title": "ABS",
+  "description": "Math function ABS(value1)",
+  "tags": [
+   "math",
+   "absolute"
+  ],
+  "resource": "functions/ABS.md",
+  "tokens": [
+   "abs",
+   "math",
+   "absolute",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ACOS",
+  "type": "Formula Function",
+  "title": "ACOS",
+  "description": "General function ACOS(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/ACOS.md",
+  "tokens": [
+   "acos",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:ACOSH",
+  "type": "Formula Function",
+  "title": "ACOSH",
+  "description": "General function ACOSH(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/ACOSH.md",
+  "tokens": [
+   "acosh",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:ACOT",
+  "type": "Formula Function",
+  "title": "ACOT",
+  "description": "General function ACOT(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/ACOT.md",
+  "tokens": [
+   "acot",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:ACOTH",
+  "type": "Formula Function",
+  "title": "ACOTH",
+  "description": "General function ACOTH(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/ACOTH.md",
+  "tokens": [
+   "acoth",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:ADD",
+  "type": "Formula Function",
+  "title": "ADD",
+  "description": "General function ADD(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/ADD.md",
+  "tokens": [
+   "add",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:ADDRESS",
+  "type": "Formula Function",
+  "title": "ADDRESS",
+  "description": "Lookup function ADDRESS(row, column, [absolute_relative_mode], [use_a1_notation], [sheet])",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/ADDRESS.md",
+  "tokens": [
+   "address",
+   "lookup",
+   "function",
+   "row",
+   "column",
+   "absolute",
+   "relative",
+   "mode",
+   "use",
+   "a1",
+   "notation",
+   "sheet"
+  ]
+ },
+ {
+  "id": "fn:AND",
+  "type": "Formula Function",
+  "title": "AND",
+  "description": "Logical function AND(value1, [value2, …])",
+  "tags": [
+   "logical"
+  ],
+  "resource": "functions/AND.md",
+  "tokens": [
+   "and",
+   "logical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:ARABIC",
+  "type": "Formula Function",
+  "title": "ARABIC",
+  "description": "Math function ARABIC(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/ARABIC.md",
+  "tokens": [
+   "arabic",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ARRAYFORMULA",
+  "type": "Formula Function",
+  "title": "ARRAYFORMULA",
+  "description": "Lambda function ARRAYFORMULA(value1)",
+  "tags": [
+   "lambda"
+  ],
+  "resource": "functions/ARRAYFORMULA.md",
+  "tokens": [
+   "arrayformula",
+   "array_formula",
+   "lambda",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ASC",
+  "type": "Formula Function",
+  "title": "ASC",
+  "description": "Text function ASC(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/ASC.md",
+  "tokens": [
+   "asc",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ASIN",
+  "type": "Formula Function",
+  "title": "ASIN",
+  "description": "General function ASIN(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/ASIN.md",
+  "tokens": [
+   "asin",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:ASINH",
+  "type": "Formula Function",
+  "title": "ASINH",
+  "description": "General function ASINH(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/ASINH.md",
+  "tokens": [
+   "asinh",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:ATAN",
+  "type": "Formula Function",
+  "title": "ATAN",
+  "description": "General function ATAN(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/ATAN.md",
+  "tokens": [
+   "atan",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:ATAN2",
+  "type": "Formula Function",
+  "title": "ATAN2",
+  "description": "Math function ATAN2(x, y)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/ATAN2.md",
+  "tokens": [
+   "atan2",
+   "math",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:ATANH",
+  "type": "Formula Function",
+  "title": "ATANH",
+  "description": "General function ATANH(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/ATANH.md",
+  "tokens": [
+   "atanh",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:AVEDEV",
+  "type": "Formula Function",
+  "title": "AVEDEV",
+  "description": "General function AVEDEV(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/AVEDEV.md",
+  "tokens": [
+   "avedev",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:AVERAGE",
+  "type": "Formula Function",
+  "title": "AVERAGE",
+  "description": "Statistical function AVERAGE(value1, [value2, …])",
+  "tags": [
+   "statistical",
+   "aggregate",
+   "mean",
+   "avg"
+  ],
+  "resource": "functions/AVERAGE.md",
+  "tokens": [
+   "average",
+   "statistical",
+   "aggregate",
+   "mean",
+   "avg",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:AVERAGEA",
+  "type": "Formula Function",
+  "title": "AVERAGEA",
+  "description": "General function AVERAGEA(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/AVERAGEA.md",
+  "tokens": [
+   "averagea",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:AVERAGEIF",
+  "type": "Formula Function",
+  "title": "AVERAGEIF",
+  "description": "Math function AVERAGEIF(value1, value2, [value3])",
+  "tags": [
+   "math",
+   "aggregate",
+   "average",
+   "conditional",
+   "where"
+  ],
+  "resource": "functions/AVERAGEIF.md",
+  "tokens": [
+   "averageif",
+   "math",
+   "aggregate",
+   "average",
+   "conditional",
+   "where",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:AVERAGEIFS",
+  "type": "Formula Function",
+  "title": "AVERAGEIFS",
+  "description": "Statistical function AVERAGEIFS(average_range, criteria_range1, criterion1, …)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/AVERAGEIFS.md",
+  "tokens": [
+   "averageifs",
+   "statistical",
+   "function",
+   "average",
+   "range",
+   "criteria",
+   "range1",
+   "criterion1"
+  ]
+ },
+ {
+  "id": "fn:BASE",
+  "type": "Formula Function",
+  "title": "BASE",
+  "description": "Math function BASE(value, base, [min_length])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/BASE.md",
+  "tokens": [
+   "base",
+   "math",
+   "function",
+   "value",
+   "min",
+   "length"
+  ]
+ },
+ {
+  "id": "fn:BETA.DIST",
+  "type": "Formula Function",
+  "title": "BETA.DIST",
+  "description": "Statistical function BETA.DIST(value1, value2, value3, [value4], [value5], [value6])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/BETA.DIST.md",
+  "tokens": [
+   "beta.dist",
+   "betadist",
+   "statistical",
+   "function",
+   "beta",
+   "dist",
+   "value1",
+   "value2",
+   "value3",
+   "value4",
+   "value5",
+   "value6"
+  ]
+ },
+ {
+  "id": "fn:BETA.INV",
+  "type": "Formula Function",
+  "title": "BETA.INV",
+  "description": "Statistical function BETA.INV(value1, value2, value3, [value4], [value5])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/BETA.INV.md",
+  "tokens": [
+   "beta.inv",
+   "betainv",
+   "statistical",
+   "function",
+   "beta",
+   "inv",
+   "value1",
+   "value2",
+   "value3",
+   "value4",
+   "value5"
+  ]
+ },
+ {
+  "id": "fn:BIN2DEC",
+  "type": "Formula Function",
+  "title": "BIN2DEC",
+  "description": "General function BIN2DEC(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/BIN2DEC.md",
+  "tokens": [
+   "bin2dec",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:BIN2HEX",
+  "type": "Formula Function",
+  "title": "BIN2HEX",
+  "description": "General function BIN2HEX(value, [places])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/BIN2HEX.md",
+  "tokens": [
+   "bin2hex",
+   "general",
+   "function",
+   "value",
+   "places"
+  ]
+ },
+ {
+  "id": "fn:BIN2OCT",
+  "type": "Formula Function",
+  "title": "BIN2OCT",
+  "description": "General function BIN2OCT(value, [places])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/BIN2OCT.md",
+  "tokens": [
+   "bin2oct",
+   "general",
+   "function",
+   "value",
+   "places"
+  ]
+ },
+ {
+  "id": "fn:BINOM.DIST",
+  "type": "Formula Function",
+  "title": "BINOM.DIST",
+  "description": "Statistical function BINOM.DIST(num_successes, num_trials, prob_success, cumulative)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/BINOM.DIST.md",
+  "tokens": [
+   "binom.dist",
+   "binomdist",
+   "statistical",
+   "function",
+   "binom",
+   "dist",
+   "num",
+   "successes",
+   "trials",
+   "prob",
+   "success",
+   "cumulative"
+  ]
+ },
+ {
+  "id": "fn:BINOM.INV",
+  "type": "Formula Function",
+  "title": "BINOM.INV",
+  "description": "Statistical function BINOM.INV(value1, value2, value3)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/BINOM.INV.md",
+  "tokens": [
+   "binom.inv",
+   "critbinom",
+   "statistical",
+   "function",
+   "binom",
+   "inv",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:BITAND",
+  "type": "Formula Function",
+  "title": "BITAND",
+  "description": "General function BITAND(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/BITAND.md",
+  "tokens": [
+   "bitand",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:BITLSHIFT",
+  "type": "Formula Function",
+  "title": "BITLSHIFT",
+  "description": "General function BITLSHIFT(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/BITLSHIFT.md",
+  "tokens": [
+   "bitlshift",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:BITOR",
+  "type": "Formula Function",
+  "title": "BITOR",
+  "description": "General function BITOR(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/BITOR.md",
+  "tokens": [
+   "bitor",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:BITRSHIFT",
+  "type": "Formula Function",
+  "title": "BITRSHIFT",
+  "description": "General function BITRSHIFT(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/BITRSHIFT.md",
+  "tokens": [
+   "bitrshift",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:BITXOR",
+  "type": "Formula Function",
+  "title": "BITXOR",
+  "description": "General function BITXOR(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/BITXOR.md",
+  "tokens": [
+   "bitxor",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:BYCOL",
+  "type": "Formula Function",
+  "title": "BYCOL",
+  "description": "Lambda function BYCOL(value1, value2)",
+  "tags": [
+   "lambda"
+  ],
+  "resource": "functions/BYCOL.md",
+  "tokens": [
+   "bycol",
+   "lambda",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:BYROW",
+  "type": "Formula Function",
+  "title": "BYROW",
+  "description": "Lambda function BYROW(value1, value2)",
+  "tags": [
+   "lambda"
+  ],
+  "resource": "functions/BYROW.md",
+  "tokens": [
+   "byrow",
+   "lambda",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:CEILING",
+  "type": "Formula Function",
+  "title": "CEILING",
+  "description": "Math function CEILING(value1, [value2])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/CEILING.md",
+  "tokens": [
+   "ceiling",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:CEILING.MATH",
+  "type": "Formula Function",
+  "title": "CEILING.MATH",
+  "description": "Math function CEILING.MATH(value1, [value2], [value3])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/CEILING.MATH.md",
+  "tokens": [
+   "ceiling.math",
+   "math",
+   "function",
+   "ceiling",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:CEILING.PRECISE",
+  "type": "Formula Function",
+  "title": "CEILING.PRECISE",
+  "description": "Math function CEILING.PRECISE(value1, [value2])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/CEILING.PRECISE.md",
+  "tokens": [
+   "ceiling.precise",
+   "iso.ceiling",
+   "math",
+   "function",
+   "ceiling",
+   "precise",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:CELL",
+  "type": "Formula Function",
+  "title": "CELL",
+  "description": "Info function CELL(info_type, reference)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/CELL.md",
+  "tokens": [
+   "cell",
+   "info",
+   "function",
+   "type",
+   "reference"
+  ]
+ },
+ {
+  "id": "fn:CHAR",
+  "type": "Formula Function",
+  "title": "CHAR",
+  "description": "Text function CHAR(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/CHAR.md",
+  "tokens": [
+   "char",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:CHISQ.DIST",
+  "type": "Formula Function",
+  "title": "CHISQ.DIST",
+  "description": "Statistical function CHISQ.DIST(value1, value2, value3)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/CHISQ.DIST.md",
+  "tokens": [
+   "chisq.dist",
+   "statistical",
+   "function",
+   "chisq",
+   "dist",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:CHISQ.DIST.RT",
+  "type": "Formula Function",
+  "title": "CHISQ.DIST.RT",
+  "description": "Statistical function CHIDIST(x, degrees_freedom)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/CHISQ.DIST.RT.md",
+  "tokens": [
+   "chisq.dist.rt",
+   "chidist",
+   "statistical",
+   "function",
+   "degrees",
+   "freedom"
+  ]
+ },
+ {
+  "id": "fn:CHISQ.INV",
+  "type": "Formula Function",
+  "title": "CHISQ.INV",
+  "description": "Statistical function CHISQ.INV(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/CHISQ.INV.md",
+  "tokens": [
+   "chisq.inv",
+   "statistical",
+   "function",
+   "chisq",
+   "inv",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:CHISQ.INV.RT",
+  "type": "Formula Function",
+  "title": "CHISQ.INV.RT",
+  "description": "Statistical function CHISQ.INV.RT(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/CHISQ.INV.RT.md",
+  "tokens": [
+   "chisq.inv.rt",
+   "chiinv",
+   "statistical",
+   "function",
+   "chisq",
+   "inv",
+   "rt",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:CHISQ.TEST",
+  "type": "Formula Function",
+  "title": "CHISQ.TEST",
+  "description": "Statistical function CHISQ.TEST(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/CHISQ.TEST.md",
+  "tokens": [
+   "chisq.test",
+   "chitest",
+   "statistical",
+   "function",
+   "chisq",
+   "test",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:CHOOSE",
+  "type": "Formula Function",
+  "title": "CHOOSE",
+  "description": "Lookup function CHOOSE(value1, value2, [value3, …])",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/CHOOSE.md",
+  "tokens": [
+   "choose",
+   "lookup",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:CHOOSECOLS",
+  "type": "Formula Function",
+  "title": "CHOOSECOLS",
+  "description": "Array function CHOOSECOLS(value1, value2, [value3, …])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/CHOOSECOLS.md",
+  "tokens": [
+   "choosecols",
+   "array",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:CHOOSEROWS",
+  "type": "Formula Function",
+  "title": "CHOOSEROWS",
+  "description": "Array function CHOOSEROWS(value1, value2, [value3, …])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/CHOOSEROWS.md",
+  "tokens": [
+   "chooserows",
+   "array",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:CLEAN",
+  "type": "Formula Function",
+  "title": "CLEAN",
+  "description": "Text function CLEAN(text)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/CLEAN.md",
+  "tokens": [
+   "clean",
+   "text",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:CODE",
+  "type": "Formula Function",
+  "title": "CODE",
+  "description": "Text function CODE(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/CODE.md",
+  "tokens": [
+   "code",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:COLUMN",
+  "type": "Formula Function",
+  "title": "COLUMN",
+  "description": "Lookup function COLUMN([value1])",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/COLUMN.md",
+  "tokens": [
+   "column",
+   "lookup",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:COLUMNS",
+  "type": "Formula Function",
+  "title": "COLUMNS",
+  "description": "Lookup function COLUMNS(value1)",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/COLUMNS.md",
+  "tokens": [
+   "columns",
+   "lookup",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:COMBIN",
+  "type": "Formula Function",
+  "title": "COMBIN",
+  "description": "Math function COMBIN(n, k)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/COMBIN.md",
+  "tokens": [
+   "combin",
+   "math",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:COMBINA",
+  "type": "Formula Function",
+  "title": "COMBINA",
+  "description": "Math function COMBINA(value1, value2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/COMBINA.md",
+  "tokens": [
+   "combina",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:COMPLEX",
+  "type": "Formula Function",
+  "title": "COMPLEX",
+  "description": "Engineering function COMPLEX(real_part, imaginary_part, [suffix])",
+  "tags": [
+   "engineering"
+  ],
+  "resource": "functions/COMPLEX.md",
+  "tokens": [
+   "complex",
+   "engineering",
+   "function",
+   "real",
+   "part",
+   "imaginary",
+   "suffix"
+  ]
+ },
+ {
+  "id": "fn:CONCAT",
+  "type": "Formula Function",
+  "title": "CONCAT",
+  "description": "Text function CONCAT(value1, [value2, …])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/CONCAT.md",
+  "tokens": [
+   "concat",
+   "concatenate",
+   "text",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:CONFIDENCE",
+  "type": "Formula Function",
+  "title": "CONFIDENCE",
+  "description": "Statistical function CONFIDENCE(alpha, standard_deviation, pop_size)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/CONFIDENCE.md",
+  "tokens": [
+   "confidence",
+   "confidence.norm",
+   "statistical",
+   "function",
+   "alpha",
+   "standard",
+   "deviation",
+   "pop",
+   "size"
+  ]
+ },
+ {
+  "id": "fn:CONFIDENCE.T",
+  "type": "Formula Function",
+  "title": "CONFIDENCE.T",
+  "description": "Statistical function CONFIDENCE.T(value1, value2, value3)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/CONFIDENCE.T.md",
+  "tokens": [
+   "confidence.t",
+   "statistical",
+   "function",
+   "confidence",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:CORREL",
+  "type": "Formula Function",
+  "title": "CORREL",
+  "description": "Statistical function CORREL(data_y, data_x)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/CORREL.md",
+  "tokens": [
+   "correl",
+   "pearson",
+   "statistical",
+   "function",
+   "data"
+  ]
+ },
+ {
+  "id": "fn:COS",
+  "type": "Formula Function",
+  "title": "COS",
+  "description": "General function COS(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/COS.md",
+  "tokens": [
+   "cos",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:COSH",
+  "type": "Formula Function",
+  "title": "COSH",
+  "description": "General function COSH(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/COSH.md",
+  "tokens": [
+   "cosh",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:COT",
+  "type": "Formula Function",
+  "title": "COT",
+  "description": "General function COT(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/COT.md",
+  "tokens": [
+   "cot",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:COTH",
+  "type": "Formula Function",
+  "title": "COTH",
+  "description": "General function COTH(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/COTH.md",
+  "tokens": [
+   "coth",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:COUNT",
+  "type": "Formula Function",
+  "title": "COUNT",
+  "description": "Statistical function COUNT(value1, [value2, …])",
+  "tags": [
+   "statistical",
+   "aggregate",
+   "numeric"
+  ],
+  "resource": "functions/COUNT.md",
+  "tokens": [
+   "count",
+   "statistical",
+   "aggregate",
+   "numeric",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:COUNTA",
+  "type": "Formula Function",
+  "title": "COUNTA",
+  "description": "Statistical function COUNTA(value1, [value2, …])",
+  "tags": [
+   "statistical",
+   "aggregate",
+   "count",
+   "non-empty",
+   "filled"
+  ],
+  "resource": "functions/COUNTA.md",
+  "tokens": [
+   "counta",
+   "statistical",
+   "aggregate",
+   "count",
+   "non",
+   "empty",
+   "filled",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:COUNTBLANK",
+  "type": "Formula Function",
+  "title": "COUNTBLANK",
+  "description": "Statistical function COUNTBLANK(value1)",
+  "tags": [
+   "statistical",
+   "aggregate",
+   "count",
+   "empty"
+  ],
+  "resource": "functions/COUNTBLANK.md",
+  "tokens": [
+   "countblank",
+   "statistical",
+   "aggregate",
+   "count",
+   "empty",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:COUNTIF",
+  "type": "Formula Function",
+  "title": "COUNTIF",
+  "description": "Statistical function COUNTIF(value1, value2)",
+  "tags": [
+   "statistical",
+   "aggregate",
+   "count",
+   "conditional",
+   "where"
+  ],
+  "resource": "functions/COUNTIF.md",
+  "tokens": [
+   "countif",
+   "statistical",
+   "aggregate",
+   "count",
+   "conditional",
+   "where",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:COUNTIFS",
+  "type": "Formula Function",
+  "title": "COUNTIFS",
+  "description": "Statistical function COUNTIFS(value1, value2, [value3, …])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/COUNTIFS.md",
+  "tokens": [
+   "countifs",
+   "statistical",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:COUNTUNIQUE",
+  "type": "Formula Function",
+  "title": "COUNTUNIQUE",
+  "description": "Math function COUNTUNIQUE(value1, [value2, …])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/COUNTUNIQUE.md",
+  "tokens": [
+   "countunique",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:COVAR",
+  "type": "Formula Function",
+  "title": "COVAR",
+  "description": "Statistical function COVAR(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/COVAR.md",
+  "tokens": [
+   "covar",
+   "covariance.p",
+   "statistical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:COVARIANCE.S",
+  "type": "Formula Function",
+  "title": "COVARIANCE.S",
+  "description": "Statistical function COVARIANCE.S(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/COVARIANCE.S.md",
+  "tokens": [
+   "covariance.s",
+   "statistical",
+   "function",
+   "covariance",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:CSC",
+  "type": "Formula Function",
+  "title": "CSC",
+  "description": "General function CSC(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/CSC.md",
+  "tokens": [
+   "csc",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:CSCH",
+  "type": "Formula Function",
+  "title": "CSCH",
+  "description": "General function CSCH(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/CSCH.md",
+  "tokens": [
+   "csch",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:CUMIPMT",
+  "type": "Formula Function",
+  "title": "CUMIPMT",
+  "description": "Financial function CUMIPMT(rate, number_of_periods, present_value, first_period, last_period, end_or_beginning)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/CUMIPMT.md",
+  "tokens": [
+   "cumipmt",
+   "financial",
+   "function",
+   "rate",
+   "number",
+   "of",
+   "periods",
+   "present",
+   "value",
+   "first",
+   "period",
+   "last",
+   "end",
+   "or",
+   "beginning"
+  ]
+ },
+ {
+  "id": "fn:CUMPRINC",
+  "type": "Formula Function",
+  "title": "CUMPRINC",
+  "description": "Financial function CUMPRINC(rate, number_of_periods, present_value, first_period, last_period, end_or_beginning)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/CUMPRINC.md",
+  "tokens": [
+   "cumprinc",
+   "financial",
+   "function",
+   "rate",
+   "number",
+   "of",
+   "periods",
+   "present",
+   "value",
+   "first",
+   "period",
+   "last",
+   "end",
+   "or",
+   "beginning"
+  ]
+ },
+ {
+  "id": "fn:DATE",
+  "type": "Formula Function",
+  "title": "DATE",
+  "description": "Date function DATE(value1, value2, value3)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/DATE.md",
+  "tokens": [
+   "date",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:DATEDIF",
+  "type": "Formula Function",
+  "title": "DATEDIF",
+  "description": "Days/months/years between two dates. Units: Y, M, D, MD, YM, YD.",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/DATEDIF.md",
+  "tokens": [
+   "datedif",
+   "date",
+   "days",
+   "months",
+   "years",
+   "between",
+   "two",
+   "dates",
+   "units",
+   "md",
+   "ym",
+   "yd"
+  ]
+ },
+ {
+  "id": "fn:DATEVALUE",
+  "type": "Formula Function",
+  "title": "DATEVALUE",
+  "description": "Date function DATEVALUE(date_string)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/DATEVALUE.md",
+  "tokens": [
+   "datevalue",
+   "date",
+   "function",
+   "string"
+  ]
+ },
+ {
+  "id": "fn:DAVERAGE",
+  "type": "Formula Function",
+  "title": "DAVERAGE",
+  "description": "General function DAVERAGE(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DAVERAGE.md",
+  "tokens": [
+   "daverage",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DAY",
+  "type": "Formula Function",
+  "title": "DAY",
+  "description": "Date function DAY(value1)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/DAY.md",
+  "tokens": [
+   "day",
+   "date",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:DAYS",
+  "type": "Formula Function",
+  "title": "DAYS",
+  "description": "Date function DAYS(value1, value2)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/DAYS.md",
+  "tokens": [
+   "days",
+   "date",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:DAYS360",
+  "type": "Formula Function",
+  "title": "DAYS360",
+  "description": "Date function DAYS360(start_date, end_date, [method])",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/DAYS360.md",
+  "tokens": [
+   "days360",
+   "date",
+   "function",
+   "start",
+   "end",
+   "method"
+  ]
+ },
+ {
+  "id": "fn:DB",
+  "type": "Formula Function",
+  "title": "DB",
+  "description": "Financial function DB(cost, salvage, life, period, [month])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/DB.md",
+  "tokens": [
+   "db",
+   "financial",
+   "function",
+   "cost",
+   "salvage",
+   "life",
+   "period",
+   "month"
+  ]
+ },
+ {
+  "id": "fn:DCOUNT",
+  "type": "Formula Function",
+  "title": "DCOUNT",
+  "description": "General function DCOUNT(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DCOUNT.md",
+  "tokens": [
+   "dcount",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DCOUNTA",
+  "type": "Formula Function",
+  "title": "DCOUNTA",
+  "description": "General function DCOUNTA(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DCOUNTA.md",
+  "tokens": [
+   "dcounta",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DDB",
+  "type": "Formula Function",
+  "title": "DDB",
+  "description": "Financial function DDB(cost, salvage, life, period, [factor])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/DDB.md",
+  "tokens": [
+   "ddb",
+   "financial",
+   "function",
+   "cost",
+   "salvage",
+   "life",
+   "period",
+   "factor"
+  ]
+ },
+ {
+  "id": "fn:DEC2BIN",
+  "type": "Formula Function",
+  "title": "DEC2BIN",
+  "description": "General function DEC2BIN(value, [places])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DEC2BIN.md",
+  "tokens": [
+   "dec2bin",
+   "general",
+   "function",
+   "value",
+   "places"
+  ]
+ },
+ {
+  "id": "fn:DEC2HEX",
+  "type": "Formula Function",
+  "title": "DEC2HEX",
+  "description": "General function DEC2HEX(value, [places])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DEC2HEX.md",
+  "tokens": [
+   "dec2hex",
+   "general",
+   "function",
+   "value",
+   "places"
+  ]
+ },
+ {
+  "id": "fn:DEC2OCT",
+  "type": "Formula Function",
+  "title": "DEC2OCT",
+  "description": "General function DEC2OCT(value, [places])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DEC2OCT.md",
+  "tokens": [
+   "dec2oct",
+   "general",
+   "function",
+   "value",
+   "places"
+  ]
+ },
+ {
+  "id": "fn:DECIMAL",
+  "type": "Formula Function",
+  "title": "DECIMAL",
+  "description": "Math function DECIMAL(value, base)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/DECIMAL.md",
+  "tokens": [
+   "decimal",
+   "math",
+   "function",
+   "value",
+   "base"
+  ]
+ },
+ {
+  "id": "fn:DEGREES",
+  "type": "Formula Function",
+  "title": "DEGREES",
+  "description": "General function DEGREES(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DEGREES.md",
+  "tokens": [
+   "degrees",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:DELTA",
+  "type": "Formula Function",
+  "title": "DELTA",
+  "description": "Engineering function DELTA(value1, [value2])",
+  "tags": [
+   "engineering"
+  ],
+  "resource": "functions/DELTA.md",
+  "tokens": [
+   "delta",
+   "engineering",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:DETECTLANGUAGE",
+  "type": "Formula Function",
+  "title": "DETECTLANGUAGE",
+  "description": "Not available offline — DETECTLANGUAGE depends on external Google services.",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DETECTLANGUAGE.md",
+  "tokens": [
+   "detectlanguage",
+   "general",
+   "not",
+   "available",
+   "offline",
+   "depends",
+   "on",
+   "external",
+   "google",
+   "services"
+  ]
+ },
+ {
+  "id": "fn:DEVSQ",
+  "type": "Formula Function",
+  "title": "DEVSQ",
+  "description": "General function DEVSQ(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DEVSQ.md",
+  "tokens": [
+   "devsq",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:DGET",
+  "type": "Formula Function",
+  "title": "DGET",
+  "description": "General function DGET(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DGET.md",
+  "tokens": [
+   "dget",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DISC",
+  "type": "Formula Function",
+  "title": "DISC",
+  "description": "Financial function DISC(settlement, maturity, price, redemption, [day_count_convention])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/DISC.md",
+  "tokens": [
+   "disc",
+   "financial",
+   "function",
+   "settlement",
+   "maturity",
+   "price",
+   "redemption",
+   "day",
+   "count",
+   "convention"
+  ]
+ },
+ {
+  "id": "fn:DIVIDE",
+  "type": "Formula Function",
+  "title": "DIVIDE",
+  "description": "Math function DIVIDE(dividend, divisor)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/DIVIDE.md",
+  "tokens": [
+   "divide",
+   "math",
+   "function",
+   "dividend",
+   "divisor"
+  ]
+ },
+ {
+  "id": "fn:DMAX",
+  "type": "Formula Function",
+  "title": "DMAX",
+  "description": "General function DMAX(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DMAX.md",
+  "tokens": [
+   "dmax",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DMIN",
+  "type": "Formula Function",
+  "title": "DMIN",
+  "description": "General function DMIN(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DMIN.md",
+  "tokens": [
+   "dmin",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DOLLAR",
+  "type": "Formula Function",
+  "title": "DOLLAR",
+  "description": "Text function DOLLAR(number, [number_of_places])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/DOLLAR.md",
+  "tokens": [
+   "dollar",
+   "text",
+   "function",
+   "number",
+   "of",
+   "places"
+  ]
+ },
+ {
+  "id": "fn:DOLLARDE",
+  "type": "Formula Function",
+  "title": "DOLLARDE",
+  "description": "Financial function DOLLARDE(fractional_price, unit)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/DOLLARDE.md",
+  "tokens": [
+   "dollarde",
+   "financial",
+   "function",
+   "fractional",
+   "price",
+   "unit"
+  ]
+ },
+ {
+  "id": "fn:DOLLARFR",
+  "type": "Formula Function",
+  "title": "DOLLARFR",
+  "description": "Financial function DOLLARFR(decimal_price, unit)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/DOLLARFR.md",
+  "tokens": [
+   "dollarfr",
+   "financial",
+   "function",
+   "decimal",
+   "price",
+   "unit"
+  ]
+ },
+ {
+  "id": "fn:DPRODUCT",
+  "type": "Formula Function",
+  "title": "DPRODUCT",
+  "description": "General function DPRODUCT(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DPRODUCT.md",
+  "tokens": [
+   "dproduct",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DSTDEV",
+  "type": "Formula Function",
+  "title": "DSTDEV",
+  "description": "General function DSTDEV(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DSTDEV.md",
+  "tokens": [
+   "dstdev",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DSTDEVP",
+  "type": "Formula Function",
+  "title": "DSTDEVP",
+  "description": "General function DSTDEVP(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DSTDEVP.md",
+  "tokens": [
+   "dstdevp",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DSUM",
+  "type": "Formula Function",
+  "title": "DSUM",
+  "description": "General function DSUM(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DSUM.md",
+  "tokens": [
+   "dsum",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DVAR",
+  "type": "Formula Function",
+  "title": "DVAR",
+  "description": "General function DVAR(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DVAR.md",
+  "tokens": [
+   "dvar",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:DVARP",
+  "type": "Formula Function",
+  "title": "DVARP",
+  "description": "General function DVARP(database, field, criteria)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/DVARP.md",
+  "tokens": [
+   "dvarp",
+   "general",
+   "function",
+   "database",
+   "field",
+   "criteria"
+  ]
+ },
+ {
+  "id": "fn:EDATE",
+  "type": "Formula Function",
+  "title": "EDATE",
+  "description": "Date function EDATE(value1, value2)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/EDATE.md",
+  "tokens": [
+   "edate",
+   "date",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:EFFECT",
+  "type": "Formula Function",
+  "title": "EFFECT",
+  "description": "Financial function EFFECT(nominal_rate, periods_per_year)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/EFFECT.md",
+  "tokens": [
+   "effect",
+   "financial",
+   "function",
+   "nominal",
+   "rate",
+   "periods",
+   "per",
+   "year"
+  ]
+ },
+ {
+  "id": "fn:ENCODEURL",
+  "type": "Formula Function",
+  "title": "ENCODEURL",
+  "description": "Web function ENCODEURL(text)",
+  "tags": [
+   "web"
+  ],
+  "resource": "functions/ENCODEURL.md",
+  "tokens": [
+   "encodeurl",
+   "web",
+   "function",
+   "text"
+  ]
+ },
+ {
+  "id": "fn:EOMONTH",
+  "type": "Formula Function",
+  "title": "EOMONTH",
+  "description": "Date function EOMONTH(value1, value2)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/EOMONTH.md",
+  "tokens": [
+   "eomonth",
+   "date",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:EPOCHTODATE",
+  "type": "Formula Function",
+  "title": "EPOCHTODATE",
+  "description": "Converts a Unix epoch timestamp to a date serial.",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/EPOCHTODATE.md",
+  "tokens": [
+   "epochtodate",
+   "date",
+   "converts",
+   "unix",
+   "epoch",
+   "timestamp",
+   "to",
+   "serial"
+  ]
+ },
+ {
+  "id": "fn:EQ",
+  "type": "Formula Function",
+  "title": "EQ",
+  "description": "General function EQ(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/EQ.md",
+  "tokens": [
+   "eq",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:ERF",
+  "type": "Formula Function",
+  "title": "ERF",
+  "description": "Engineering function ERF(lower_bound, [upper_bound])",
+  "tags": [
+   "engineering"
+  ],
+  "resource": "functions/ERF.md",
+  "tokens": [
+   "erf",
+   "erf.precise",
+   "engineering",
+   "function",
+   "lower",
+   "bound",
+   "upper"
+  ]
+ },
+ {
+  "id": "fn:ERFC",
+  "type": "Formula Function",
+  "title": "ERFC",
+  "description": "Engineering function ERFC(value1)",
+  "tags": [
+   "engineering"
+  ],
+  "resource": "functions/ERFC.md",
+  "tokens": [
+   "erfc",
+   "erfc.precise",
+   "engineering",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ERROR.TYPE",
+  "type": "Formula Function",
+  "title": "ERROR.TYPE",
+  "description": "Info function ERROR.TYPE(reference)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ERROR.TYPE.md",
+  "tokens": [
+   "error.type",
+   "info",
+   "function",
+   "error",
+   "type",
+   "reference"
+  ]
+ },
+ {
+  "id": "fn:EVEN",
+  "type": "Formula Function",
+  "title": "EVEN",
+  "description": "Math function EVEN(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/EVEN.md",
+  "tokens": [
+   "even",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:EXACT",
+  "type": "Formula Function",
+  "title": "EXACT",
+  "description": "Text function EXACT(value1, value2)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/EXACT.md",
+  "tokens": [
+   "exact",
+   "text",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:EXP",
+  "type": "Formula Function",
+  "title": "EXP",
+  "description": "Math function EXP(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/EXP.md",
+  "tokens": [
+   "exp",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:EXPON.DIST",
+  "type": "Formula Function",
+  "title": "EXPON.DIST",
+  "description": "Statistical function EXPON.DIST(value1, value2, value3)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/EXPON.DIST.md",
+  "tokens": [
+   "expon.dist",
+   "expondist",
+   "statistical",
+   "function",
+   "expon",
+   "dist",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:F.DIST",
+  "type": "Formula Function",
+  "title": "F.DIST",
+  "description": "Statistical function F.DIST(value1, value2, value3, value4)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/F.DIST.md",
+  "tokens": [
+   "f.dist",
+   "statistical",
+   "function",
+   "dist",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:F.DIST.RT",
+  "type": "Formula Function",
+  "title": "F.DIST.RT",
+  "description": "Statistical function FDIST(x, degrees_freedom1, degrees_freedom2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/F.DIST.RT.md",
+  "tokens": [
+   "f.dist.rt",
+   "fdist",
+   "statistical",
+   "function",
+   "degrees",
+   "freedom1",
+   "freedom2"
+  ]
+ },
+ {
+  "id": "fn:F.INV",
+  "type": "Formula Function",
+  "title": "F.INV",
+  "description": "Statistical function F.INV(value1, value2, value3)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/F.INV.md",
+  "tokens": [
+   "f.inv",
+   "statistical",
+   "function",
+   "inv",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:F.INV.RT",
+  "type": "Formula Function",
+  "title": "F.INV.RT",
+  "description": "Statistical function F.INV.RT(value1, value2, value3)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/F.INV.RT.md",
+  "tokens": [
+   "f.inv.rt",
+   "finv",
+   "statistical",
+   "function",
+   "inv",
+   "rt",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:F.TEST",
+  "type": "Formula Function",
+  "title": "F.TEST",
+  "description": "Statistical function F.TEST(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/F.TEST.md",
+  "tokens": [
+   "f.test",
+   "ftest",
+   "statistical",
+   "function",
+   "test",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:FACT",
+  "type": "Formula Function",
+  "title": "FACT",
+  "description": "Math function FACT(value)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/FACT.md",
+  "tokens": [
+   "fact",
+   "math",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:FACTDOUBLE",
+  "type": "Formula Function",
+  "title": "FACTDOUBLE",
+  "description": "Math function FACTDOUBLE(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/FACTDOUBLE.md",
+  "tokens": [
+   "factdouble",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:FALSE",
+  "type": "Formula Function",
+  "title": "FALSE",
+  "description": "Logical function FALSE()",
+  "tags": [
+   "logical"
+  ],
+  "resource": "functions/FALSE.md",
+  "tokens": [
+   "false",
+   "logical",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:FILTER",
+  "type": "Formula Function",
+  "title": "FILTER",
+  "description": "Array function FILTER(value1, value2, [value3, …])",
+  "tags": [
+   "array",
+   "subset",
+   "where"
+  ],
+  "resource": "functions/FILTER.md",
+  "tokens": [
+   "filter",
+   "array",
+   "subset",
+   "where",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:FIND",
+  "type": "Formula Function",
+  "title": "FIND",
+  "description": "Text function FIND(value1, value2, [value3])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/FIND.md",
+  "tokens": [
+   "find",
+   "text",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:FINDB",
+  "type": "Formula Function",
+  "title": "FINDB",
+  "description": "General function FINDB(value1, value2, [value3])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/FINDB.md",
+  "tokens": [
+   "findb",
+   "general",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:FISHER",
+  "type": "Formula Function",
+  "title": "FISHER",
+  "description": "Statistical function FISHER(value1)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/FISHER.md",
+  "tokens": [
+   "fisher",
+   "statistical",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:FISHERINV",
+  "type": "Formula Function",
+  "title": "FISHERINV",
+  "description": "Statistical function FISHERINV(value1)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/FISHERINV.md",
+  "tokens": [
+   "fisherinv",
+   "statistical",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:FIXED",
+  "type": "Formula Function",
+  "title": "FIXED",
+  "description": "Text function FIXED(number, [number_of_places], [suppress_separator])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/FIXED.md",
+  "tokens": [
+   "fixed",
+   "text",
+   "function",
+   "number",
+   "of",
+   "places",
+   "suppress",
+   "separator"
+  ]
+ },
+ {
+  "id": "fn:FLATTEN",
+  "type": "Formula Function",
+  "title": "FLATTEN",
+  "description": "Array function FLATTEN(value1, [value2, …])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/FLATTEN.md",
+  "tokens": [
+   "flatten",
+   "array",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:FLOOR",
+  "type": "Formula Function",
+  "title": "FLOOR",
+  "description": "Math function FLOOR(value1, [value2])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/FLOOR.md",
+  "tokens": [
+   "floor",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:FLOOR.MATH",
+  "type": "Formula Function",
+  "title": "FLOOR.MATH",
+  "description": "Math function FLOOR.MATH(value1, [value2], [value3])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/FLOOR.MATH.md",
+  "tokens": [
+   "floor.math",
+   "math",
+   "function",
+   "floor",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:FLOOR.PRECISE",
+  "type": "Formula Function",
+  "title": "FLOOR.PRECISE",
+  "description": "Math function FLOOR.PRECISE(value1, [value2])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/FLOOR.PRECISE.md",
+  "tokens": [
+   "floor.precise",
+   "math",
+   "function",
+   "floor",
+   "precise",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:FORECAST",
+  "type": "Formula Function",
+  "title": "FORECAST",
+  "description": "Statistical function FORECAST(x, data_y, data_x)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/FORECAST.md",
+  "tokens": [
+   "forecast",
+   "forecast.linear",
+   "statistical",
+   "function",
+   "data"
+  ]
+ },
+ {
+  "id": "fn:FORMULATEXT",
+  "type": "Formula Function",
+  "title": "FORMULATEXT",
+  "description": "Lookup function FORMULATEXT(cell)",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/FORMULATEXT.md",
+  "tokens": [
+   "formulatext",
+   "lookup",
+   "function",
+   "cell"
+  ]
+ },
+ {
+  "id": "fn:FREQUENCY",
+  "type": "Formula Function",
+  "title": "FREQUENCY",
+  "description": "Statistical function FREQUENCY(data, classes)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/FREQUENCY.md",
+  "tokens": [
+   "frequency",
+   "statistical",
+   "function",
+   "data",
+   "classes"
+  ]
+ },
+ {
+  "id": "fn:FV",
+  "type": "Formula Function",
+  "title": "FV",
+  "description": "Financial function FV(rate, number_of_periods, payment_amount, [present_value], [end_or_beginning])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/FV.md",
+  "tokens": [
+   "fv",
+   "financial",
+   "function",
+   "rate",
+   "number",
+   "of",
+   "periods",
+   "payment",
+   "amount",
+   "present",
+   "value",
+   "end",
+   "or",
+   "beginning"
+  ]
+ },
+ {
+  "id": "fn:FVSCHEDULE",
+  "type": "Formula Function",
+  "title": "FVSCHEDULE",
+  "description": "Financial function FVSCHEDULE(principal, rate_schedule)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/FVSCHEDULE.md",
+  "tokens": [
+   "fvschedule",
+   "financial",
+   "function",
+   "principal",
+   "rate",
+   "schedule"
+  ]
+ },
+ {
+  "id": "fn:GAMMA",
+  "type": "Formula Function",
+  "title": "GAMMA",
+  "description": "Math function GAMMA(value)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/GAMMA.md",
+  "tokens": [
+   "gamma",
+   "math",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:GAMMA.DIST",
+  "type": "Formula Function",
+  "title": "GAMMA.DIST",
+  "description": "Statistical function GAMMA.DIST(x, alpha, beta, cumulative)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/GAMMA.DIST.md",
+  "tokens": [
+   "gamma.dist",
+   "gammadist",
+   "statistical",
+   "function",
+   "gamma",
+   "dist",
+   "alpha",
+   "beta",
+   "cumulative"
+  ]
+ },
+ {
+  "id": "fn:GAMMA.INV",
+  "type": "Formula Function",
+  "title": "GAMMA.INV",
+  "description": "Statistical function GAMMA.INV(value1, value2, value3)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/GAMMA.INV.md",
+  "tokens": [
+   "gamma.inv",
+   "gammainv",
+   "statistical",
+   "function",
+   "gamma",
+   "inv",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:GAMMALN",
+  "type": "Formula Function",
+  "title": "GAMMALN",
+  "description": "General function GAMMALN(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/GAMMALN.md",
+  "tokens": [
+   "gammaln",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:GAMMALN.PRECISE",
+  "type": "Formula Function",
+  "title": "GAMMALN.PRECISE",
+  "description": "Math function GAMMALN.PRECISE(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/GAMMALN.PRECISE.md",
+  "tokens": [
+   "gammaln.precise",
+   "math",
+   "function",
+   "gammaln",
+   "precise",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:GCD",
+  "type": "Formula Function",
+  "title": "GCD",
+  "description": "Math function GCD(value1, [value2, …])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/GCD.md",
+  "tokens": [
+   "gcd",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:GEOMEAN",
+  "type": "Formula Function",
+  "title": "GEOMEAN",
+  "description": "General function GEOMEAN(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/GEOMEAN.md",
+  "tokens": [
+   "geomean",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:GESTEP",
+  "type": "Formula Function",
+  "title": "GESTEP",
+  "description": "Engineering function GESTEP(value1, [value2])",
+  "tags": [
+   "engineering"
+  ],
+  "resource": "functions/GESTEP.md",
+  "tokens": [
+   "gestep",
+   "engineering",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:GETPIVOTDATA",
+  "type": "Formula Function",
+  "title": "GETPIVOTDATA",
+  "description": "Not available offline — GETPIVOTDATA depends on external Google services.",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/GETPIVOTDATA.md",
+  "tokens": [
+   "getpivotdata",
+   "general",
+   "not",
+   "available",
+   "offline",
+   "depends",
+   "on",
+   "external",
+   "google",
+   "services"
+  ]
+ },
+ {
+  "id": "fn:GOOGLEFINANCE",
+  "type": "Formula Function",
+  "title": "GOOGLEFINANCE",
+  "description": "Not available offline — GOOGLEFINANCE depends on external Google services.",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/GOOGLEFINANCE.md",
+  "tokens": [
+   "googlefinance",
+   "general",
+   "not",
+   "available",
+   "offline",
+   "depends",
+   "on",
+   "external",
+   "google",
+   "services"
+  ]
+ },
+ {
+  "id": "fn:GOOGLETRANSLATE",
+  "type": "Formula Function",
+  "title": "GOOGLETRANSLATE",
+  "description": "Not available offline — GOOGLETRANSLATE depends on external Google services.",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/GOOGLETRANSLATE.md",
+  "tokens": [
+   "googletranslate",
+   "general",
+   "not",
+   "available",
+   "offline",
+   "depends",
+   "on",
+   "external",
+   "google",
+   "services"
+  ]
+ },
+ {
+  "id": "fn:GT",
+  "type": "Formula Function",
+  "title": "GT",
+  "description": "General function GT(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/GT.md",
+  "tokens": [
+   "gt",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:GTE",
+  "type": "Formula Function",
+  "title": "GTE",
+  "description": "General function GTE(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/GTE.md",
+  "tokens": [
+   "gte",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:HARMEAN",
+  "type": "Formula Function",
+  "title": "HARMEAN",
+  "description": "General function HARMEAN(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/HARMEAN.md",
+  "tokens": [
+   "harmean",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:HEX2BIN",
+  "type": "Formula Function",
+  "title": "HEX2BIN",
+  "description": "General function HEX2BIN(value, [places])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/HEX2BIN.md",
+  "tokens": [
+   "hex2bin",
+   "general",
+   "function",
+   "value",
+   "places"
+  ]
+ },
+ {
+  "id": "fn:HEX2DEC",
+  "type": "Formula Function",
+  "title": "HEX2DEC",
+  "description": "General function HEX2DEC(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/HEX2DEC.md",
+  "tokens": [
+   "hex2dec",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:HEX2OCT",
+  "type": "Formula Function",
+  "title": "HEX2OCT",
+  "description": "General function HEX2OCT(value, [places])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/HEX2OCT.md",
+  "tokens": [
+   "hex2oct",
+   "general",
+   "function",
+   "value",
+   "places"
+  ]
+ },
+ {
+  "id": "fn:HLOOKUP",
+  "type": "Formula Function",
+  "title": "HLOOKUP",
+  "description": "Lookup function HLOOKUP(value1, value2, value3, [value4])",
+  "tags": [
+   "lookup",
+   "find",
+   "search",
+   "horizontal"
+  ],
+  "resource": "functions/HLOOKUP.md",
+  "tokens": [
+   "hlookup",
+   "lookup",
+   "find",
+   "search",
+   "horizontal",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:HOUR",
+  "type": "Formula Function",
+  "title": "HOUR",
+  "description": "Date function HOUR(value1)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/HOUR.md",
+  "tokens": [
+   "hour",
+   "date",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:HSTACK",
+  "type": "Formula Function",
+  "title": "HSTACK",
+  "description": "Array function HSTACK(value1, [value2, …])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/HSTACK.md",
+  "tokens": [
+   "hstack",
+   "array",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:HYPERLINK",
+  "type": "Formula Function",
+  "title": "HYPERLINK",
+  "description": "Text function HYPERLINK(url, [label])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/HYPERLINK.md",
+  "tokens": [
+   "hyperlink",
+   "text",
+   "function",
+   "url",
+   "label"
+  ]
+ },
+ {
+  "id": "fn:HYPGEOM.DIST",
+  "type": "Formula Function",
+  "title": "HYPGEOM.DIST",
+  "description": "Statistical function HYPGEOM.DIST(value1, value2, value3, value4, [value5])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/HYPGEOM.DIST.md",
+  "tokens": [
+   "hypgeom.dist",
+   "hypgeomdist",
+   "statistical",
+   "function",
+   "hypgeom",
+   "dist",
+   "value1",
+   "value2",
+   "value3",
+   "value4",
+   "value5"
+  ]
+ },
+ {
+  "id": "fn:IF",
+  "type": "Formula Function",
+  "title": "IF",
+  "description": "Array function IF(value1, value2, [value3])",
+  "tags": [
+   "array",
+   "condition",
+   "branch"
+  ],
+  "resource": "functions/IF.md",
+  "tokens": [
+   "if",
+   "array",
+   "condition",
+   "branch",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:IFERROR",
+  "type": "Formula Function",
+  "title": "IFERROR",
+  "description": "Array function IFERROR(value1, [value2])",
+  "tags": [
+   "array",
+   "condition",
+   "fallback"
+  ],
+  "resource": "functions/IFERROR.md",
+  "tokens": [
+   "iferror",
+   "array",
+   "condition",
+   "fallback",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:IFNA",
+  "type": "Formula Function",
+  "title": "IFNA",
+  "description": "Array function IFNA(value1, value2)",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/IFNA.md",
+  "tokens": [
+   "ifna",
+   "array",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:IFS",
+  "type": "Formula Function",
+  "title": "IFS",
+  "description": "Array function IFS(value1, value2, [value3, …])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/IFS.md",
+  "tokens": [
+   "ifs",
+   "array",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:IMABS",
+  "type": "Formula Function",
+  "title": "IMABS",
+  "description": "General function IMABS(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMABS.md",
+  "tokens": [
+   "imabs",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMAGE",
+  "type": "Formula Function",
+  "title": "IMAGE",
+  "description": "Not available offline — IMAGE depends on external Google services.",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMAGE.md",
+  "tokens": [
+   "image",
+   "general",
+   "not",
+   "available",
+   "offline",
+   "depends",
+   "on",
+   "external",
+   "google",
+   "services"
+  ]
+ },
+ {
+  "id": "fn:IMAGINARY",
+  "type": "Formula Function",
+  "title": "IMAGINARY",
+  "description": "General function IMAGINARY(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMAGINARY.md",
+  "tokens": [
+   "imaginary",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMARGUMENT",
+  "type": "Formula Function",
+  "title": "IMARGUMENT",
+  "description": "General function IMARGUMENT(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMARGUMENT.md",
+  "tokens": [
+   "imargument",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMCONJUGATE",
+  "type": "Formula Function",
+  "title": "IMCONJUGATE",
+  "description": "General function IMCONJUGATE(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMCONJUGATE.md",
+  "tokens": [
+   "imconjugate",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMCOS",
+  "type": "Formula Function",
+  "title": "IMCOS",
+  "description": "General function IMCOS(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMCOS.md",
+  "tokens": [
+   "imcos",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMCOSH",
+  "type": "Formula Function",
+  "title": "IMCOSH",
+  "description": "General function IMCOSH(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMCOSH.md",
+  "tokens": [
+   "imcosh",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMDIV",
+  "type": "Formula Function",
+  "title": "IMDIV",
+  "description": "Engineering function IMDIV(value1, value2)",
+  "tags": [
+   "engineering"
+  ],
+  "resource": "functions/IMDIV.md",
+  "tokens": [
+   "imdiv",
+   "engineering",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:IMEXP",
+  "type": "Formula Function",
+  "title": "IMEXP",
+  "description": "General function IMEXP(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMEXP.md",
+  "tokens": [
+   "imexp",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMLN",
+  "type": "Formula Function",
+  "title": "IMLN",
+  "description": "General function IMLN(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMLN.md",
+  "tokens": [
+   "imln",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMLOG10",
+  "type": "Formula Function",
+  "title": "IMLOG10",
+  "description": "General function IMLOG10(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMLOG10.md",
+  "tokens": [
+   "imlog10",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMLOG2",
+  "type": "Formula Function",
+  "title": "IMLOG2",
+  "description": "General function IMLOG2(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMLOG2.md",
+  "tokens": [
+   "imlog2",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMPORTDATA",
+  "type": "Formula Function",
+  "title": "IMPORTDATA",
+  "description": "Not available offline — IMPORTDATA depends on external Google services.",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMPORTDATA.md",
+  "tokens": [
+   "importdata",
+   "general",
+   "not",
+   "available",
+   "offline",
+   "depends",
+   "on",
+   "external",
+   "google",
+   "services"
+  ]
+ },
+ {
+  "id": "fn:IMPORTFEED",
+  "type": "Formula Function",
+  "title": "IMPORTFEED",
+  "description": "Not available offline — IMPORTFEED depends on external Google services.",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMPORTFEED.md",
+  "tokens": [
+   "importfeed",
+   "general",
+   "not",
+   "available",
+   "offline",
+   "depends",
+   "on",
+   "external",
+   "google",
+   "services"
+  ]
+ },
+ {
+  "id": "fn:IMPORTHTML",
+  "type": "Formula Function",
+  "title": "IMPORTHTML",
+  "description": "Not available offline — IMPORTHTML depends on external Google services.",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMPORTHTML.md",
+  "tokens": [
+   "importhtml",
+   "general",
+   "not",
+   "available",
+   "offline",
+   "depends",
+   "on",
+   "external",
+   "google",
+   "services"
+  ]
+ },
+ {
+  "id": "fn:IMPORTRANGE",
+  "type": "Formula Function",
+  "title": "IMPORTRANGE",
+  "description": "Pull a range from another Mono workbook.",
+  "tags": [
+   "web",
+   "cross-workbook",
+   "external"
+  ],
+  "resource": "functions/IMPORTRANGE.md",
+  "tokens": [
+   "importrange",
+   "web",
+   "cross",
+   "workbook",
+   "external",
+   "pull",
+   "range",
+   "from",
+   "another",
+   "mono"
+  ]
+ },
+ {
+  "id": "fn:IMPORTXML",
+  "type": "Formula Function",
+  "title": "IMPORTXML",
+  "description": "Not available offline — IMPORTXML depends on external Google services.",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMPORTXML.md",
+  "tokens": [
+   "importxml",
+   "general",
+   "not",
+   "available",
+   "offline",
+   "depends",
+   "on",
+   "external",
+   "google",
+   "services"
+  ]
+ },
+ {
+  "id": "fn:IMPOWER",
+  "type": "Formula Function",
+  "title": "IMPOWER",
+  "description": "Engineering function IMPOWER(value1, value2)",
+  "tags": [
+   "engineering"
+  ],
+  "resource": "functions/IMPOWER.md",
+  "tokens": [
+   "impower",
+   "engineering",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:IMPRODUCT",
+  "type": "Formula Function",
+  "title": "IMPRODUCT",
+  "description": "Engineering function IMPRODUCT(value1, [value2, …])",
+  "tags": [
+   "engineering"
+  ],
+  "resource": "functions/IMPRODUCT.md",
+  "tokens": [
+   "improduct",
+   "engineering",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:IMREAL",
+  "type": "Formula Function",
+  "title": "IMREAL",
+  "description": "General function IMREAL(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMREAL.md",
+  "tokens": [
+   "imreal",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMSIN",
+  "type": "Formula Function",
+  "title": "IMSIN",
+  "description": "General function IMSIN(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMSIN.md",
+  "tokens": [
+   "imsin",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMSINH",
+  "type": "Formula Function",
+  "title": "IMSINH",
+  "description": "General function IMSINH(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMSINH.md",
+  "tokens": [
+   "imsinh",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMSQRT",
+  "type": "Formula Function",
+  "title": "IMSQRT",
+  "description": "General function IMSQRT(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMSQRT.md",
+  "tokens": [
+   "imsqrt",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:IMSUB",
+  "type": "Formula Function",
+  "title": "IMSUB",
+  "description": "Engineering function IMSUB(value1, value2)",
+  "tags": [
+   "engineering"
+  ],
+  "resource": "functions/IMSUB.md",
+  "tokens": [
+   "imsub",
+   "engineering",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:IMSUM",
+  "type": "Formula Function",
+  "title": "IMSUM",
+  "description": "Engineering function IMSUM(value1, [value2, …])",
+  "tags": [
+   "engineering"
+  ],
+  "resource": "functions/IMSUM.md",
+  "tokens": [
+   "imsum",
+   "engineering",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:IMTAN",
+  "type": "Formula Function",
+  "title": "IMTAN",
+  "description": "General function IMTAN(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/IMTAN.md",
+  "tokens": [
+   "imtan",
+   "general",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:INDEX",
+  "type": "Formula Function",
+  "title": "INDEX",
+  "description": "Lookup function INDEX(value1, value2, [value3])",
+  "tags": [
+   "lookup",
+   "find"
+  ],
+  "resource": "functions/INDEX.md",
+  "tokens": [
+   "index",
+   "lookup",
+   "find",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:INDIRECT",
+  "type": "Formula Function",
+  "title": "INDIRECT",
+  "description": "Lookup function INDIRECT(value1, [value2])",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/INDIRECT.md",
+  "tokens": [
+   "indirect",
+   "lookup",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:INT",
+  "type": "Formula Function",
+  "title": "INT",
+  "description": "Math function INT(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/INT.md",
+  "tokens": [
+   "int",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:INTERCEPT",
+  "type": "Formula Function",
+  "title": "INTERCEPT",
+  "description": "Statistical function INTERCEPT(data_y, data_x)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/INTERCEPT.md",
+  "tokens": [
+   "intercept",
+   "statistical",
+   "function",
+   "data"
+  ]
+ },
+ {
+  "id": "fn:INTRATE",
+  "type": "Formula Function",
+  "title": "INTRATE",
+  "description": "Financial function INTRATE(value1, value2, value3, value4, [value5])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/INTRATE.md",
+  "tokens": [
+   "intrate",
+   "financial",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4",
+   "value5"
+  ]
+ },
+ {
+  "id": "fn:IPMT",
+  "type": "Formula Function",
+  "title": "IPMT",
+  "description": "Financial function IPMT(rate, period, number_of_periods, present_value, [future_value], [end_or_beginning])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/IPMT.md",
+  "tokens": [
+   "ipmt",
+   "financial",
+   "function",
+   "rate",
+   "period",
+   "number",
+   "of",
+   "periods",
+   "present",
+   "value",
+   "future",
+   "end",
+   "or",
+   "beginning"
+  ]
+ },
+ {
+  "id": "fn:IRR",
+  "type": "Formula Function",
+  "title": "IRR",
+  "description": "Financial function IRR(cashflow_amounts, [rate_guess])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/IRR.md",
+  "tokens": [
+   "irr",
+   "financial",
+   "function",
+   "cashflow",
+   "amounts",
+   "rate",
+   "guess"
+  ]
+ },
+ {
+  "id": "fn:ISBETWEEN",
+  "type": "Formula Function",
+  "title": "ISBETWEEN",
+  "description": "Math function ISBETWEEN(value, low, high, [low_inclusive], [high_inclusive])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/ISBETWEEN.md",
+  "tokens": [
+   "isbetween",
+   "math",
+   "function",
+   "value",
+   "low",
+   "high",
+   "inclusive"
+  ]
+ },
+ {
+  "id": "fn:ISBLANK",
+  "type": "Formula Function",
+  "title": "ISBLANK",
+  "description": "Info function ISBLANK(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISBLANK.md",
+  "tokens": [
+   "isblank",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISDATE",
+  "type": "Formula Function",
+  "title": "ISDATE",
+  "description": "Info function ISDATE(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISDATE.md",
+  "tokens": [
+   "isdate",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISEMAIL",
+  "type": "Formula Function",
+  "title": "ISEMAIL",
+  "description": "Info function ISEMAIL(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISEMAIL.md",
+  "tokens": [
+   "isemail",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISERR",
+  "type": "Formula Function",
+  "title": "ISERR",
+  "description": "Info function ISERR(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISERR.md",
+  "tokens": [
+   "iserr",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISERROR",
+  "type": "Formula Function",
+  "title": "ISERROR",
+  "description": "Info function ISERROR(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISERROR.md",
+  "tokens": [
+   "iserror",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISEVEN",
+  "type": "Formula Function",
+  "title": "ISEVEN",
+  "description": "Info function ISEVEN(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISEVEN.md",
+  "tokens": [
+   "iseven",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISFORMULA",
+  "type": "Formula Function",
+  "title": "ISFORMULA",
+  "description": "Info function ISFORMULA(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISFORMULA.md",
+  "tokens": [
+   "isformula",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISLOGICAL",
+  "type": "Formula Function",
+  "title": "ISLOGICAL",
+  "description": "Info function ISLOGICAL(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISLOGICAL.md",
+  "tokens": [
+   "islogical",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISNA",
+  "type": "Formula Function",
+  "title": "ISNA",
+  "description": "Info function ISNA(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISNA.md",
+  "tokens": [
+   "isna",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISNONTEXT",
+  "type": "Formula Function",
+  "title": "ISNONTEXT",
+  "description": "Info function ISNONTEXT(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISNONTEXT.md",
+  "tokens": [
+   "isnontext",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISNUMBER",
+  "type": "Formula Function",
+  "title": "ISNUMBER",
+  "description": "Info function ISNUMBER(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISNUMBER.md",
+  "tokens": [
+   "isnumber",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISODD",
+  "type": "Formula Function",
+  "title": "ISODD",
+  "description": "Info function ISODD(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISODD.md",
+  "tokens": [
+   "isodd",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISOWEEKNUM",
+  "type": "Formula Function",
+  "title": "ISOWEEKNUM",
+  "description": "Date function ISOWEEKNUM(date)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/ISOWEEKNUM.md",
+  "tokens": [
+   "isoweeknum",
+   "date",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:ISPMT",
+  "type": "Formula Function",
+  "title": "ISPMT",
+  "description": "Financial function ISPMT(value1, value2, value3, value4)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/ISPMT.md",
+  "tokens": [
+   "ispmt",
+   "financial",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:ISREF",
+  "type": "Formula Function",
+  "title": "ISREF",
+  "description": "Info function ISREF(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISREF.md",
+  "tokens": [
+   "isref",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISTEXT",
+  "type": "Formula Function",
+  "title": "ISTEXT",
+  "description": "Info function ISTEXT(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISTEXT.md",
+  "tokens": [
+   "istext",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ISURL",
+  "type": "Formula Function",
+  "title": "ISURL",
+  "description": "Info function ISURL(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/ISURL.md",
+  "tokens": [
+   "isurl",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:JOIN",
+  "type": "Formula Function",
+  "title": "JOIN",
+  "description": "Text function JOIN(delimiter, value_or_array1, [value_or_array2, …])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/JOIN.md",
+  "tokens": [
+   "join",
+   "text",
+   "function",
+   "delimiter",
+   "value",
+   "or",
+   "array1",
+   "array2"
+  ]
+ },
+ {
+  "id": "fn:KURT",
+  "type": "Formula Function",
+  "title": "KURT",
+  "description": "Statistical function KURT(value1, [value2, …])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/KURT.md",
+  "tokens": [
+   "kurt",
+   "statistical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:LAMBDA",
+  "type": "Formula Function",
+  "title": "LAMBDA",
+  "description": "Lambda function LAMBDA(value1, [value2, …])",
+  "tags": [
+   "lambda"
+  ],
+  "resource": "functions/LAMBDA.md",
+  "tokens": [
+   "lambda",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:LARGE",
+  "type": "Formula Function",
+  "title": "LARGE",
+  "description": "Statistical function LARGE(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/LARGE.md",
+  "tokens": [
+   "large",
+   "statistical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:LCM",
+  "type": "Formula Function",
+  "title": "LCM",
+  "description": "Math function LCM(value1, [value2, …])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/LCM.md",
+  "tokens": [
+   "lcm",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:LEFT",
+  "type": "Formula Function",
+  "title": "LEFT",
+  "description": "Text function LEFT(value1, [value2])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/LEFT.md",
+  "tokens": [
+   "left",
+   "text",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:LEFTB",
+  "type": "Formula Function",
+  "title": "LEFTB",
+  "description": "General function LEFTB(value1, [value2])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/LEFTB.md",
+  "tokens": [
+   "leftb",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:LEN",
+  "type": "Formula Function",
+  "title": "LEN",
+  "description": "Text function LEN(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/LEN.md",
+  "tokens": [
+   "len",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:LENB",
+  "type": "Formula Function",
+  "title": "LENB",
+  "description": "Text function LENB(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/LENB.md",
+  "tokens": [
+   "lenb",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:LET",
+  "type": "Formula Function",
+  "title": "LET",
+  "description": "Lambda function LET(value1, value2, value3, [value4, …])",
+  "tags": [
+   "lambda"
+  ],
+  "resource": "functions/LET.md",
+  "tokens": [
+   "let",
+   "lambda",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:LN",
+  "type": "Formula Function",
+  "title": "LN",
+  "description": "Math function LN(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/LN.md",
+  "tokens": [
+   "ln",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:LOG",
+  "type": "Formula Function",
+  "title": "LOG",
+  "description": "Math function LOG(value1, [value2])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/LOG.md",
+  "tokens": [
+   "log",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:LOG10",
+  "type": "Formula Function",
+  "title": "LOG10",
+  "description": "Math function LOG10(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/LOG10.md",
+  "tokens": [
+   "log10",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:LOGNORM.DIST",
+  "type": "Formula Function",
+  "title": "LOGNORM.DIST",
+  "description": "Statistical function LOGNORM.DIST(value1, value2, value3, [value4])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/LOGNORM.DIST.md",
+  "tokens": [
+   "lognorm.dist",
+   "lognormdist",
+   "statistical",
+   "function",
+   "lognorm",
+   "dist",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:LOGNORM.INV",
+  "type": "Formula Function",
+  "title": "LOGNORM.INV",
+  "description": "Statistical function LOGNORM.INV(value1, value2, value3)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/LOGNORM.INV.md",
+  "tokens": [
+   "lognorm.inv",
+   "loginv",
+   "statistical",
+   "function",
+   "lognorm",
+   "inv",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:LOOKUP",
+  "type": "Formula Function",
+  "title": "LOOKUP",
+  "description": "Lookup function LOOKUP(search_key, search_range, [result_range])",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/LOOKUP.md",
+  "tokens": [
+   "lookup",
+   "function",
+   "search",
+   "key",
+   "range",
+   "result"
+  ]
+ },
+ {
+  "id": "fn:LOWER",
+  "type": "Formula Function",
+  "title": "LOWER",
+  "description": "Text function LOWER(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/LOWER.md",
+  "tokens": [
+   "lower",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:LT",
+  "type": "Formula Function",
+  "title": "LT",
+  "description": "General function LT(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/LT.md",
+  "tokens": [
+   "lt",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:LTE",
+  "type": "Formula Function",
+  "title": "LTE",
+  "description": "General function LTE(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/LTE.md",
+  "tokens": [
+   "lte",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MAKEARRAY",
+  "type": "Formula Function",
+  "title": "MAKEARRAY",
+  "description": "Lambda function MAKEARRAY(value1, value2, value3)",
+  "tags": [
+   "lambda"
+  ],
+  "resource": "functions/MAKEARRAY.md",
+  "tokens": [
+   "makearray",
+   "lambda",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:MAP",
+  "type": "Formula Function",
+  "title": "MAP",
+  "description": "Lambda function MAP(value1, value2, [value3, …])",
+  "tags": [
+   "lambda"
+  ],
+  "resource": "functions/MAP.md",
+  "tokens": [
+   "map",
+   "lambda",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:MATCH",
+  "type": "Formula Function",
+  "title": "MATCH",
+  "description": "Lookup function MATCH(value1, value2, [value3])",
+  "tags": [
+   "lookup",
+   "find",
+   "position"
+  ],
+  "resource": "functions/MATCH.md",
+  "tokens": [
+   "match",
+   "lookup",
+   "find",
+   "position",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:MAX",
+  "type": "Formula Function",
+  "title": "MAX",
+  "description": "Statistical function MAX(value1, [value2, …])",
+  "tags": [
+   "statistical",
+   "aggregate",
+   "largest",
+   "highest",
+   "biggest",
+   "maximum"
+  ],
+  "resource": "functions/MAX.md",
+  "tokens": [
+   "max",
+   "statistical",
+   "aggregate",
+   "largest",
+   "highest",
+   "biggest",
+   "maximum",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MAXA",
+  "type": "Formula Function",
+  "title": "MAXA",
+  "description": "General function MAXA(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/MAXA.md",
+  "tokens": [
+   "maxa",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MAXIFS",
+  "type": "Formula Function",
+  "title": "MAXIFS",
+  "description": "Statistical function MAXIFS(range, criteria_range1, criterion1, …)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/MAXIFS.md",
+  "tokens": [
+   "maxifs",
+   "statistical",
+   "function",
+   "range",
+   "criteria",
+   "range1",
+   "criterion1"
+  ]
+ },
+ {
+  "id": "fn:MDETERM",
+  "type": "Formula Function",
+  "title": "MDETERM",
+  "description": "Math function MDETERM(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/MDETERM.md",
+  "tokens": [
+   "mdeterm",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:MEDIAN",
+  "type": "Formula Function",
+  "title": "MEDIAN",
+  "description": "Statistical function MEDIAN(value1, [value2, …])",
+  "tags": [
+   "statistical",
+   "aggregate",
+   "middle"
+  ],
+  "resource": "functions/MEDIAN.md",
+  "tokens": [
+   "median",
+   "statistical",
+   "aggregate",
+   "middle",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MID",
+  "type": "Formula Function",
+  "title": "MID",
+  "description": "Text function MID(value1, value2, value3)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/MID.md",
+  "tokens": [
+   "mid",
+   "text",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:MIDB",
+  "type": "Formula Function",
+  "title": "MIDB",
+  "description": "General function MIDB(value1, value2, value3)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/MIDB.md",
+  "tokens": [
+   "midb",
+   "general",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:MIN",
+  "type": "Formula Function",
+  "title": "MIN",
+  "description": "Statistical function MIN(value1, [value2, …])",
+  "tags": [
+   "statistical",
+   "aggregate",
+   "smallest",
+   "lowest",
+   "minimum"
+  ],
+  "resource": "functions/MIN.md",
+  "tokens": [
+   "min",
+   "statistical",
+   "aggregate",
+   "smallest",
+   "lowest",
+   "minimum",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MINA",
+  "type": "Formula Function",
+  "title": "MINA",
+  "description": "General function MINA(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/MINA.md",
+  "tokens": [
+   "mina",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MINIFS",
+  "type": "Formula Function",
+  "title": "MINIFS",
+  "description": "Statistical function MINIFS(range, criteria_range1, criterion1, …)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/MINIFS.md",
+  "tokens": [
+   "minifs",
+   "statistical",
+   "function",
+   "range",
+   "criteria",
+   "range1",
+   "criterion1"
+  ]
+ },
+ {
+  "id": "fn:MINUS",
+  "type": "Formula Function",
+  "title": "MINUS",
+  "description": "General function MINUS(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/MINUS.md",
+  "tokens": [
+   "minus",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MINUTE",
+  "type": "Formula Function",
+  "title": "MINUTE",
+  "description": "Date function MINUTE(value1)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/MINUTE.md",
+  "tokens": [
+   "minute",
+   "date",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:MINVERSE",
+  "type": "Formula Function",
+  "title": "MINVERSE",
+  "description": "Math function MINVERSE(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/MINVERSE.md",
+  "tokens": [
+   "minverse",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:MIRR",
+  "type": "Formula Function",
+  "title": "MIRR",
+  "description": "Financial function MIRR(cashflow_amounts, financing_rate, reinvestment_return_rate)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/MIRR.md",
+  "tokens": [
+   "mirr",
+   "financial",
+   "function",
+   "cashflow",
+   "amounts",
+   "financing",
+   "rate",
+   "reinvestment",
+   "return"
+  ]
+ },
+ {
+  "id": "fn:MMULT",
+  "type": "Formula Function",
+  "title": "MMULT",
+  "description": "Math function MMULT(matrix1, matrix2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/MMULT.md",
+  "tokens": [
+   "mmult",
+   "math",
+   "function",
+   "matrix1",
+   "matrix2"
+  ]
+ },
+ {
+  "id": "fn:MOD",
+  "type": "Formula Function",
+  "title": "MOD",
+  "description": "Math function MOD(value1, value2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/MOD.md",
+  "tokens": [
+   "mod",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MODE",
+  "type": "Formula Function",
+  "title": "MODE",
+  "description": "Statistical function MODE(value1, [value2, …])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/MODE.md",
+  "tokens": [
+   "mode",
+   "mode.sngl",
+   "statistical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MODE.MULT",
+  "type": "Formula Function",
+  "title": "MODE.MULT",
+  "description": "Statistical function MODE.MULT(value1, [value2, …])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/MODE.MULT.md",
+  "tokens": [
+   "mode.mult",
+   "statistical",
+   "function",
+   "mode",
+   "mult",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MONTH",
+  "type": "Formula Function",
+  "title": "MONTH",
+  "description": "Date function MONTH(value1)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/MONTH.md",
+  "tokens": [
+   "month",
+   "date",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:MROUND",
+  "type": "Formula Function",
+  "title": "MROUND",
+  "description": "Math function MROUND(value1, value2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/MROUND.md",
+  "tokens": [
+   "mround",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MULTINOMIAL",
+  "type": "Formula Function",
+  "title": "MULTINOMIAL",
+  "description": "Math function MULTINOMIAL(value1, [value2, …])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/MULTINOMIAL.md",
+  "tokens": [
+   "multinomial",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:MULTIPLY",
+  "type": "Formula Function",
+  "title": "MULTIPLY",
+  "description": "General function MULTIPLY(factor1, factor2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/MULTIPLY.md",
+  "tokens": [
+   "multiply",
+   "general",
+   "function",
+   "factor1",
+   "factor2"
+  ]
+ },
+ {
+  "id": "fn:MUNIT",
+  "type": "Formula Function",
+  "title": "MUNIT",
+  "description": "Math function MUNIT(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/MUNIT.md",
+  "tokens": [
+   "munit",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:N",
+  "type": "Formula Function",
+  "title": "N",
+  "description": "Info function N(value)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/N.md",
+  "tokens": [
+   "n",
+   "info",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:NA",
+  "type": "Formula Function",
+  "title": "NA",
+  "description": "Info function NA()",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/NA.md",
+  "tokens": [
+   "na",
+   "info",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:NE",
+  "type": "Formula Function",
+  "title": "NE",
+  "description": "General function NE(value1, value2)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/NE.md",
+  "tokens": [
+   "ne",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:NEGBINOM.DIST",
+  "type": "Formula Function",
+  "title": "NEGBINOM.DIST",
+  "description": "Statistical function NEGBINOM.DIST(value1, value2, value3, [value4])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/NEGBINOM.DIST.md",
+  "tokens": [
+   "negbinom.dist",
+   "negbinomdist",
+   "statistical",
+   "function",
+   "negbinom",
+   "dist",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:NETWORKDAYS",
+  "type": "Formula Function",
+  "title": "NETWORKDAYS",
+  "description": "Date function NETWORKDAYS(start_date, end_date, [holidays])",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/NETWORKDAYS.md",
+  "tokens": [
+   "networkdays",
+   "date",
+   "function",
+   "start",
+   "end",
+   "holidays"
+  ]
+ },
+ {
+  "id": "fn:NETWORKDAYS.INTL",
+  "type": "Formula Function",
+  "title": "NETWORKDAYS.INTL",
+  "description": "Date function NETWORKDAYS.INTL(value1, value2, [value3], [value4])",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/NETWORKDAYS.INTL.md",
+  "tokens": [
+   "networkdays.intl",
+   "date",
+   "function",
+   "networkdays",
+   "intl",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:NOMINAL",
+  "type": "Formula Function",
+  "title": "NOMINAL",
+  "description": "Financial function NOMINAL(effective_rate, periods_per_year)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/NOMINAL.md",
+  "tokens": [
+   "nominal",
+   "financial",
+   "function",
+   "effective",
+   "rate",
+   "periods",
+   "per",
+   "year"
+  ]
+ },
+ {
+  "id": "fn:NORM.DIST",
+  "type": "Formula Function",
+  "title": "NORM.DIST",
+  "description": "Statistical function NORM.DIST(x, mean, standard_deviation, cumulative)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/NORM.DIST.md",
+  "tokens": [
+   "norm.dist",
+   "normdist",
+   "statistical",
+   "function",
+   "norm",
+   "dist",
+   "mean",
+   "standard",
+   "deviation",
+   "cumulative"
+  ]
+ },
+ {
+  "id": "fn:NORM.INV",
+  "type": "Formula Function",
+  "title": "NORM.INV",
+  "description": "Statistical function NORM.INV(probability, mean, standard_deviation)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/NORM.INV.md",
+  "tokens": [
+   "norm.inv",
+   "norminv",
+   "statistical",
+   "function",
+   "norm",
+   "inv",
+   "probability",
+   "mean",
+   "standard",
+   "deviation"
+  ]
+ },
+ {
+  "id": "fn:NORM.S.DIST",
+  "type": "Formula Function",
+  "title": "NORM.S.DIST",
+  "description": "Statistical function NORM.S.DIST(value1, [value2])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/NORM.S.DIST.md",
+  "tokens": [
+   "norm.s.dist",
+   "normsdist",
+   "statistical",
+   "function",
+   "norm",
+   "dist",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:NORM.S.INV",
+  "type": "Formula Function",
+  "title": "NORM.S.INV",
+  "description": "Statistical function NORM.S.INV(value1)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/NORM.S.INV.md",
+  "tokens": [
+   "norm.s.inv",
+   "normsinv",
+   "statistical",
+   "function",
+   "norm",
+   "inv",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:NOT",
+  "type": "Formula Function",
+  "title": "NOT",
+  "description": "Logical function NOT(value1)",
+  "tags": [
+   "logical"
+  ],
+  "resource": "functions/NOT.md",
+  "tokens": [
+   "not",
+   "logical",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:NOW",
+  "type": "Formula Function",
+  "title": "NOW",
+  "description": "Date function NOW()",
+  "tags": [
+   "date",
+   "current",
+   "datetime"
+  ],
+  "resource": "functions/NOW.md",
+  "tokens": [
+   "now",
+   "date",
+   "current",
+   "datetime",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:NPER",
+  "type": "Formula Function",
+  "title": "NPER",
+  "description": "Financial function NPER(rate, payment_amount, present_value, [future_value], [end_or_beginning])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/NPER.md",
+  "tokens": [
+   "nper",
+   "financial",
+   "function",
+   "rate",
+   "payment",
+   "amount",
+   "present",
+   "value",
+   "future",
+   "end",
+   "or",
+   "beginning"
+  ]
+ },
+ {
+  "id": "fn:NPV",
+  "type": "Formula Function",
+  "title": "NPV",
+  "description": "Financial function NPV(discount, cashflow1, [cashflow2, …])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/NPV.md",
+  "tokens": [
+   "npv",
+   "financial",
+   "function",
+   "discount",
+   "cashflow1",
+   "cashflow2"
+  ]
+ },
+ {
+  "id": "fn:NUMBERVALUE",
+  "type": "Formula Function",
+  "title": "NUMBERVALUE",
+  "description": "Text function NUMBERVALUE(text, [decimal_separator], [group_separator])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/NUMBERVALUE.md",
+  "tokens": [
+   "numbervalue",
+   "text",
+   "function",
+   "decimal",
+   "separator",
+   "group"
+  ]
+ },
+ {
+  "id": "fn:OCT2BIN",
+  "type": "Formula Function",
+  "title": "OCT2BIN",
+  "description": "General function OCT2BIN(value, [places])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/OCT2BIN.md",
+  "tokens": [
+   "oct2bin",
+   "general",
+   "function",
+   "value",
+   "places"
+  ]
+ },
+ {
+  "id": "fn:OCT2DEC",
+  "type": "Formula Function",
+  "title": "OCT2DEC",
+  "description": "General function OCT2DEC(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/OCT2DEC.md",
+  "tokens": [
+   "oct2dec",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:OCT2HEX",
+  "type": "Formula Function",
+  "title": "OCT2HEX",
+  "description": "General function OCT2HEX(value, [places])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/OCT2HEX.md",
+  "tokens": [
+   "oct2hex",
+   "general",
+   "function",
+   "value",
+   "places"
+  ]
+ },
+ {
+  "id": "fn:ODD",
+  "type": "Formula Function",
+  "title": "ODD",
+  "description": "Math function ODD(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/ODD.md",
+  "tokens": [
+   "odd",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:OFFSET",
+  "type": "Formula Function",
+  "title": "OFFSET",
+  "description": "Lookup function OFFSET(cell_reference, offset_rows, offset_columns, [height], [width])",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/OFFSET.md",
+  "tokens": [
+   "offset",
+   "lookup",
+   "function",
+   "cell",
+   "reference",
+   "rows",
+   "columns",
+   "height",
+   "width"
+  ]
+ },
+ {
+  "id": "fn:OR",
+  "type": "Formula Function",
+  "title": "OR",
+  "description": "Logical function OR(value1, [value2, …])",
+  "tags": [
+   "logical"
+  ],
+  "resource": "functions/OR.md",
+  "tokens": [
+   "or",
+   "logical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:PDURATION",
+  "type": "Formula Function",
+  "title": "PDURATION",
+  "description": "Financial function PDURATION(value1, value2, value3)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/PDURATION.md",
+  "tokens": [
+   "pduration",
+   "financial",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:PERCENTILE",
+  "type": "Formula Function",
+  "title": "PERCENTILE",
+  "description": "Statistical function PERCENTILE(data, percentile)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/PERCENTILE.md",
+  "tokens": [
+   "percentile",
+   "percentile.inc",
+   "statistical",
+   "function",
+   "data"
+  ]
+ },
+ {
+  "id": "fn:PERCENTILE.EXC",
+  "type": "Formula Function",
+  "title": "PERCENTILE.EXC",
+  "description": "Statistical function PERCENTILE.EXC(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/PERCENTILE.EXC.md",
+  "tokens": [
+   "percentile.exc",
+   "statistical",
+   "function",
+   "percentile",
+   "exc",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:PERCENTRANK",
+  "type": "Formula Function",
+  "title": "PERCENTRANK",
+  "description": "Statistical function PERCENTRANK(value1, value2, [value3])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/PERCENTRANK.md",
+  "tokens": [
+   "percentrank",
+   "percentrank.inc",
+   "statistical",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:PERMUT",
+  "type": "Formula Function",
+  "title": "PERMUT",
+  "description": "Math function PERMUT(n, k)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/PERMUT.md",
+  "tokens": [
+   "permut",
+   "math",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:PERMUTATIONA",
+  "type": "Formula Function",
+  "title": "PERMUTATIONA",
+  "description": "Math function PERMUTATIONA(value1, value2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/PERMUTATIONA.md",
+  "tokens": [
+   "permutationa",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:PI",
+  "type": "Formula Function",
+  "title": "PI",
+  "description": "Math function PI()",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/PI.md",
+  "tokens": [
+   "pi",
+   "math",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:PMT",
+  "type": "Formula Function",
+  "title": "PMT",
+  "description": "Financial function PMT(rate, number_of_periods, present_value, [future_value], [end_or_beginning])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/PMT.md",
+  "tokens": [
+   "pmt",
+   "financial",
+   "function",
+   "rate",
+   "number",
+   "of",
+   "periods",
+   "present",
+   "value",
+   "future",
+   "end",
+   "or",
+   "beginning"
+  ]
+ },
+ {
+  "id": "fn:POISSON.DIST",
+  "type": "Formula Function",
+  "title": "POISSON.DIST",
+  "description": "Statistical function POISSON.DIST(x, mean, cumulative)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/POISSON.DIST.md",
+  "tokens": [
+   "poisson.dist",
+   "poisson",
+   "statistical",
+   "function",
+   "dist",
+   "mean",
+   "cumulative"
+  ]
+ },
+ {
+  "id": "fn:POW",
+  "type": "Formula Function",
+  "title": "POW",
+  "description": "General function POW(base, exponent)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/POW.md",
+  "tokens": [
+   "pow",
+   "general",
+   "function",
+   "base",
+   "exponent"
+  ]
+ },
+ {
+  "id": "fn:POWER",
+  "type": "Formula Function",
+  "title": "POWER",
+  "description": "Math function POWER(value1, value2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/POWER.md",
+  "tokens": [
+   "power",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:PPMT",
+  "type": "Formula Function",
+  "title": "PPMT",
+  "description": "Financial function PPMT(rate, period, number_of_periods, present_value, [future_value], [end_or_beginning])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/PPMT.md",
+  "tokens": [
+   "ppmt",
+   "financial",
+   "function",
+   "rate",
+   "period",
+   "number",
+   "of",
+   "periods",
+   "present",
+   "value",
+   "future",
+   "end",
+   "or",
+   "beginning"
+  ]
+ },
+ {
+  "id": "fn:PROB",
+  "type": "Formula Function",
+  "title": "PROB",
+  "description": "Statistical function PROB(value1, value2, value3, [value4])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/PROB.md",
+  "tokens": [
+   "prob",
+   "statistical",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:PRODUCT",
+  "type": "Formula Function",
+  "title": "PRODUCT",
+  "description": "Math function PRODUCT(value1, [value2, …])",
+  "tags": [
+   "math",
+   "aggregate",
+   "multiply"
+  ],
+  "resource": "functions/PRODUCT.md",
+  "tokens": [
+   "product",
+   "math",
+   "aggregate",
+   "multiply",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:PROPER",
+  "type": "Formula Function",
+  "title": "PROPER",
+  "description": "Text function PROPER(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/PROPER.md",
+  "tokens": [
+   "proper",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:PV",
+  "type": "Formula Function",
+  "title": "PV",
+  "description": "Financial function PV(rate, number_of_periods, payment_amount, [future_value], [end_or_beginning])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/PV.md",
+  "tokens": [
+   "pv",
+   "financial",
+   "function",
+   "rate",
+   "number",
+   "of",
+   "periods",
+   "payment",
+   "amount",
+   "future",
+   "value",
+   "end",
+   "or",
+   "beginning"
+  ]
+ },
+ {
+  "id": "fn:QUARTILE",
+  "type": "Formula Function",
+  "title": "QUARTILE",
+  "description": "Statistical function QUARTILE(data, quartile_number)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/QUARTILE.md",
+  "tokens": [
+   "quartile",
+   "quartile.inc",
+   "statistical",
+   "function",
+   "data",
+   "number"
+  ]
+ },
+ {
+  "id": "fn:QUARTILE.EXC",
+  "type": "Formula Function",
+  "title": "QUARTILE.EXC",
+  "description": "Statistical function QUARTILE.EXC(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/QUARTILE.EXC.md",
+  "tokens": [
+   "quartile.exc",
+   "statistical",
+   "function",
+   "quartile",
+   "exc",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:QUERY",
+  "type": "Formula Function",
+  "title": "QUERY",
+  "description": "Array function QUERY(value1, value2, [value3])",
+  "tags": [
+   "array",
+   "sql",
+   "select"
+  ],
+  "resource": "functions/QUERY.md",
+  "tokens": [
+   "query",
+   "array",
+   "sql",
+   "select",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:QUOTIENT",
+  "type": "Formula Function",
+  "title": "QUOTIENT",
+  "description": "Math function QUOTIENT(value1, value2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/QUOTIENT.md",
+  "tokens": [
+   "quotient",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:RADIANS",
+  "type": "Formula Function",
+  "title": "RADIANS",
+  "description": "General function RADIANS(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/RADIANS.md",
+  "tokens": [
+   "radians",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:RAND",
+  "type": "Formula Function",
+  "title": "RAND",
+  "description": "Math function RAND()",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/RAND.md",
+  "tokens": [
+   "rand",
+   "math",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:RANDARRAY",
+  "type": "Formula Function",
+  "title": "RANDARRAY",
+  "description": "Array function RANDARRAY([value1], [value2], [value3], [value4], [value5])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/RANDARRAY.md",
+  "tokens": [
+   "randarray",
+   "array",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4",
+   "value5"
+  ]
+ },
+ {
+  "id": "fn:RANDBETWEEN",
+  "type": "Formula Function",
+  "title": "RANDBETWEEN",
+  "description": "Math function RANDBETWEEN(value1, value2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/RANDBETWEEN.md",
+  "tokens": [
+   "randbetween",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:RANK",
+  "type": "Formula Function",
+  "title": "RANK",
+  "description": "Statistical function RANK(value, data, [is_ascending])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/RANK.md",
+  "tokens": [
+   "rank",
+   "rank.eq",
+   "statistical",
+   "function",
+   "value",
+   "data",
+   "is",
+   "ascending"
+  ]
+ },
+ {
+  "id": "fn:RANK.AVG",
+  "type": "Formula Function",
+  "title": "RANK.AVG",
+  "description": "Statistical function RANK.AVG(value1, value2, [value3])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/RANK.AVG.md",
+  "tokens": [
+   "rank.avg",
+   "statistical",
+   "function",
+   "rank",
+   "avg",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:RATE",
+  "type": "Formula Function",
+  "title": "RATE",
+  "description": "Financial function RATE(number_of_periods, payment_per_period, present_value, [future_value], [end_or_beginning], [rate_guess])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/RATE.md",
+  "tokens": [
+   "rate",
+   "financial",
+   "function",
+   "number",
+   "of",
+   "periods",
+   "payment",
+   "per",
+   "period",
+   "present",
+   "value",
+   "future",
+   "end",
+   "or",
+   "beginning",
+   "guess"
+  ]
+ },
+ {
+  "id": "fn:RECEIVED",
+  "type": "Formula Function",
+  "title": "RECEIVED",
+  "description": "Financial function RECEIVED(value1, value2, value3, value4, [value5])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/RECEIVED.md",
+  "tokens": [
+   "received",
+   "financial",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4",
+   "value5"
+  ]
+ },
+ {
+  "id": "fn:REDUCE",
+  "type": "Formula Function",
+  "title": "REDUCE",
+  "description": "Lambda function REDUCE(value1, value2, value3)",
+  "tags": [
+   "lambda"
+  ],
+  "resource": "functions/REDUCE.md",
+  "tokens": [
+   "reduce",
+   "lambda",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:REGEXEXTRACT",
+  "type": "Formula Function",
+  "title": "REGEXEXTRACT",
+  "description": "Extracts the first matching substring (or first capture group).",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/REGEXEXTRACT.md",
+  "tokens": [
+   "regexextract",
+   "text",
+   "extracts",
+   "the",
+   "first",
+   "matching",
+   "substring",
+   "or",
+   "capture",
+   "group"
+  ]
+ },
+ {
+  "id": "fn:REGEXMATCH",
+  "type": "Formula Function",
+  "title": "REGEXMATCH",
+  "description": "Whether a piece of text matches a regular expression.",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/REGEXMATCH.md",
+  "tokens": [
+   "regexmatch",
+   "text",
+   "whether",
+   "piece",
+   "of",
+   "matches",
+   "regular",
+   "expression"
+  ]
+ },
+ {
+  "id": "fn:REGEXREPLACE",
+  "type": "Formula Function",
+  "title": "REGEXREPLACE",
+  "description": "Replaces every match of a regular expression.",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/REGEXREPLACE.md",
+  "tokens": [
+   "regexreplace",
+   "text",
+   "replaces",
+   "every",
+   "match",
+   "of",
+   "regular",
+   "expression"
+  ]
+ },
+ {
+  "id": "fn:REPLACE",
+  "type": "Formula Function",
+  "title": "REPLACE",
+  "description": "Text function REPLACE(value1, value2, value3, value4)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/REPLACE.md",
+  "tokens": [
+   "replace",
+   "text",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:REPLACEB",
+  "type": "Formula Function",
+  "title": "REPLACEB",
+  "description": "General function REPLACEB(value1, value2, value3, value4)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/REPLACEB.md",
+  "tokens": [
+   "replaceb",
+   "general",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:REPT",
+  "type": "Formula Function",
+  "title": "REPT",
+  "description": "Text function REPT(value1, value2)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/REPT.md",
+  "tokens": [
+   "rept",
+   "text",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:RIGHT",
+  "type": "Formula Function",
+  "title": "RIGHT",
+  "description": "Text function RIGHT(value1, [value2])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/RIGHT.md",
+  "tokens": [
+   "right",
+   "text",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:RIGHTB",
+  "type": "Formula Function",
+  "title": "RIGHTB",
+  "description": "General function RIGHTB(value1, [value2])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/RIGHTB.md",
+  "tokens": [
+   "rightb",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:ROMAN",
+  "type": "Formula Function",
+  "title": "ROMAN",
+  "description": "Math function ROMAN(value)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/ROMAN.md",
+  "tokens": [
+   "roman",
+   "math",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:ROUND",
+  "type": "Formula Function",
+  "title": "ROUND",
+  "description": "Math function ROUND(value1, [value2])",
+  "tags": [
+   "math",
+   "decimal",
+   "precision"
+  ],
+  "resource": "functions/ROUND.md",
+  "tokens": [
+   "round",
+   "math",
+   "decimal",
+   "precision",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:ROUNDDOWN",
+  "type": "Formula Function",
+  "title": "ROUNDDOWN",
+  "description": "Math function ROUNDDOWN(value1, [value2])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/ROUNDDOWN.md",
+  "tokens": [
+   "rounddown",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:ROUNDUP",
+  "type": "Formula Function",
+  "title": "ROUNDUP",
+  "description": "Math function ROUNDUP(value1, [value2])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/ROUNDUP.md",
+  "tokens": [
+   "roundup",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:ROW",
+  "type": "Formula Function",
+  "title": "ROW",
+  "description": "Lookup function ROW([value1])",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/ROW.md",
+  "tokens": [
+   "row",
+   "lookup",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:ROWS",
+  "type": "Formula Function",
+  "title": "ROWS",
+  "description": "Lookup function ROWS(value1)",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/ROWS.md",
+  "tokens": [
+   "rows",
+   "lookup",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:RRI",
+  "type": "Formula Function",
+  "title": "RRI",
+  "description": "Financial function RRI(value1, value2, value3)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/RRI.md",
+  "tokens": [
+   "rri",
+   "financial",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:RSQ",
+  "type": "Formula Function",
+  "title": "RSQ",
+  "description": "Statistical function RSQ(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/RSQ.md",
+  "tokens": [
+   "rsq",
+   "statistical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SCAN",
+  "type": "Formula Function",
+  "title": "SCAN",
+  "description": "Lambda function SCAN(value1, value2, value3)",
+  "tags": [
+   "lambda"
+  ],
+  "resource": "functions/SCAN.md",
+  "tokens": [
+   "scan",
+   "lambda",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:SEARCH",
+  "type": "Formula Function",
+  "title": "SEARCH",
+  "description": "Text function SEARCH(value1, value2, [value3])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/SEARCH.md",
+  "tokens": [
+   "search",
+   "text",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:SEARCHB",
+  "type": "Formula Function",
+  "title": "SEARCHB",
+  "description": "General function SEARCHB(value1, value2, [value3])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/SEARCHB.md",
+  "tokens": [
+   "searchb",
+   "general",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:SEC",
+  "type": "Formula Function",
+  "title": "SEC",
+  "description": "General function SEC(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/SEC.md",
+  "tokens": [
+   "sec",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:SECH",
+  "type": "Formula Function",
+  "title": "SECH",
+  "description": "General function SECH(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/SECH.md",
+  "tokens": [
+   "sech",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:SECOND",
+  "type": "Formula Function",
+  "title": "SECOND",
+  "description": "Date function SECOND(value1)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/SECOND.md",
+  "tokens": [
+   "second",
+   "date",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:SEQUENCE",
+  "type": "Formula Function",
+  "title": "SEQUENCE",
+  "description": "Array function SEQUENCE(value1, [value2], [value3], [value4])",
+  "tags": [
+   "array",
+   "series",
+   "range"
+  ],
+  "resource": "functions/SEQUENCE.md",
+  "tokens": [
+   "sequence",
+   "array",
+   "series",
+   "range",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:SERIESSUM",
+  "type": "Formula Function",
+  "title": "SERIESSUM",
+  "description": "Math function SERIESSUM(value1, value2, value3, value4)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/SERIESSUM.md",
+  "tokens": [
+   "seriessum",
+   "math",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:SIGN",
+  "type": "Formula Function",
+  "title": "SIGN",
+  "description": "Math function SIGN(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/SIGN.md",
+  "tokens": [
+   "sign",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:SIN",
+  "type": "Formula Function",
+  "title": "SIN",
+  "description": "General function SIN(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/SIN.md",
+  "tokens": [
+   "sin",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:SINH",
+  "type": "Formula Function",
+  "title": "SINH",
+  "description": "General function SINH(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/SINH.md",
+  "tokens": [
+   "sinh",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:SKEW",
+  "type": "Formula Function",
+  "title": "SKEW",
+  "description": "Statistical function SKEW(value1, [value2, …])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/SKEW.md",
+  "tokens": [
+   "skew",
+   "statistical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SKEW.P",
+  "type": "Formula Function",
+  "title": "SKEW.P",
+  "description": "Statistical function SKEW.P(value1, [value2, …])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/SKEW.P.md",
+  "tokens": [
+   "skew.p",
+   "statistical",
+   "function",
+   "skew",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SLN",
+  "type": "Formula Function",
+  "title": "SLN",
+  "description": "Financial function SLN(cost, salvage, life)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/SLN.md",
+  "tokens": [
+   "sln",
+   "financial",
+   "function",
+   "cost",
+   "salvage",
+   "life"
+  ]
+ },
+ {
+  "id": "fn:SLOPE",
+  "type": "Formula Function",
+  "title": "SLOPE",
+  "description": "Statistical function SLOPE(data_y, data_x)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/SLOPE.md",
+  "tokens": [
+   "slope",
+   "statistical",
+   "function",
+   "data"
+  ]
+ },
+ {
+  "id": "fn:SMALL",
+  "type": "Formula Function",
+  "title": "SMALL",
+  "description": "Statistical function SMALL(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/SMALL.md",
+  "tokens": [
+   "small",
+   "statistical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SORT",
+  "type": "Formula Function",
+  "title": "SORT",
+  "description": "Array function SORT(value1, [value2, …])",
+  "tags": [
+   "array",
+   "order",
+   "arrange"
+  ],
+  "resource": "functions/SORT.md",
+  "tokens": [
+   "sort",
+   "array",
+   "order",
+   "arrange",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SORTN",
+  "type": "Formula Function",
+  "title": "SORTN",
+  "description": "Array function SORTN(value1, [value2, …])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/SORTN.md",
+  "tokens": [
+   "sortn",
+   "array",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SPARKLINE",
+  "type": "Formula Function",
+  "title": "SPARKLINE",
+  "description": "Not available offline — SPARKLINE depends on external Google services.",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/SPARKLINE.md",
+  "tokens": [
+   "sparkline",
+   "general",
+   "not",
+   "available",
+   "offline",
+   "depends",
+   "on",
+   "external",
+   "google",
+   "services"
+  ]
+ },
+ {
+  "id": "fn:SPLIT",
+  "type": "Formula Function",
+  "title": "SPLIT",
+  "description": "Text function SPLIT(text, delimiter, [split_by_each], [remove_empty_text])",
+  "tags": [
+   "text",
+   "separate",
+   "delimiter"
+  ],
+  "resource": "functions/SPLIT.md",
+  "tokens": [
+   "split",
+   "text",
+   "separate",
+   "delimiter",
+   "function",
+   "by",
+   "each",
+   "remove",
+   "empty"
+  ]
+ },
+ {
+  "id": "fn:SQRT",
+  "type": "Formula Function",
+  "title": "SQRT",
+  "description": "Math function SQRT(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/SQRT.md",
+  "tokens": [
+   "sqrt",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:SQRTPI",
+  "type": "Formula Function",
+  "title": "SQRTPI",
+  "description": "General function SQRTPI(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/SQRTPI.md",
+  "tokens": [
+   "sqrtpi",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:STANDARDIZE",
+  "type": "Formula Function",
+  "title": "STANDARDIZE",
+  "description": "Statistical function STANDARDIZE(value1, value2, value3)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/STANDARDIZE.md",
+  "tokens": [
+   "standardize",
+   "statistical",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:STDEV",
+  "type": "Formula Function",
+  "title": "STDEV",
+  "description": "General function STDEV(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/STDEV.md",
+  "tokens": [
+   "stdev",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:STDEV.P",
+  "type": "Formula Function",
+  "title": "STDEV.P",
+  "description": "General function STDEVP(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/STDEV.P.md",
+  "tokens": [
+   "stdev.p",
+   "general",
+   "function",
+   "stdevp",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:STDEV.S",
+  "type": "Formula Function",
+  "title": "STDEV.S",
+  "description": "General function STDEV(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/STDEV.S.md",
+  "tokens": [
+   "stdev.s",
+   "general",
+   "function",
+   "stdev",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:STDEVA",
+  "type": "Formula Function",
+  "title": "STDEVA",
+  "description": "General function STDEVA(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/STDEVA.md",
+  "tokens": [
+   "stdeva",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:STDEVP",
+  "type": "Formula Function",
+  "title": "STDEVP",
+  "description": "General function STDEVP(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/STDEVP.md",
+  "tokens": [
+   "stdevp",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:STDEVPA",
+  "type": "Formula Function",
+  "title": "STDEVPA",
+  "description": "General function STDEVPA(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/STDEVPA.md",
+  "tokens": [
+   "stdevpa",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:STEYX",
+  "type": "Formula Function",
+  "title": "STEYX",
+  "description": "Statistical function STEYX(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/STEYX.md",
+  "tokens": [
+   "steyx",
+   "statistical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SUBSTITUTE",
+  "type": "Formula Function",
+  "title": "SUBSTITUTE",
+  "description": "Text function SUBSTITUTE(value1, value2, value3, [value4])",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/SUBSTITUTE.md",
+  "tokens": [
+   "substitute",
+   "text",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:SUBTOTAL",
+  "type": "Formula Function",
+  "title": "SUBTOTAL",
+  "description": "Math function SUBTOTAL(function_code, range1, [range2, …])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/SUBTOTAL.md",
+  "tokens": [
+   "subtotal",
+   "math",
+   "function",
+   "code",
+   "range1",
+   "range2"
+  ]
+ },
+ {
+  "id": "fn:SUM",
+  "type": "Formula Function",
+  "title": "SUM",
+  "description": "Math function SUM(value1, [value2, …])",
+  "tags": [
+   "math",
+   "aggregate",
+   "total",
+   "add"
+  ],
+  "resource": "functions/SUM.md",
+  "tokens": [
+   "sum",
+   "math",
+   "aggregate",
+   "total",
+   "add",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SUMIF",
+  "type": "Formula Function",
+  "title": "SUMIF",
+  "description": "Math function SUMIF(value1, value2, [value3])",
+  "tags": [
+   "math",
+   "aggregate",
+   "sum",
+   "conditional",
+   "where"
+  ],
+  "resource": "functions/SUMIF.md",
+  "tokens": [
+   "sumif",
+   "math",
+   "aggregate",
+   "sum",
+   "conditional",
+   "where",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:SUMIFS",
+  "type": "Formula Function",
+  "title": "SUMIFS",
+  "description": "Math function SUMIFS(value1, value2, value3, [value4, …])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/SUMIFS.md",
+  "tokens": [
+   "sumifs",
+   "math",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:SUMPRODUCT",
+  "type": "Formula Function",
+  "title": "SUMPRODUCT",
+  "description": "Math function SUMPRODUCT(value1, [value2, …])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/SUMPRODUCT.md",
+  "tokens": [
+   "sumproduct",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SUMSQ",
+  "type": "Formula Function",
+  "title": "SUMSQ",
+  "description": "Math function SUMSQ(value1, [value2, …])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/SUMSQ.md",
+  "tokens": [
+   "sumsq",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SUMX2MY2",
+  "type": "Formula Function",
+  "title": "SUMX2MY2",
+  "description": "Math function SUMX2MY2(value1, value2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/SUMX2MY2.md",
+  "tokens": [
+   "sumx2my2",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SUMX2PY2",
+  "type": "Formula Function",
+  "title": "SUMX2PY2",
+  "description": "Math function SUMX2PY2(value1, value2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/SUMX2PY2.md",
+  "tokens": [
+   "sumx2py2",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SUMXMY2",
+  "type": "Formula Function",
+  "title": "SUMXMY2",
+  "description": "Math function SUMXMY2(value1, value2)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/SUMXMY2.md",
+  "tokens": [
+   "sumxmy2",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:SWITCH",
+  "type": "Formula Function",
+  "title": "SWITCH",
+  "description": "Array function SWITCH(value1, value2, value3, [value4, …])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/SWITCH.md",
+  "tokens": [
+   "switch",
+   "array",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:SYD",
+  "type": "Formula Function",
+  "title": "SYD",
+  "description": "Financial function SYD(cost, salvage, life, period)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/SYD.md",
+  "tokens": [
+   "syd",
+   "financial",
+   "function",
+   "cost",
+   "salvage",
+   "life",
+   "period"
+  ]
+ },
+ {
+  "id": "fn:T",
+  "type": "Formula Function",
+  "title": "T",
+  "description": "Text function T(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/T.md",
+  "tokens": [
+   "t",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:T.DIST",
+  "type": "Formula Function",
+  "title": "T.DIST",
+  "description": "Statistical function T.DIST(value1, value2, value3)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/T.DIST.md",
+  "tokens": [
+   "t.dist",
+   "statistical",
+   "function",
+   "dist",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:T.DIST.2T",
+  "type": "Formula Function",
+  "title": "T.DIST.2T",
+  "description": "Statistical function TDIST(x, degrees_freedom, tails)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/T.DIST.2T.md",
+  "tokens": [
+   "t.dist.2t",
+   "tdist",
+   "statistical",
+   "function",
+   "degrees",
+   "freedom",
+   "tails"
+  ]
+ },
+ {
+  "id": "fn:T.DIST.RT",
+  "type": "Formula Function",
+  "title": "T.DIST.RT",
+  "description": "Statistical function T.DIST.RT(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/T.DIST.RT.md",
+  "tokens": [
+   "t.dist.rt",
+   "statistical",
+   "function",
+   "dist",
+   "rt",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:T.INV",
+  "type": "Formula Function",
+  "title": "T.INV",
+  "description": "Statistical function T.INV(value1, value2)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/T.INV.md",
+  "tokens": [
+   "t.inv",
+   "statistical",
+   "function",
+   "inv",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:T.INV.2T",
+  "type": "Formula Function",
+  "title": "T.INV.2T",
+  "description": "Statistical function TINV(probability, degrees_freedom)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/T.INV.2T.md",
+  "tokens": [
+   "t.inv.2t",
+   "tinv",
+   "statistical",
+   "function",
+   "probability",
+   "degrees",
+   "freedom"
+  ]
+ },
+ {
+  "id": "fn:T.TEST",
+  "type": "Formula Function",
+  "title": "T.TEST",
+  "description": "Statistical function T.TEST(value1, value2, value3, value4)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/T.TEST.md",
+  "tokens": [
+   "t.test",
+   "ttest",
+   "statistical",
+   "function",
+   "test",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:TAN",
+  "type": "Formula Function",
+  "title": "TAN",
+  "description": "General function TAN(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/TAN.md",
+  "tokens": [
+   "tan",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:TANH",
+  "type": "Formula Function",
+  "title": "TANH",
+  "description": "General function TANH(value)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/TANH.md",
+  "tokens": [
+   "tanh",
+   "general",
+   "function",
+   "value"
+  ]
+ },
+ {
+  "id": "fn:TBILLEQ",
+  "type": "Formula Function",
+  "title": "TBILLEQ",
+  "description": "Financial function TBILLEQ(value1, value2, value3)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/TBILLEQ.md",
+  "tokens": [
+   "tbilleq",
+   "financial",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:TBILLPRICE",
+  "type": "Formula Function",
+  "title": "TBILLPRICE",
+  "description": "Financial function TBILLPRICE(settlement, maturity, discount)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/TBILLPRICE.md",
+  "tokens": [
+   "tbillprice",
+   "financial",
+   "function",
+   "settlement",
+   "maturity",
+   "discount"
+  ]
+ },
+ {
+  "id": "fn:TBILLYIELD",
+  "type": "Formula Function",
+  "title": "TBILLYIELD",
+  "description": "Financial function TBILLYIELD(settlement, maturity, price)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/TBILLYIELD.md",
+  "tokens": [
+   "tbillyield",
+   "financial",
+   "function",
+   "settlement",
+   "maturity",
+   "price"
+  ]
+ },
+ {
+  "id": "fn:TEXT",
+  "type": "Formula Function",
+  "title": "TEXT",
+  "description": "Text function TEXT(value1, value2)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/TEXT.md",
+  "tokens": [
+   "text",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:TEXTJOIN",
+  "type": "Formula Function",
+  "title": "TEXTJOIN",
+  "description": "Text function TEXTJOIN(value1, value2, value3, [value4, …])",
+  "tags": [
+   "text",
+   "join",
+   "combine",
+   "delimiter"
+  ],
+  "resource": "functions/TEXTJOIN.md",
+  "tokens": [
+   "textjoin",
+   "text",
+   "join",
+   "combine",
+   "delimiter",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:TIME",
+  "type": "Formula Function",
+  "title": "TIME",
+  "description": "Date function TIME(hour, minute, second)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/TIME.md",
+  "tokens": [
+   "time",
+   "date",
+   "function",
+   "hour",
+   "minute",
+   "second"
+  ]
+ },
+ {
+  "id": "fn:TIMEVALUE",
+  "type": "Formula Function",
+  "title": "TIMEVALUE",
+  "description": "Date function TIMEVALUE(time_string)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/TIMEVALUE.md",
+  "tokens": [
+   "timevalue",
+   "date",
+   "function",
+   "time",
+   "string"
+  ]
+ },
+ {
+  "id": "fn:TO_DATE",
+  "type": "Formula Function",
+  "title": "TO_DATE",
+  "description": "General function TO_DATE(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/TO_DATE.md",
+  "tokens": [
+   "to_date",
+   "general",
+   "function",
+   "to",
+   "date",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:TO_DOLLARS",
+  "type": "Formula Function",
+  "title": "TO_DOLLARS",
+  "description": "General function TO_DOLLARS(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/TO_DOLLARS.md",
+  "tokens": [
+   "to_dollars",
+   "general",
+   "function",
+   "to",
+   "dollars",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:TO_PERCENT",
+  "type": "Formula Function",
+  "title": "TO_PERCENT",
+  "description": "General function TO_PERCENT(value1)",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/TO_PERCENT.md",
+  "tokens": [
+   "to_percent",
+   "general",
+   "function",
+   "to",
+   "percent",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:TO_PURE_NUMBER",
+  "type": "Formula Function",
+  "title": "TO_PURE_NUMBER",
+  "description": "Text function TO_PURE_NUMBER(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/TO_PURE_NUMBER.md",
+  "tokens": [
+   "to_pure_number",
+   "text",
+   "function",
+   "to",
+   "pure",
+   "number",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:TO_TEXT",
+  "type": "Formula Function",
+  "title": "TO_TEXT",
+  "description": "Text function TO_TEXT(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/TO_TEXT.md",
+  "tokens": [
+   "to_text",
+   "text",
+   "function",
+   "to",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:TOCOL",
+  "type": "Formula Function",
+  "title": "TOCOL",
+  "description": "Array function TOCOL(value1, [value2, …])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/TOCOL.md",
+  "tokens": [
+   "tocol",
+   "array",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:TODAY",
+  "type": "Formula Function",
+  "title": "TODAY",
+  "description": "Date function TODAY()",
+  "tags": [
+   "date",
+   "current"
+  ],
+  "resource": "functions/TODAY.md",
+  "tokens": [
+   "today",
+   "date",
+   "current",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:TOROW",
+  "type": "Formula Function",
+  "title": "TOROW",
+  "description": "Array function TOROW(value1, [value2, …])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/TOROW.md",
+  "tokens": [
+   "torow",
+   "array",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:TRANSPOSE",
+  "type": "Formula Function",
+  "title": "TRANSPOSE",
+  "description": "Array function TRANSPOSE(value1)",
+  "tags": [
+   "array",
+   "flip",
+   "rotate"
+  ],
+  "resource": "functions/TRANSPOSE.md",
+  "tokens": [
+   "transpose",
+   "array",
+   "flip",
+   "rotate",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:TREND",
+  "type": "Formula Function",
+  "title": "TREND",
+  "description": "Statistical function TREND(value1, [value2], [value3])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/TREND.md",
+  "tokens": [
+   "trend",
+   "statistical",
+   "function",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "fn:TRIM",
+  "type": "Formula Function",
+  "title": "TRIM",
+  "description": "Text function TRIM(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/TRIM.md",
+  "tokens": [
+   "trim",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:TRIMMEAN",
+  "type": "Formula Function",
+  "title": "TRIMMEAN",
+  "description": "Statistical function TRIMMEAN(data, exclude_proportion)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/TRIMMEAN.md",
+  "tokens": [
+   "trimmean",
+   "statistical",
+   "function",
+   "data",
+   "exclude",
+   "proportion"
+  ]
+ },
+ {
+  "id": "fn:TRUE",
+  "type": "Formula Function",
+  "title": "TRUE",
+  "description": "Logical function TRUE()",
+  "tags": [
+   "logical"
+  ],
+  "resource": "functions/TRUE.md",
+  "tokens": [
+   "true",
+   "logical",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:TRUNC",
+  "type": "Formula Function",
+  "title": "TRUNC",
+  "description": "Math function TRUNC(value1, [value2])",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/TRUNC.md",
+  "tokens": [
+   "trunc",
+   "math",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:TYPE",
+  "type": "Formula Function",
+  "title": "TYPE",
+  "description": "Info function TYPE(value1)",
+  "tags": [
+   "info"
+  ],
+  "resource": "functions/TYPE.md",
+  "tokens": [
+   "type",
+   "info",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:UMINUS",
+  "type": "Formula Function",
+  "title": "UMINUS",
+  "description": "Math function UMINUS(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/UMINUS.md",
+  "tokens": [
+   "uminus",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:UNARY_PERCENT",
+  "type": "Formula Function",
+  "title": "UNARY_PERCENT",
+  "description": "Math function UNARY_PERCENT(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/UNARY_PERCENT.md",
+  "tokens": [
+   "unary_percent",
+   "math",
+   "function",
+   "unary",
+   "percent",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:UNICHAR",
+  "type": "Formula Function",
+  "title": "UNICHAR",
+  "description": "Text function UNICHAR(number)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/UNICHAR.md",
+  "tokens": [
+   "unichar",
+   "text",
+   "function",
+   "number"
+  ]
+ },
+ {
+  "id": "fn:UNICODE",
+  "type": "Formula Function",
+  "title": "UNICODE",
+  "description": "Text function UNICODE(text)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/UNICODE.md",
+  "tokens": [
+   "unicode",
+   "text",
+   "function"
+  ]
+ },
+ {
+  "id": "fn:UNIQUE",
+  "type": "Formula Function",
+  "title": "UNIQUE",
+  "description": "Array function UNIQUE(value1)",
+  "tags": [
+   "array",
+   "distinct",
+   "deduplicate"
+  ],
+  "resource": "functions/UNIQUE.md",
+  "tokens": [
+   "unique",
+   "array",
+   "distinct",
+   "deduplicate",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:UPLUS",
+  "type": "Formula Function",
+  "title": "UPLUS",
+  "description": "Math function UPLUS(value1)",
+  "tags": [
+   "math"
+  ],
+  "resource": "functions/UPLUS.md",
+  "tokens": [
+   "uplus",
+   "math",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:UPPER",
+  "type": "Formula Function",
+  "title": "UPPER",
+  "description": "Text function UPPER(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/UPPER.md",
+  "tokens": [
+   "upper",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:VALUE",
+  "type": "Formula Function",
+  "title": "VALUE",
+  "description": "Text function VALUE(value1)",
+  "tags": [
+   "text"
+  ],
+  "resource": "functions/VALUE.md",
+  "tokens": [
+   "value",
+   "text",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:VAR",
+  "type": "Formula Function",
+  "title": "VAR",
+  "description": "General function VAR(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/VAR.md",
+  "tokens": [
+   "var",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:VAR.P",
+  "type": "Formula Function",
+  "title": "VAR.P",
+  "description": "General function VARP(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/VAR.P.md",
+  "tokens": [
+   "var.p",
+   "general",
+   "function",
+   "varp",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:VAR.S",
+  "type": "Formula Function",
+  "title": "VAR.S",
+  "description": "General function VAR(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/VAR.S.md",
+  "tokens": [
+   "var.s",
+   "general",
+   "function",
+   "var",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:VARA",
+  "type": "Formula Function",
+  "title": "VARA",
+  "description": "General function VARA(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/VARA.md",
+  "tokens": [
+   "vara",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:VARP",
+  "type": "Formula Function",
+  "title": "VARP",
+  "description": "General function VARP(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/VARP.md",
+  "tokens": [
+   "varp",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:VARPA",
+  "type": "Formula Function",
+  "title": "VARPA",
+  "description": "General function VARPA(value1, [value2, …])",
+  "tags": [
+   "general"
+  ],
+  "resource": "functions/VARPA.md",
+  "tokens": [
+   "varpa",
+   "general",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:VLOOKUP",
+  "type": "Formula Function",
+  "title": "VLOOKUP",
+  "description": "Lookup function VLOOKUP(value1, value2, value3, [value4])",
+  "tags": [
+   "lookup",
+   "find",
+   "search",
+   "vertical"
+  ],
+  "resource": "functions/VLOOKUP.md",
+  "tokens": [
+   "vlookup",
+   "lookup",
+   "find",
+   "search",
+   "vertical",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:VSTACK",
+  "type": "Formula Function",
+  "title": "VSTACK",
+  "description": "Array function VSTACK(value1, [value2, …])",
+  "tags": [
+   "array"
+  ],
+  "resource": "functions/VSTACK.md",
+  "tokens": [
+   "vstack",
+   "array",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:WEEKDAY",
+  "type": "Formula Function",
+  "title": "WEEKDAY",
+  "description": "Date function WEEKDAY(value1, [value2])",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/WEEKDAY.md",
+  "tokens": [
+   "weekday",
+   "date",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:WEEKNUM",
+  "type": "Formula Function",
+  "title": "WEEKNUM",
+  "description": "Date function WEEKNUM(date, [type])",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/WEEKNUM.md",
+  "tokens": [
+   "weeknum",
+   "date",
+   "function",
+   "type"
+  ]
+ },
+ {
+  "id": "fn:WEIBULL.DIST",
+  "type": "Formula Function",
+  "title": "WEIBULL.DIST",
+  "description": "Statistical function WEIBULL.DIST(value1, value2, value3, value4)",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/WEIBULL.DIST.md",
+  "tokens": [
+   "weibull.dist",
+   "weibull",
+   "statistical",
+   "function",
+   "dist",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:WORKDAY",
+  "type": "Formula Function",
+  "title": "WORKDAY",
+  "description": "Date function WORKDAY(start_date, num_days, [holidays])",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/WORKDAY.md",
+  "tokens": [
+   "workday",
+   "date",
+   "function",
+   "start",
+   "num",
+   "days",
+   "holidays"
+  ]
+ },
+ {
+  "id": "fn:WORKDAY.INTL",
+  "type": "Formula Function",
+  "title": "WORKDAY.INTL",
+  "description": "Date function WORKDAY.INTL(value1, value2, [value3], [value4])",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/WORKDAY.INTL.md",
+  "tokens": [
+   "workday.intl",
+   "date",
+   "function",
+   "workday",
+   "intl",
+   "value1",
+   "value2",
+   "value3",
+   "value4"
+  ]
+ },
+ {
+  "id": "fn:XIRR",
+  "type": "Formula Function",
+  "title": "XIRR",
+  "description": "Financial function XIRR(cashflow_amounts, cashflow_dates, [rate_guess])",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/XIRR.md",
+  "tokens": [
+   "xirr",
+   "financial",
+   "function",
+   "cashflow",
+   "amounts",
+   "dates",
+   "rate",
+   "guess"
+  ]
+ },
+ {
+  "id": "fn:XLOOKUP",
+  "type": "Formula Function",
+  "title": "XLOOKUP",
+  "description": "Lookup function XLOOKUP(value1, value2, value3, [value4], [value5], [value6])",
+  "tags": [
+   "lookup",
+   "find",
+   "search"
+  ],
+  "resource": "functions/XLOOKUP.md",
+  "tokens": [
+   "xlookup",
+   "lookup",
+   "find",
+   "search",
+   "function",
+   "value1",
+   "value2",
+   "value3",
+   "value4",
+   "value5",
+   "value6"
+  ]
+ },
+ {
+  "id": "fn:XMATCH",
+  "type": "Formula Function",
+  "title": "XMATCH",
+  "description": "Lookup function XMATCH(search_key, lookup_range, [match_mode], [search_mode])",
+  "tags": [
+   "lookup"
+  ],
+  "resource": "functions/XMATCH.md",
+  "tokens": [
+   "xmatch",
+   "lookup",
+   "function",
+   "search",
+   "key",
+   "range",
+   "match",
+   "mode"
+  ]
+ },
+ {
+  "id": "fn:XNPV",
+  "type": "Formula Function",
+  "title": "XNPV",
+  "description": "Financial function XNPV(discount, cashflow_amounts, cashflow_dates)",
+  "tags": [
+   "financial"
+  ],
+  "resource": "functions/XNPV.md",
+  "tokens": [
+   "xnpv",
+   "financial",
+   "function",
+   "discount",
+   "cashflow",
+   "amounts",
+   "dates"
+  ]
+ },
+ {
+  "id": "fn:XOR",
+  "type": "Formula Function",
+  "title": "XOR",
+  "description": "Logical function XOR(value1, [value2, …])",
+  "tags": [
+   "logical"
+  ],
+  "resource": "functions/XOR.md",
+  "tokens": [
+   "xor",
+   "logical",
+   "function",
+   "value1",
+   "value2"
+  ]
+ },
+ {
+  "id": "fn:YEAR",
+  "type": "Formula Function",
+  "title": "YEAR",
+  "description": "Date function YEAR(value1)",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/YEAR.md",
+  "tokens": [
+   "year",
+   "date",
+   "function",
+   "value1"
+  ]
+ },
+ {
+  "id": "fn:YEARFRAC",
+  "type": "Formula Function",
+  "title": "YEARFRAC",
+  "description": "Date function YEARFRAC(start_date, end_date, [day_count_convention])",
+  "tags": [
+   "date"
+  ],
+  "resource": "functions/YEARFRAC.md",
+  "tokens": [
+   "yearfrac",
+   "date",
+   "function",
+   "start",
+   "end",
+   "day",
+   "count",
+   "convention"
+  ]
+ },
+ {
+  "id": "fn:Z.TEST",
+  "type": "Formula Function",
+  "title": "Z.TEST",
+  "description": "Statistical function Z.TEST(value1, value2, [value3])",
+  "tags": [
+   "statistical"
+  ],
+  "resource": "functions/Z.TEST.md",
+  "tokens": [
+   "z.test",
+   "ztest",
+   "statistical",
+   "function",
+   "test",
+   "value1",
+   "value2",
+   "value3"
+  ]
+ },
+ {
+  "id": "feat:ai-copilot",
+  "type": "App Feature",
+  "title": "AI Copilot",
+  "description": "Sheet-mode AI panel: natural language to formulas, explanations, data analysis, and previewed sheet edits — common requests answered locally with no API key.",
+  "tags": [
+   "ai",
+   "copilot",
+   "chat",
+   "assistant",
+   "formulas",
+   "natural-language"
+  ],
+  "resource": "features/ai-copilot.md",
+  "tokens": [
+   "ai",
+   "copilot",
+   "chat",
+   "assistant",
+   "formulas",
+   "natural",
+   "language",
+   "sheet",
+   "mode",
+   "panel",
+   "to",
+   "explanations",
+   "data",
+   "analysis",
+   "and",
+   "previewed",
+   "edits",
+   "common",
+   "requests",
+   "answered",
+   "locally",
+   "with",
+   "no",
+   "api",
+   "key",
+   "in",
+   "that",
+   "turns",
+   "into",
+   "sum",
+   "of",
+   "d2",
+   "d9",
+   "d10",
+   "explains",
+   "analyzes",
+   "the",
+   "selection",
+   "proposes",
+   "every",
+   "proposed",
+   "change",
+   "is",
+   "validated",
+   "sandbox",
+   "shown",
+   "as",
+   "before",
+   "after",
+   "preview",
+   "nothing",
+   "applied",
+   "until",
+   "you",
+   "click",
+   "apply",
+   "applying",
+   "one",
+   "undo",
+   "step",
+   "formula",
+   "are",
+   "instantly",
+   "an",
+   "llm",
+   "env",
+   "extends",
+   "it",
+   "harder",
+   "where",
+   "button",
+   "at",
+   "right",
+   "command",
+   "bar",
+   "ctrl",
+   "cmd",
+   "toggles",
+   "palette",
+   "ask"
+  ]
+ },
+ {
+  "id": "feat:color-scales",
+  "type": "App Feature",
+  "title": "Color scales",
+  "description": "Gradient conditional formatting: cell background shades scale with the cell's numeric value across the selected range.",
+  "tags": [
+   "format",
+   "gradient",
+   "heatmap",
+   "conditional"
+  ],
+  "resource": "features/color-scales.md",
+  "tokens": [
+   "color",
+   "scales",
+   "format",
+   "gradient",
+   "heatmap",
+   "conditional",
+   "formatting",
+   "cell",
+   "background",
+   "shades",
+   "scale",
+   "with",
+   "the",
+   "numeric",
+   "value",
+   "across",
+   "selected",
+   "range",
+   "type",
+   "that",
+   "colors",
+   "each",
+   "along",
+   "according",
+   "to",
+   "its",
+   "relative",
+   "over",
+   "your",
+   "data",
+   "part",
+   "of",
+   "system",
+   "where"
+  ]
+ },
+ {
+  "id": "feat:conditional-formatting",
+  "type": "App Feature",
+  "title": "Conditional formatting",
+  "description": "Rule-based cell styling: apply a style to cells in a range when a condition matches.",
+  "tags": [
+   "format",
+   "style",
+   "rules",
+   "highlight"
+  ],
+  "resource": "features/conditional-formatting.md",
+  "tokens": [
+   "conditional",
+   "formatting",
+   "format",
+   "style",
+   "rules",
+   "highlight",
+   "rule",
+   "based",
+   "cell",
+   "styling",
+   "apply",
+   "to",
+   "cells",
+   "in",
+   "range",
+   "when",
+   "condition",
+   "matches",
+   "applies",
+   "per",
+   "sheet",
+   "conditionalformats",
+   "of",
+   "shape",
+   "cond",
+   "related",
+   "visual",
+   "that",
+   "build",
+   "on",
+   "the",
+   "same",
+   "system",
+   "color",
+   "scales",
+   "and",
+   "data",
+   "bars",
+   "where"
+  ]
+ },
+ {
+  "id": "feat:cross-sheet-references",
+  "type": "App Feature",
+  "title": "Cross-sheet references",
+  "description": "Formulas can reference cells on other sheets in the same workbook: =Sheet2!A1.",
+  "tags": [
+   "formulas",
+   "sheets",
+   "references",
+   "tabs"
+  ],
+  "resource": "features/cross-sheet-references.md",
+  "tokens": [
+   "cross",
+   "sheet",
+   "references",
+   "formulas",
+   "sheets",
+   "tabs",
+   "can",
+   "reference",
+   "cells",
+   "on",
+   "other",
+   "in",
+   "the",
+   "same",
+   "workbook",
+   "sheet2",
+   "a1",
+   "formula",
+   "one",
+   "read",
+   "from",
+   "another",
+   "using",
+   "sheetname",
+   "ranges",
+   "too",
+   "sum",
+   "data",
+   "a10",
+   "recalculation",
+   "follows",
+   "dependency",
+   "across",
+   "for",
+   "different",
+   "see",
+   "importrange",
+   "where",
+   "type",
+   "any",
+   "clicking",
+   "tab",
+   "while",
+   "typing",
+   "inserts"
+  ]
+ },
+ {
+  "id": "feat:data-bars",
+  "type": "App Feature",
+  "title": "Data bars",
+  "description": "In-cell proportional bars: each cell draws a horizontal bar sized relative to the range's largest magnitude.",
+  "tags": [
+   "format",
+   "bars",
+   "visualization",
+   "conditional"
+  ],
+  "resource": "features/data-bars.md",
+  "tokens": [
+   "data",
+   "bars",
+   "format",
+   "visualization",
+   "conditional",
+   "in",
+   "cell",
+   "proportional",
+   "each",
+   "draws",
+   "horizontal",
+   "bar",
+   "sized",
+   "relative",
+   "to",
+   "the",
+   "range",
+   "largest",
+   "magnitude",
+   "adds",
+   "an",
+   "selected",
+   "drawn",
+   "with",
+   "css",
+   "gradient",
+   "databar",
+   "type",
+   "skipped",
+   "by",
+   "single",
+   "color",
+   "rule",
+   "evaluator",
+   "and",
+   "grid",
+   "where"
+  ]
+ },
+ {
+  "id": "feat:data-validation",
+  "type": "App Feature",
+  "title": "Data validation",
+  "description": "Restrict what a range accepts: dropdown lists of allowed values and checkboxes.",
+  "tags": [
+   "data",
+   "dropdown",
+   "checkbox",
+   "validation",
+   "restrict"
+  ],
+  "resource": "features/data-validation.md",
+  "tokens": [
+   "data",
+   "validation",
+   "dropdown",
+   "checkbox",
+   "restrict",
+   "what",
+   "range",
+   "accepts",
+   "lists",
+   "of",
+   "allowed",
+   "values",
+   "and",
+   "checkboxes",
+   "constrains",
+   "cell",
+   "input",
+   "over",
+   "pick",
+   "from",
+   "stored",
+   "per",
+   "sheet",
+   "as",
+   "validations",
+   "kind",
+   "where",
+   "insert",
+   "quick",
+   "single",
+   "purpose",
+   "inserts"
+  ]
+ },
+ {
+  "id": "feat:dynamic-arrays",
+  "type": "App Feature",
+  "title": "Dynamic arrays and spill",
+  "description": "Array formulas whose results spill into neighbouring cells: FILTER, SORT, UNIQUE, SEQUENCE, QUERY, TRANSPOSE, ARRAYFORMULA and friends.",
+  "tags": [
+   "formulas",
+   "arrays",
+   "spill",
+   "filter",
+   "sort",
+   "unique",
+   "sequence",
+   "query"
+  ],
+  "resource": "features/dynamic-arrays.md",
+  "tokens": [
+   "dynamic",
+   "arrays",
+   "and",
+   "spill",
+   "formulas",
+   "filter",
+   "sort",
+   "unique",
+   "sequence",
+   "query",
+   "array",
+   "whose",
+   "results",
+   "into",
+   "neighbouring",
+   "cells",
+   "transpose",
+   "arrayformula",
+   "friends",
+   "returning",
+   "their",
+   "with",
+   "group",
+   "by",
+   "sum",
+   "avg",
+   "count",
+   "max",
+   "min",
+   "aggregates",
+   "vstack",
+   "hstack",
+   "xlookup",
+   "more",
+   "if",
+   "the",
+   "area",
+   "is",
+   "blocked",
+   "anchor",
+   "shows",
+   "lambda",
+   "style",
+   "helpers",
+   "let",
+   "compose",
+   "these",
+   "where",
+   "type",
+   "any",
+   "formula",
+   "in",
+   "cell",
+   "occupy",
+   "below",
+   "right",
+   "of",
+   "automatically"
+  ]
+ },
+ {
+  "id": "feat:filter-views",
+  "type": "App Feature",
+  "title": "Filter views",
+  "description": "Header filter buttons over a range: per-column value checklists that hide non-matching rows, plus sort A→Z / Z→A.",
+  "tags": [
+   "data",
+   "filter",
+   "hide",
+   "rows",
+   "sort"
+  ],
+  "resource": "features/filter-views.md",
+  "tokens": [
+   "filter",
+   "views",
+   "data",
+   "hide",
+   "rows",
+   "sort",
+   "header",
+   "buttons",
+   "over",
+   "range",
+   "per",
+   "column",
+   "value",
+   "checklists",
+   "that",
+   "non",
+   "matching",
+   "plus",
+   "creating",
+   "on",
+   "adds",
+   "to",
+   "its",
+   "row",
+   "each",
+   "opens",
+   "checklist",
+   "with",
+   "select",
+   "all",
+   "clear",
+   "and",
+   "unchecking",
+   "values",
+   "hides",
+   "numbers",
+   "skip",
+   "like",
+   "google",
+   "sheets",
+   "stored",
+   "sheet",
+   "as",
+   "cols",
+   "where",
+   "create",
+   "ctrl",
+   "shift",
+   "remove"
+  ]
+ },
+ {
+  "id": "feat:find-replace",
+  "type": "App Feature",
+  "title": "Find and replace",
+  "description": "Search cell contents across the sheet and replace matches.",
+  "tags": [
+   "edit",
+   "search",
+   "find",
+   "replace"
+  ],
+  "resource": "features/find-replace.md",
+  "tokens": [
+   "find",
+   "and",
+   "replace",
+   "edit",
+   "search",
+   "cell",
+   "contents",
+   "across",
+   "the",
+   "sheet",
+   "matches",
+   "searches",
+   "replaces",
+   "where",
+   "ctrl"
+  ]
+ },
+ {
+  "id": "feat:freeze-panes",
+  "type": "App Feature",
+  "title": "Freeze panes",
+  "description": "Keep header rows/columns visible while scrolling: freeze 1–2 rows/columns or up to the current row/column.",
+  "tags": [
+   "view",
+   "freeze",
+   "sticky",
+   "headers",
+   "scroll"
+  ],
+  "resource": "features/freeze-panes.md",
+  "tokens": [
+   "freeze",
+   "panes",
+   "view",
+   "sticky",
+   "headers",
+   "scroll",
+   "keep",
+   "header",
+   "rows",
+   "columns",
+   "visible",
+   "while",
+   "scrolling",
+   "or",
+   "up",
+   "to",
+   "the",
+   "current",
+   "row",
+   "column",
+   "pins",
+   "at",
+   "top",
+   "and",
+   "left",
+   "so",
+   "they",
+   "stay",
+   "rest",
+   "of",
+   "sheet",
+   "scrolls",
+   "stored",
+   "per",
+   "as",
+   "frozen",
+   "cols",
+   "where",
+   "no",
+   "unfreeze",
+   "all"
+  ]
+ },
+ {
+  "id": "feat:google-sheets-sync",
+  "type": "App Feature",
+  "title": "Google Sheets sync",
+  "description": "Two-way sync with a real Google Sheet via an Apps Script /exec endpoint, with direction and conflict-policy controls.",
+  "tags": [
+   "sync",
+   "google",
+   "sheets",
+   "apps-script",
+   "import",
+   "export"
+  ],
+  "resource": "features/google-sheets-sync.md",
+  "tokens": [
+   "google",
+   "sheets",
+   "sync",
+   "apps",
+   "script",
+   "import",
+   "export",
+   "two",
+   "way",
+   "with",
+   "real",
+   "sheet",
+   "via",
+   "an",
+   "exec",
+   "endpoint",
+   "direction",
+   "and",
+   "conflict",
+   "policy",
+   "controls",
+   "connect",
+   "by",
+   "deploying",
+   "monosync",
+   "gs",
+   "to",
+   "it",
+   "pasting",
+   "the",
+   "deployment",
+   "url",
+   "pick",
+   "then",
+   "now",
+   "or",
+   "enable",
+   "auto",
+   "values",
+   "formulas",
+   "basic",
+   "formatting",
+   "round",
+   "trip",
+   "mono",
+   "scripts",
+   "charts",
+   "stay",
+   "local",
+   "where",
+   "settings"
+  ]
+ },
+ {
+  "id": "feat:importrange",
+  "type": "App Feature",
+  "title": "IMPORTRANGE (cross-workbook)",
+  "description": "Pull a range from another Mono workbook: =IMPORTRANGE(source_key, \"Sheet!A1:B2\").",
+  "tags": [
+   "formulas",
+   "import",
+   "workbook",
+   "external",
+   "web"
+  ],
+  "resource": "features/importrange.md",
+  "tokens": [
+   "importrange",
+   "cross",
+   "workbook",
+   "formulas",
+   "import",
+   "external",
+   "web",
+   "pull",
+   "range",
+   "from",
+   "another",
+   "mono",
+   "source",
+   "key",
+   "sheet",
+   "a1",
+   "b2",
+   "pulls",
+   "registered",
+   "as",
+   "foreign",
+   "unknown",
+   "keys",
+   "return",
+   "ref",
+   "for",
+   "references",
+   "within",
+   "the",
+   "same",
+   "use",
+   "instead",
+   "where",
+   "function",
+   "in",
+   "any",
+   "formula",
+   "see",
+   "functions",
+   "md"
+  ]
+ },
+ {
+  "id": "feat:lambda-let",
+  "type": "App Feature",
+  "title": "LAMBDA and LET",
+  "description": "Functional formulas: define inline functions with LAMBDA, name intermediate values with LET, and map/reduce over ranges.",
+  "tags": [
+   "formulas",
+   "lambda",
+   "let",
+   "map",
+   "reduce",
+   "functional"
+  ],
+  "resource": "features/lambda-let.md",
+  "tokens": [
+   "lambda",
+   "and",
+   "let",
+   "formulas",
+   "map",
+   "reduce",
+   "functional",
+   "define",
+   "inline",
+   "functions",
+   "with",
+   "name",
+   "intermediate",
+   "values",
+   "over",
+   "ranges",
+   "params",
+   "body",
+   "defines",
+   "an",
+   "function",
+   "value",
+   "result",
+   "names",
+   "inside",
+   "formula",
+   "consuming",
+   "helpers",
+   "operate",
+   "scan",
+   "byrow",
+   "bycol",
+   "makearray",
+   "results",
+   "spill",
+   "like",
+   "other",
+   "dynamic",
+   "arrays",
+   "where",
+   "use",
+   "in",
+   "any",
+   "a1",
+   "a5"
+  ]
+ },
+ {
+  "id": "feat:merge-cells",
+  "type": "App Feature",
+  "title": "Merge cells",
+  "description": "Merge a selected range into one cell — all, horizontally (per row), or vertically (per column) — and unmerge.",
+  "tags": [
+   "format",
+   "merge",
+   "combine",
+   "layout"
+  ],
+  "resource": "features/merge-cells.md",
+  "tokens": [
+   "merge",
+   "cells",
+   "format",
+   "combine",
+   "layout",
+   "selected",
+   "range",
+   "into",
+   "one",
+   "cell",
+   "all",
+   "horizontally",
+   "per",
+   "row",
+   "or",
+   "vertically",
+   "column",
+   "and",
+   "unmerge",
+   "merges",
+   "the",
+   "single",
+   "variants",
+   "stored",
+   "sheet",
+   "in",
+   "where",
+   "toolbar",
+   "split",
+   "button"
+  ]
+ },
+ {
+  "id": "feat:mono-scripts",
+  "type": "App Feature",
+  "title": "Mono Scripts",
+  "description": "Apps-Script-style JavaScript automation: custom menus, onOpen/onEdit triggers, and custom formula functions.",
+  "tags": [
+   "scripts",
+   "automation",
+   "javascript",
+   "macros",
+   "custom-functions",
+   "triggers"
+  ],
+  "resource": "features/mono-scripts.md",
+  "tokens": [
+   "mono",
+   "scripts",
+   "automation",
+   "javascript",
+   "macros",
+   "custom",
+   "functions",
+   "triggers",
+   "apps",
+   "script",
+   "style",
+   "menus",
+   "onopen",
+   "onedit",
+   "and",
+   "formula",
+   "write",
+   "against",
+   "an",
+   "api",
+   "spreadsheetapp",
+   "sheet",
+   "range",
+   "logger",
+   "utilities",
+   "propertiesservice",
+   "plus",
+   "plain",
+   "function",
+   "like",
+   "double",
+   "return",
+   "number",
+   "becomes",
+   "usable",
+   "as",
+   "a1",
+   "in",
+   "cells",
+   "includes",
+   "built",
+   "editor",
+   "with",
+   "run",
+   "button",
+   "execution",
+   "log",
+   "sandboxed",
+   "hardened",
+   "globals",
+   "menu",
+   "trigger",
+   "killable",
+   "web",
+   "worker",
+   "timeout",
+   "where",
+   "extensions",
+   "tools"
+  ]
+ },
+ {
+  "id": "feat:named-ranges",
+  "type": "App Feature",
+  "title": "Named ranges",
+  "description": "Give a range a name and use that name in formulas instead of A1 coordinates.",
+  "tags": [
+   "data",
+   "names",
+   "ranges",
+   "formulas"
+  ],
+  "resource": "features/named-ranges.md",
+  "tokens": [
+   "named",
+   "ranges",
+   "data",
+   "names",
+   "formulas",
+   "give",
+   "range",
+   "name",
+   "and",
+   "use",
+   "that",
+   "in",
+   "instead",
+   "of",
+   "a1",
+   "coordinates",
+   "workbook",
+   "level",
+   "for",
+   "namedranges",
+   "sid",
+   "r1",
+   "c1",
+   "r2",
+   "c2",
+   "formula",
+   "can",
+   "reference",
+   "the",
+   "directly",
+   "unknown",
+   "evaluate",
+   "to",
+   "where"
+  ]
+ },
+ {
+  "id": "feat:protected-ranges",
+  "type": "App Feature",
+  "title": "Protected ranges",
+  "description": "Block edits to a range until it is explicitly unprotected (single-user protect, not collaborator permissions).",
+  "tags": [
+   "data",
+   "protect",
+   "lock",
+   "ranges"
+  ],
+  "resource": "features/protected-ranges.md",
+  "tokens": [
+   "protected",
+   "ranges",
+   "data",
+   "protect",
+   "lock",
+   "block",
+   "edits",
+   "to",
+   "range",
+   "until",
+   "it",
+   "is",
+   "explicitly",
+   "unprotected",
+   "single",
+   "user",
+   "not",
+   "collaborator",
+   "permissions",
+   "marks",
+   "as",
+   "so",
+   "are",
+   "blocked",
+   "this",
+   "local",
+   "guard",
+   "against",
+   "accidental",
+   "model",
+   "where",
+   "unprotect"
+  ]
+ },
+ {
+  "id": "feat:views",
+  "type": "App Feature",
+  "title": "Multi-view system",
+  "description": "Show the same sheet data as Grid, Kanban, Calendar, Gallery, or Form — with per-view filters, sorts, and grouping.",
+  "tags": [
+   "views",
+   "kanban",
+   "calendar",
+   "gallery",
+   "form",
+   "grid",
+   "layout",
+   "board"
+  ],
+  "resource": "features/views.md",
+  "tokens": [
+   "multi",
+   "view",
+   "system",
+   "views",
+   "kanban",
+   "calendar",
+   "gallery",
+   "form",
+   "grid",
+   "layout",
+   "board",
+   "show",
+   "the",
+   "same",
+   "sheet",
+   "data",
+   "as",
+   "or",
+   "with",
+   "per",
+   "filters",
+   "sorts",
+   "and",
+   "grouping",
+   "each",
+   "can",
+   "have",
+   "named",
+   "of",
+   "five",
+   "kinds",
+   "is",
+   "presentation",
+   "only",
+   "hidden",
+   "columns",
+   "never",
+   "changes",
+   "underlying",
+   "cells",
+   "spreadsheet",
+   "itself",
+   "default",
+   "kind",
+   "cards",
+   "in",
+   "grouped",
+   "by",
+   "chosen",
+   "column",
+   "config",
+   "groupcol",
+   "dragging",
+   "card",
+   "between",
+   "writes",
+   "new",
+   "group",
+   "value",
+   "back",
+   "through",
+   "undo",
+   "able",
+   "edit",
+   "path",
+   "typing",
+   "hand",
+   "rolled",
+   "month",
+   "week",
+   "placing",
+   "rows",
+   "their",
+   "date",
+   "fields",
+   "startfield",
+   "endfield",
+   "titlefield",
+   "css",
+   "cover",
+   "field",
+   "coverfield",
+   "row",
+   "entry",
+   "over",
+   "where",
+   "button",
+   "at",
+   "right",
+   "command",
+   "bar",
+   "opens",
+   "add",
+   "picker",
+   "tabs",
+   "strip",
+   "above",
+   "switches",
+   "has",
+   "an",
+   "editor",
+   "side",
+   "panel",
+   "for",
+   "its",
+   "configuration",
+   "which",
+   "groups"
+  ]
+ }
+]

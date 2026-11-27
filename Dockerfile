@@ -18,6 +18,7 @@ COPY --from=build /src/server/node_modules node_modules
 COPY --from=build /src/server/dist dist
 COPY --from=build /src/server/legacy legacy
 COPY --from=build /src/server/legacy-dashboard legacy-dashboard
+COPY --from=build /src/server/monosheets monosheets
 COPY --from=build /src/server/migrations migrations
 COPY --from=build /src/server/public public
 RUN mkdir -p /data && chown node:node /data

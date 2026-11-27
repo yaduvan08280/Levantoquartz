@@ -2616,7 +2616,7 @@ export class MonoGrid {
     const c = this.active.c;
     const sh = this.sheet();
     // Import lazily to avoid circular deps — cellTypes.js is already loaded as a module
-    import('./model/cellTypes.js').then(({ listCellTypes, getCellType }) => {
+    import('../../mono/model/cellTypes.js').then(({ listCellTypes, getCellType }) => {
       const types = listCellTypes();
       const current = sh.colTypes?.[c] || '';
       document.getElementById('msColTypePicker')?.remove();

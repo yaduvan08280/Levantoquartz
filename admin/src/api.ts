@@ -39,9 +39,6 @@ export interface User {
   row: number; username: string; display: string; assigned: string; all: boolean; forms: string[];
   active: boolean; hasPassword: boolean; lastLogin: string; role: string; telegramLinked: boolean;
 }
-export interface TabInfo {
-  id: number; name: string; hidden: boolean; rows: number; cols: number; computed: boolean;
-}
 export interface AuditEntry {
   id: string; at: string; actor: string; action: string; tab: string | null; row_no: number | null;
   col_no: number | null; old_val: string | null; new_val: string | null; detail: any;

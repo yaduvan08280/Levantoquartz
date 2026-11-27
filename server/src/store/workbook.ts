@@ -36,6 +36,14 @@ export class Tab {
   colWidths: Record<number, number> = {};
   /** Fill colour of row-1 cells, 1-based column -> '#rrggbb'. */
   headerBg: Record<number, string> = {};
+  /** What the sheet editor keeps about this tab beyond values: its own sheet
+      id, layout (widths, filters, frozen panes) and per-cell styling. */
+  mono: { id?: string; meta?: Record<string, any>; cellx?: Record<string, any> } = {};
+
+  /** Cells changed since the sheet editor was last told: row * 8192 + col. */
+  touched = new Set<number>();
+  /** Rows or columns moved, so positions can no longer be described cell by cell. */
+  reshaped = false;
   rows: Cell[][] = [];
   fmts: (RowFormats | undefined)[] = [];
 
@@ -134,6 +142,7 @@ export class Tab {
     const r = this.rowFor(row);
     while (r.length < col - 1) r.push('');
     r[col - 1] = empty ? '' : v;
+    this.touched.add(row * 8192 + col);
     if (fmt !== undefined) this.setFormat(row, col, fmt);
     this.dirtyRows.add(row - 1);
     this.version++;
@@ -170,7 +179,13 @@ export class Tab {
     if (empty && row > this.rows.length) return;
     const r = this.rowFor(row);
     while (r.length < col - 1) r.push('');
-    r[col - 1] = empty ? '' : v;
+    const old = r[col - 1];
+    const next = empty ? '' : v;
+    const same = old === next || (isEmpty(old) && empty) ||
+      (old instanceof Date && next instanceof Date && old.getTime() === next.getTime());
+    if (same) return;
+    r[col - 1] = next;
+    this.touched.add(row * 8192 + col);
     this.cver++;
   }
 
@@ -179,7 +194,7 @@ export class Tab {
     for (let i = 0; i < values.length; i++) this.setComputed(firstRow + i, col, values[i]);
     for (let r = firstRow + values.length; r <= this.rows.length; r++) {
       const row = this.rows[r - 1];
-      if (row && !isEmpty(row[col - 1])) row[col - 1] = '';
+      if (row && !isEmpty(row[col - 1])) { row[col - 1] = ''; this.touched.add(r * 8192 + col); }
     }
     this.cver++;
   }
@@ -256,6 +271,7 @@ export class Tab {
     this.dirtyMeta = true;
     this.version++;
     this.structVersion++;
+    this.reshaped = true;
   }
 
   /* ------------------------------------------------------ serialising -- */
@@ -411,6 +427,7 @@ export class Workbook {
       t.colFmt = r.col_formats || {};
       t.colWidths = r.col_widths || {};
       t.headerBg = (r.meta && r.meta.headerBg) || {};
+      t.mono = (r.meta && r.meta.mono) || {};
       list.push(t);
       byId.set(t.id!, t);
     }
@@ -510,14 +527,14 @@ export class Workbook {
             `INSERT INTO tabs(name, position, hidden, frozen_rows, frozen_cols, max_cols, col_formats, col_widths, meta)
              VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
             [t.name, t.position, t.hidden, t.frozenRows, t.frozenCols, t.maxCols,
-             JSON.stringify(t.colFmt), JSON.stringify(t.colWidths), JSON.stringify({ headerBg: t.headerBg })]);
+             JSON.stringify(t.colFmt), JSON.stringify(t.colWidths), JSON.stringify({ headerBg: t.headerBg, mono: t.mono })]);
           t.id = r.rows[0].id;
         } else if (w.meta) {
           await client.query(
             `UPDATE tabs SET name=$2, position=$3, hidden=$4, frozen_rows=$5, frozen_cols=$6,
                     max_cols=$7, col_formats=$8, col_widths=$9, meta=$10, updated_at=now() WHERE id=$1`,
             [t.id, t.name, t.position, t.hidden, t.frozenRows, t.frozenCols, t.maxCols,
-             JSON.stringify(t.colFmt), JSON.stringify(t.colWidths), JSON.stringify({ headerBg: t.headerBg })]);
+             JSON.stringify(t.colFmt), JSON.stringify(t.colWidths), JSON.stringify({ headerBg: t.headerBg, mono: t.mono })]);
         }
         if (w.all) await client.query('DELETE FROM tab_rows WHERE tab_id = $1', [t.id]);
         if (w.deletes.length) {
