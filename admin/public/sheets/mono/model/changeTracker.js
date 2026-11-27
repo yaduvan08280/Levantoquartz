@@ -93,6 +93,11 @@ export function restore(taken) {
   }
 }
 
+/** The edits not sent yet, read-only: Map(sid -> Set|'full'). Live
+ *  collaboration uses it to leave those cells alone when someone else's
+ *  older write to them arrives. */
+export function pending() { return state.sheets; }
+
 /** Forget everything (after a full save, or when a workbook is replaced). */
 export function reset() {
   state.sheets = new Map();
@@ -105,4 +110,4 @@ export function pendingCellCount() {
   return n;
 }
 
-export default { trackCell, trackSheetRebuilt, take, restore, reset, dropSheets, pendingCellCount, PATCH_CELL_LIMIT };
+export default { trackCell, trackSheetRebuilt, take, restore, reset, dropSheets, pending, pendingCellCount, PATCH_CELL_LIMIT };

@@ -146,6 +146,13 @@ export class MonoGrid {
     // empty gap and made the toolbar not match the reference screenshot.
     const fxHTML = `<span class="ms-ref mono" id="msRef">${addrToA1(this.active.r, this.active.c)}</span><span class="ms-fx">fx</span><input class="ms-fxinput" id="msFx" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-form-type="other" name="ms-fx-${Math.random().toString(36).slice(2, 8)}" placeholder="${this.access && !this.access.canEdit ? 'read-only — select cells to inspect' : 'value, text, or =formula'}" ${this.access && !this.access.canEdit ? 'disabled' : ''} /><div id="msCellBadges" class="ms-cell-badges"></div>`;
     const activeSt = sh.getStyle(this.active.r, this.active.c) || {};
+    // The find bar is a child of .ms, so the innerHTML below takes it with it,
+    // and every sheet tab and view tab goes through here. Note it now and put
+    // it back at the end: a find closes when you close it, not when you look
+    // at another tab. Focus has to be noted too, or the rebuilt bar loses the
+    // caret and Enter stops stepping through the matches.
+    const findOn = !!(this._find && this._find.on);
+    const findFocused = findOn && !!(document.activeElement && document.activeElement.closest && document.activeElement.closest('#msFindBar'));
     const _ro = this.access && !this.access.canEdit;
     const _banner = !_ro ? '' : `<div class="ms-role-banner">${icon(this.access.role === 'commenter' ? 'message-square' : 'eye', { size: 13 })}<span>${this.access.role === 'commenter'
       ? '<b>Comment access</b> — you can view, comment, and ask AI.'
@@ -222,6 +229,9 @@ export class MonoGrid {
     // have to click a cell again before typing works. Put focus back
     // unless the fx/cell-editor input is (or is about to be) focused.
     if (!this.editing) this.focusGrid();
+    // ...which is also why this comes after focusGrid(): the bar takes focus
+    // back only if it had it.
+    if (findOn) this.openFindBar({ rebuild: true, focus: findFocused });
   }
 
   /* Which columns to actually emit. Mirrors the row window: everything for a
@@ -865,7 +875,7 @@ export class MonoGrid {
   }
   applySelection(opts = {}) {
     if (!this.tableEl) return; // non-grid renderer active — no table to update
-    this.tableEl.querySelectorAll('.insel,.sel,.hl,.sel-row').forEach((el) => el.classList.remove('insel', 'sel', 'hl', 'sel-row'));
+    this.tableEl.querySelectorAll('.insel,.sel,.hl,.sel-row,.fmatch').forEach((el) => el.classList.remove('insel', 'sel', 'hl', 'sel-row', 'fmatch'));
     const aa = this.mergeAnchor(this.active.r, this.active.c) || this.active;
     // C1: with a virtualized grid the active cell may be OUTSIDE the rendered
     // window (Ctrl+End, Ctrl+arrow, Name-box jump…). Scroll it in and
@@ -929,6 +939,16 @@ export class MonoGrid {
     // Highlight the entire active row with sel-row (keyboard-driven, distinct from mouse hover)
     const sh = this.sheet();
     this.tableEl.querySelectorAll(`td.ms-cell[data-r="${this.active.r}"]`).forEach((td) => td.classList.add('sel-row'));
+    // Find-bar matches. Walks the RENDERED cells, not the hit list, for the
+    // same reason the selection does: a one-letter query can match every cell
+    // on the sheet, but only what is on screen can carry a class. Costs
+    // nothing when the find bar is closed.
+    if (this._findHits && this._findHits.size) {
+      const fh = this._findHits, cols = sh.cols;
+      this.tableEl.querySelectorAll('td.ms-cell').forEach((td) => {
+        if (fh.has(+td.getAttribute('data-r') * cols + +td.getAttribute('data-c'))) td.classList.add('fmatch');
+      });
+    }
     // Same rule as the cells above: walk the RENDERED headers, never the
     // selected range. Select All on a 16,384-column sheet meant 16,384
     // querySelector calls for the column headers alone.
@@ -1000,7 +1020,7 @@ export class MonoGrid {
     /* ---- Ctrl+Shift combos that must beat their plain-Ctrl siblings ---- */
     if (ctrl && shift && (k === 'x' || k === 'X')) { e.preventDefault(); return this.clearFormatting(); }      // Excel: remove all formatting
     if (ctrl && shift && (k === 'v' || k === 'V')) { e.preventDefault(); return this.openPasteSpecial(); }     // Excel: Paste Special dialog
-    if (ctrl && shift && (k === 'f' || k === 'F')) { e.preventDefault(); return this.openFindReplace(); }      // advanced find & replace
+    if (ctrl && shift && (k === 'f' || k === 'F')) { e.preventDefault(); return this.openFindBar({ expand: true }); } // find & replace, expanded
     if (ctrl && shift && (k === 'p' || k === 'P')) { e.preventDefault(); return this.printSheet(); }           // print preview
     if (ctrl && shift && (k === 'l' || k === 'L')) { e.preventDefault(); return this.toggleFilter(); }         // toggle AutoFilter
     if (ctrl && shift && (k === 't' || k === 'T')) { e.preventDefault(); return this.createFilter(); }         // create table → filtered range
@@ -1066,7 +1086,7 @@ export class MonoGrid {
 
     /* ---- find / goto ---- */
     if (ctrl && (k === 'f' || k === 'F')) { e.preventDefault(); return this.openFindBar(); }                     // Ctrl+F: find bar
-    if (ctrl && (k === 'h' || k === 'H')) { e.preventDefault(); return this.openFindReplace(); }                // Ctrl+H: Find & Replace
+    if (ctrl && (k === 'h' || k === 'H')) { e.preventDefault(); return this.openFindBar({ expand: true }); }    // Ctrl+H: Find & Replace
     if (ctrl && (k === 'g' || k === 'G')) { e.preventDefault(); return this.jumpToCell(); }                     // Ctrl+G: Go To
 
     /* ---- file ---- */
@@ -2091,70 +2111,224 @@ export class MonoGrid {
     this.engine.recalcAll(); this.save(); this.render();
   }
   modal(html) { const back = document.createElement('div'); back.className = 'modal-backdrop'; back.innerHTML = `<div class="modal">${html}</div>`; document.body.appendChild(back); back.addEventListener('mousedown', (e) => { if (e.target === back) back.remove(); }); return back; }
-  /* ---------- Ctrl+F: find bar ----------
-     Ctrl+F used to throw up the whole Find & replace modal, which covers the
-     data you are trying to look at and asks for a replacement you did not
-     want. Sheets puts a small bar over the top-right of the grid instead:
-     type, Enter or the chevrons to walk the matches, and the three-dot button
-     to escalate to Find & replace carrying the text across. Ctrl+H and
-     Ctrl+Shift+F still go straight to the dialog. */
-  openFindBar() {
+  /* ---------- Find & replace ----------
+     One panel, not two. Ctrl+F opens a Sheets-style bar over the top-right of
+     the grid and the three-dot button EXPANDS it downwards into the replace
+     controls. It used to open a modal, which was the wrong shape: the modal
+     dimmed and covered the very cells you were replacing in, and its options
+     could not be read at the same time as the data they act on.
+
+     The bar's state lives on this._find rather than in the closures below,
+     because a cross-sheet jump ("Search: all sheets") and a replace both call
+     render(), which rebuilds the host and takes the bar's DOM with it.
+     openFindBar() then rebuilds the bar exactly as it was, and every handler
+     writes straight into this._find so nothing depends on a node surviving. */
+  openFindBar(opts = {}) {
     const host = this.host.querySelector('.ms');
-    if (!host || !this.scrollEl) return this.openFindReplace();
-    const open = host.querySelector('#msFindBar');
+    if (!host || !this.scrollEl) return;
+    const f = this._find || (this._find = { q: '', repl: '', o: { scope: 'sheet', range: '' }, hits: [], idx: -1, key: null, open: false, on: false });
+    if (opts.expand) f.open = true;
+    f.on = true;
+    const was = host.querySelector('#msFindBar');
     // A second Ctrl+F selects what is already there rather than stacking bars.
-    if (open) { const i = open.querySelector('input'); i.focus(); i.select(); return; }
+    if (was && !opts.expand && !opts.rebuild) { const i = was.querySelector('#fbQ'); i.focus(); i.select(); return; }
+    if (was) was.remove();
+    const o = f.o;
+    const chk = (id, label, on) => `<label class="ms-fb-chk"><input type="checkbox" id="${id}"${on ? ' checked' : ''}><span>${label}</span></label>`;
+    const opt = (v, label) => `<option value="${v}"${o.scope === v ? ' selected' : ''}>${label}</option>`;
     const bar = document.createElement('div');
-    bar.id = 'msFindBar'; bar.className = 'ms-findbar';
-    bar.innerHTML = `<input id="fbQ" placeholder="Find in sheet" spellcheck="false" autocomplete="off" aria-label="Find in sheet">`
+    bar.id = 'msFindBar'; bar.className = 'ms-findbar' + (f.open ? ' open' : '');
+    bar.innerHTML = `<div class="ms-fb-row">`
+      + `<input id="fbQ" placeholder="Find in sheet" spellcheck="false" autocomplete="off" aria-label="Find in sheet" value="${escH(f.q)}">`
       + `<span class="ms-fb-stat" id="fbStat"></span>`
       + `<button class="ms-fb-btn ms-fb-up" id="fbPrev" title="Previous match (Shift+Enter)" aria-label="Previous match">${icon('chevron-down', { size: 14 })}</button>`
       + `<button class="ms-fb-btn" id="fbNext" title="Next match (Enter)" aria-label="Next match">${icon('chevron-down', { size: 14 })}</button>`
-      + `<button class="ms-fb-btn ms-fb-more" id="fbMore" title="Find and replace" aria-label="Find and replace">${icon('more-horizontal', { size: 14 })}</button>`
-      + `<button class="ms-fb-btn" id="fbClose" title="Close (Esc)" aria-label="Close find">${icon('x', { size: 13 })}</button>`;
+      + `<button class="ms-fb-btn ms-fb-more" id="fbMore" title="More options" aria-label="More options" aria-expanded="${f.open}">${icon('more-horizontal', { size: 14 })}</button>`
+      + `<button class="ms-fb-btn" id="fbClose" title="Close (Esc)" aria-label="Close find">${icon('x', { size: 13 })}</button>`
+      + `</div>`
+      + `<div class="ms-fb-panel"${f.open ? '' : ' hidden'}>`
+      + `<div class="ms-fb-field"><label for="fbRepl">Replace with</label><input id="fbRepl" spellcheck="false" autocomplete="off" value="${escH(f.repl)}"></div>`
+      + `<div class="ms-fb-field"><label for="fbScope">Search</label><select id="fbScope">${opt('all', 'All sheets')}${opt('sheet', 'This sheet')}${opt('range', 'Specific range')}</select></div>`
+      + `<div class="ms-fb-field" id="fbRangeRow"${o.scope === 'range' ? '' : ' hidden'}><label for="fbRange">Range</label><input id="fbRange" placeholder="e.g. Sheet1!A1:D100" spellcheck="false" value="${escH(o.range || '')}"></div>`
+      + chk('fbCase', 'Match case', o.matchCase)
+      + chk('fbEntire', 'Match entire cell contents', o.entire)
+      + chk('fbRegex', 'Search using regular expressions', o.regex)
+      + chk('fbFormulae', 'Also search within formulae', o.formulae)
+      + chk('fbLinks', 'Also search within links', o.links)
+      + `<div class="ms-fb-actions"><button class="btn btn-ghost" id="fbFind">Find</button><button class="btn btn-ghost" id="fbRep">Replace</button><button class="btn btn-ghost" id="fbRepAll">Replace all</button><button class="btn btn-primary" id="fbDone">Done</button></div>`
+      + `</div>`;
     host.appendChild(bar);
     bar.style.top = (this.scrollEl.offsetTop + 8) + 'px';
-    const q = bar.querySelector('#fbQ'), stat = bar.querySelector('#fbStat');
-    const close = () => { bar.remove(); this.focusGrid(); };
-    const step = (dir) => {
-      if (!q.value) { stat.textContent = ''; return; }
-      stat.textContent = this.findNext(q.value, false, dir) ? '' : 'No results';
+    const $ = (id) => bar.querySelector('#' + id);
+    const qEl = $('fbQ');
+    // Rescan only when the query or an option actually changed - the hit list
+    // is what the count, the highlights and the stepping all read from.
+    const sync = () => {
+      const key = this.findKey(f);
+      if (key === f.key) return;
+      f.key = key; f.hits = this.findAll(f.q, f.o); f.idx = -1; this._findPaint();
     };
-    // Searching as you type is a full sheet scan whenever nothing matches -
-    // ~110,000 getDisplay calls on a 3,600 x 31 sheet. Debounced so holding a
-    // key down cannot queue one scan per character.
+    const step = (dir) => {
+      sync();
+      if (f.hits.length) { f.idx = this.findFrom(f.hits, dir, f.idx); this._findGo(f.hits[f.idx]); }
+      this._findStat();
+    };
+    const close = () => { bar.remove(); f.hits = []; f.idx = -1; f.key = null; f.open = false; f.on = false; this._findHits = null; this.applySelection({ scroll: false }); this.focusGrid(); };
+    // Searching as you type is a full scan whenever nothing matches -
+    // ~110,000 getDisplay calls on a 3,600 x 31 sheet, and more again across
+    // every sheet. Debounced so holding a key down cannot queue one scan per
+    // character.
     let t = 0;
-    q.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => step(1), 150); });
-    q.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') { e.preventDefault(); clearTimeout(t); step(e.shiftKey ? -1 : 1); }
+    qEl.addEventListener('input', () => { f.q = qEl.value; clearTimeout(t); t = setTimeout(() => step(1), 150); });
+    bar.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); clearTimeout(t); step(e.shiftKey ? -1 : 1); }
       else if (e.key === 'Escape') { e.preventDefault(); close(); }
-      else if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); q.select(); }
+      else if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); qEl.select(); }
     });
-    bar.querySelector('#fbNext').onclick = () => step(1);
-    bar.querySelector('#fbPrev').onclick = () => step(-1);
-    bar.querySelector('#fbClose').onclick = close;
-    bar.querySelector('#fbMore').onclick = () => { const v = q.value; bar.remove(); this.openFindReplace(v); };
-    q.focus();
+    $('fbRepl').addEventListener('input', (e) => { f.repl = e.target.value; });
+    // An option change re-runs the search but does NOT jump the cursor -
+    // ticking "Match case" to narrow a result set should not move you.
+    const reread = () => { sync(); this._findStat(); };
+    $('fbScope').addEventListener('change', (e) => { o.scope = e.target.value; $('fbRangeRow').hidden = o.scope !== 'range'; reread(); });
+    $('fbRange').addEventListener('input', (e) => { o.range = e.target.value; clearTimeout(t); t = setTimeout(reread, 150); });
+    for (const [id, k] of [['fbCase', 'matchCase'], ['fbEntire', 'entire'], ['fbRegex', 'regex'], ['fbFormulae', 'formulae'], ['fbLinks', 'links']])
+      $(id).addEventListener('change', (e) => { o[k] = e.target.checked; reread(); });
+    $('fbNext').onclick = () => step(1);
+    $('fbPrev').onclick = () => step(-1);
+    $('fbFind').onclick = () => step(1);
+    $('fbClose').onclick = close;
+    $('fbDone').onclick = close;
+    $('fbMore').onclick = () => { f.open = !f.open; this.openFindBar({ rebuild: true }); };
+    $('fbRep').onclick = () => {
+      sync();
+      if (!f.hits.length) return this._findStat();
+      if (f.idx < 0) return step(1);                  // nothing is current yet - go there first
+      const n = this.replaceHits([f.hits[f.idx]], f);
+      f.key = null; step(1);                          // the sheet changed under us
+      toast(n ? 'Replaced 1' : 'Nothing to replace in that cell');
+    };
+    $('fbRepAll').onclick = () => {
+      sync();
+      const n = this.replaceHits(f.hits, f);
+      f.key = null; sync(); this._findStat();
+      toast(n ? `Replaced in ${n} cell${n === 1 ? '' : 's'}` : 'Nothing to replace');
+    };
+    sync();                 // the sheet may have changed under a "this sheet" search
+    this._findPaint();      // the wash is per-sheet, so repaint it for this one
+    this._findStat();
+    if (opts.focus !== false) { qEl.focus(); qEl.setSelectionRange(f.q.length, f.q.length); }
   }
-  openFindReplace(prefill = '') {
-    const m = this.modal(`<h3>Find &amp; replace</h3><div class="form-row"><label>Find</label><input id="frFind" value="${escH(prefill)}"></div><div class="form-row"><label>Replace with</label><input id="frRepl"></div><div class="form-row"><label style="font-weight:400"><input type="checkbox" id="frCase"> Match case</label></div><div id="frStat" class="muted"></div><div class="modal-actions"><button class="btn btn-ghost" id="frFindBtn">Find next</button><button class="btn btn-ghost" id="frAll">Replace all</button><button class="btn btn-primary" id="frClose">Done</button></div>`);
-    const find = m.querySelector('#frFind'); find.focus();
-    m.querySelector('#frClose').onclick = () => m.remove();
-    m.querySelector('#frFindBtn').onclick = () => { const ok = this.findNext(find.value, m.querySelector('#frCase').checked); m.querySelector('#frStat').textContent = ok ? '' : 'No match'; };
-    m.querySelector('#frAll').onclick = () => { const k = this.replaceAll(find.value, m.querySelector('#frRepl').value, m.querySelector('#frCase').checked); m.querySelector('#frStat').textContent = k + ' replaced'; };
+  _findStat() {
+    const el = this.host?.querySelector('#fbStat'), f = this._find;
+    if (!el || !f) return;
+    // idx < 0 means the list was just rebuilt (an option changed) and the
+    // cursor is not on a match yet - say how many there are rather than
+    // claiming you are on the first one.
+    el.textContent = !f.q ? '' : !f.hits.length ? (this._findBad ? 'Bad pattern' : 'No results')
+      : f.idx < 0 ? `${f.hits.length} found` : `${f.idx + 1} of ${f.hits.length}`;
   }
-  /** dir 1 searches forward from the active cell, -1 backward; both wrap. */
-  findNext(q, matchCase, dir = 1) {
-    if (!q) return false; const sh = this.sheet(); const sid = sh.id; const norm = (s) => matchCase ? s : s.toLowerCase(); const Q = norm(q); const tot = sh.rows * sh.cols;
-    const start = this.active.r * sh.cols + this.active.c + dir;
-    for (let i = 0; i < tot; i++) { const idx = (((start + i * dir) % tot) + tot) % tot; const r = Math.floor(idx / sh.cols), c = idx % sh.cols; const d = this.engine.getDisplay(sid, r, c); if (d && norm(String(d)).includes(Q)) { this.select(r, c); return true; } }
-    return false;
+  /** What the current hit list was scanned from, so a rebuild knows whether to
+      scan again. The sheet counts only when the scope is "this sheet": switch
+      sheets and the same query is a different search, while an all-sheets or
+      specific-range search is unaffected by which sheet you are looking at. */
+  findKey(f) {
+    return f.q + '\u0000' + JSON.stringify(f.o) + '\u0000' + (f.o.scope === 'sheet' ? this.sid() : '');
   }
-  replaceAll(q, repl, matchCase) {
-    if (!q) return 0; const sh = this.sheet(); const sid = sh.id; const list = []; let n = 0;
-    const rx = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), matchCase ? 'g' : 'gi');
-    for (let r = 0; r < sh.rows; r++) for (let c = 0; c < sh.cols; c++) { const raw = sh.getRaw(r, c); if (raw) { const matches = raw.match(rx); if (matches) { list.push({ r, c, raw: raw.replace(rx, repl) }); n += matches.length; } } }
-    if (list.length) { this.pushUndo(); this.engine.setCellsBatch(sid, list); this.save(); this.render(); }
+  /** Repaint the match wash for whichever sheet is showing. */
+  _findPaint() {
+    const f = this._find;
+    if (!f || !f.hits.length) this._findHits = null;
+    else {
+      const sid = this.sid(), cols = this.sheet().cols, set = new Set();
+      for (const h of f.hits) if (h.sid === sid) set.add(h.r * cols + h.c);
+      this._findHits = set;
+    }
+    this.applySelection({ scroll: false });
+  }
+  /** Go to a hit, switching sheets (and rebuilding the bar render() ate) if needed. */
+  _findGo(h) {
+    if (!h) return;
+    if (h.sid !== this.sid()) { this.wb.setActive(h.sid); this.save(); this.render(); this.notifySheetListChange(); }
+    this.select(h.r, h.c);
+  }
+  /** The query as a predicate. null means the user's regex does not compile. */
+  _findTest(q, o) {
+    const body = o.regex ? q : q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let rx; try { rx = new RegExp(o.entire ? `^(?:${body})$` : body, o.matchCase ? '' : 'i'); } catch { return null; }
+    return (s) => rx.test(s);
+  }
+  /** Which cells the search covers: one sheet, every sheet, or one range. */
+  _findScopes(o) {
+    if (o.scope === 'range') { const sp = this.parseRangeSpec(o.range || ''); return sp ? [sp] : []; }
+    const sheets = o.scope === 'all' ? this.wb.sheets : [this.sheet()];
+    return sheets.map((sh) => ({ sid: sh.id, r1: 0, c1: 0, r2: sh.rows - 1, c2: sh.cols - 1 }));
+  }
+  /** Every matching cell as {sid,r,c}, in scan order. A miss costs a full scan
+      either way, so scanning once and keeping the list is cheaper than walking
+      from the cursor each time - and it is what gives the bar its "3 of 124"
+      count and its highlights for free. */
+  findAll(q, o = {}) {
+    const hits = []; this._findBad = false;
+    if (!q) return hits;
+    const test = this._findTest(q, o);
+    if (!test) { this._findBad = true; return hits; }
+    const wantRaw = !!(o.formulae || o.links);
+    for (const { sid, r1, c1, r2, c2 } of this._findScopes(o)) {
+      for (let r = r1; r <= r2; r++) for (let c = c1; c <= c2; c++) {
+        const d = this.engine.getDisplay(sid, r, c);
+        let hit = d != null && d !== '' && test(String(d));
+        if (!hit && wantRaw) {
+          const raw = this.engine.getRaw(sid, r, c);
+          if (raw) {
+            if (o.formulae) hit = test(String(raw));
+            if (!hit && o.links) { const u = this.hyperlinkUrlFor(raw); hit = !!u && test(u); }
+          }
+        }
+        if (hit) hits.push({ sid, r, c });
+      }
+    }
+    return hits;
+  }
+  /** Which hit dir takes you to. From the cursor on a fresh scan (idx < 0),
+      otherwise one step on from idx; both wrap. The cursor comparison is
+      sheet-then-row-then-column so "all sheets" walks in scan order. */
+  findFrom(hits, dir, idx = -1) {
+    const n = hits.length; if (!n) return -1;
+    if (idx >= 0) return ((idx + dir) % n + n) % n;
+    const order = new Map(this.wb.sheets.map((s, i) => [s.id, i]));
+    const here = order.get(this.sid()) || 0, { r, c } = this.active;
+    const cmp = (h) => ((order.get(h.sid) || 0) - here) || (h.r - r) || (h.c - c);
+    if (dir > 0) { const i = hits.findIndex((h) => cmp(h) > 0); return i < 0 ? 0 : i; }
+    let i = n - 1; while (i >= 0 && cmp(hits[i]) >= 0) i--;
+    return i < 0 ? n - 1 : i;
+  }
+  /** The replaced text for one cell, or the original when nothing matches. */
+  replacedText(s, f) {
+    const { q, repl, o } = f;
+    if (o.entire) { const test = this._findTest(q, o); return test && test(s) ? repl : s; }
+    const body = o.regex ? q : q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let rx; try { rx = new RegExp(body, o.matchCase ? 'g' : 'gi'); } catch { return s; }
+    return s.replace(rx, repl);
+  }
+  /** Replace in the given hits. Returns the number of cells changed. */
+  replaceHits(hits, f) {
+    const edits = new Map();
+    for (const h of hits) {
+      const raw = this.engine.getRaw(h.sid, h.r, h.c);
+      if (raw == null || raw === '') continue;
+      // A formula whose RESULT matched is not a text match: leave it alone
+      // unless the user asked to search within formulae.
+      if (!f.o.formulae && String(raw)[0] === '=') continue;
+      const next = this.replacedText(String(raw), f);
+      if (next === String(raw)) continue;
+      if (!edits.has(h.sid)) edits.set(h.sid, []);
+      edits.get(h.sid).push({ r: h.r, c: h.c, raw: next });
+    }
+    if (!edits.size) return 0;
+    let n = 0;
+    this.pushUndo();
+    for (const [sid, list] of edits) { this.engine.setCellsBatch(sid, list); n += list.length; }
+    this.save(); this.render();
     return n;
   }
   openNamedRanges() {
@@ -2217,7 +2391,7 @@ export class MonoGrid {
       case 'sortAsc': return this.sortSel('asc');
       case 'sortDesc': return this.sortSel('desc');
       case 'named': return this.openNamedRanges();
-      case 'find': return this.openFindReplace();
+      case 'find': return this.openFindBar({ expand: true });
       case 'cond': return this.openCondFormat();
       case 'useInDashboard': return this.onUseInDashboard && this.onUseInDashboard();
       case 'createFilter': return this.createFilter();

@@ -631,6 +631,26 @@ export class Engine {
    * @param {number}    r
    * @param {'modified'|'created'} kind
    */
+  /** Cells another collaborator wrote: { "r,c": cell|null }. Written straight
+   *  into the cell store rather than through setRaw, so they are neither
+   *  queued for saving (they came FROM the server) nor put on this user's
+   *  undo stack (Ctrl+Z must not undo someone else's typing). Only what
+   *  depends on them is recalculated. Returns the cells whose value moved. */
+  applyRemoteCells(sid, cells) {
+    const sh = this.sheetById(sid); if (!sh) return [];
+    const seed = [];
+    for (const k of Object.keys(cells)) {
+      const i = k.indexOf(','), r = +k.slice(0, i), c = +k.slice(i + 1);
+      if (cells[k] == null) sh.cells.delete(k); else { sh.cells.set(k, cells[k]); sh._grow(r, c); }
+      this.parseCellAt(sid, r, c);
+      const a = this.key(sid, r, c); seed.push(a);
+      const w = this.wishIndex.get(a); if (w) for (const an of w) seed.push(an);
+    }
+    const changed = this.recompute(seed);
+    for (const k of Object.keys(cells)) { const i = k.indexOf(','); changed.push({ sid, r: +k.slice(0, i), c: +k.slice(i + 1) }); }
+    return changed;
+  }
+
   setCellsBatch(sid, list) {
     const sh = this.sheetById(sid); if (!sh) return;
     for (const it of list) { sh.setRaw(it.r, it.c, it.raw); this.parseCellAt(sid, it.r, it.c); }
