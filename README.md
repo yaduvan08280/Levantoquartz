@@ -8,6 +8,7 @@ panel for users and data.
 |---|---|
 | `/` | The forms app operators use. The same page as before. |
 | `/dashboard` | The production dashboard (Overview, Live, Quality, Costing, Reports…). The same page as before; admins and supervisors sign in. |
+| `/marketing` | Domestic Marketing: field sales (visits, customers, orders). The same app as before, with its own user accounts. |
 | `/admin/` | Admin panel: users, raw data, change log, import and backup. Admin accounts only. |
 | `/sheets/` | Mono Sheets on the live data (also shown inside the admin panel under Raw data). Super admins only. |
 
@@ -20,6 +21,8 @@ server/
                  grade alerts, Telegram).
   legacy-dashboard/  The dashboard's Apps Script project, unchanged (Code.js, DashAuth.js,
                  SlabworksFeedback.js, Dashboard.html). Its data routes are served at /exec.
+  legacy-marketing/  The Domestic Marketing Apps Script project, unchanged. It runs in a scope
+                 of its own (src/gas/appRuntime.ts) on its own workbook, "marketing".
   src/store/     The data: every tab held in memory, committed to Postgres on each request.
                  computed.ts reproduces the columns the spreadsheet filled with formulas.
   src/gas/       The platform the logic expects (sheet, cache, settings, files, HTTP, jobs).
@@ -85,6 +88,7 @@ createdb levanto            # or point DATABASE_URL at any empty database
 cd admin && npm install && npm run build
 cd ../server && npm install
 npm run import -- "/path/to/New Base.xlsx"     # optional: load the Google Sheets export
+npm run import -- "/path/to/Domestic Marketing.xlsx" --book marketing
 npm run dev                                    # http://localhost:8080
 ```
 

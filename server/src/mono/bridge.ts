@@ -20,7 +20,7 @@
  */
 import type { ServerResponse } from 'node:http';
 import { editValue, isEmpty } from '../store/values.js';
-import { Tab, Workbook } from '../store/workbook.js';
+import { MAIN, Tab, Workbook } from '../store/workbook.js';
 import { refreshAll, hasComputed } from '../store/computed.js';
 
 export const MAIN_BOOK = 'newbase';
@@ -45,23 +45,37 @@ export class Bridge {
   /** Set by a request that is applying Mono Sheets' own patch. */
   origin: Origin | null = null;
 
-  constructor(private wb: Workbook, private logTab: () => string) {
-    const start = Math.floor(Date.now() / 1000);
-    this.versions.set(MAIN_BOOK, start);
-    this.versions.set(LOG_BOOK, start);
-  }
+  private start = Math.floor(Date.now() / 1000);
+  /** Names of the workbooks other apps keep, by id. */
+  titles: Record<string, string> = {};
+
+  constructor(private wb: Workbook, private logTab: () => string) {}
 
   /* ------------------------------------------------------------ books -- */
 
-  bookOf(tab: Tab): string { return tab.name === this.logTab() ? LOG_BOOK : MAIN_BOOK; }
-  bookName(id: string): string { return id === LOG_BOOK ? 'App Submission Log' : 'New Base'; }
-  hasBook(id: string): boolean { return id === MAIN_BOOK || (id === LOG_BOOK && !!this.wb.rawTab(this.logTab())); }
-  version(id: string): number { return this.versions.get(id) || 0; }
-  books(): string[] { return [MAIN_BOOK, LOG_BOOK].filter((b) => this.hasBook(b)); }
+  /** New Base is shown as two workbooks (the submission log is large); every other app's is its own. */
+  bookOf(tab: Tab): string {
+    if (tab.book !== MAIN) return tab.book;
+    return tab.name === this.logTab() ? LOG_BOOK : MAIN_BOOK;
+  }
+  bookName(id: string): string {
+    return id === LOG_BOOK ? 'App Submission Log' : id === MAIN_BOOK ? 'New Base' : (this.titles[id] || id);
+  }
+  hasBook(id: string): boolean {
+    if (id === MAIN_BOOK) return true;
+    if (id === LOG_BOOK) return !!this.wb.rawTab(this.logTab());
+    return this.wb.tabsOf(id).length > 0;
+  }
+  version(id: string): number { return this.versions.get(id) || this.start; }
+  books(): string[] {
+    return [MAIN_BOOK, LOG_BOOK].concat(this.wb.books().filter((b) => b !== MAIN)).filter((b) => this.hasBook(b));
+  }
+  /** The store's workbook a sheet-editor workbook's new tabs belong to. */
+  private storeBook(book: string): string { return book === MAIN_BOOK || book === LOG_BOOK ? MAIN : book; }
 
   private tabsOf(book: string): Tab[] {
     return this.wb.tabs.filter((t) => this.bookOf(t) === book).sort((a, b) => a.position - b.position)
-      .map((t) => this.wb.tab(t.name)!);
+      .map((t) => this.wb.tab(t.name, t.book)!);
   }
 
   sheetId(tab: Tab): string { return tab.mono.id || 't' + tab.id; }
@@ -147,7 +161,7 @@ export class Bridge {
   /** Everything changed at once (an import, a reload): open sheets start over. */
   reloadAll(): void {
     for (const t of this.wb.tabs) { t.touched.clear(); t.reshaped = false; }
-    for (const book of [MAIN_BOOK, LOG_BOOK]) {
+    for (const book of this.books()) {
       const v = this.version(book) + 1;
       this.versions.set(book, v);
       this.send(book, { id: book, v, from: '', reload: true });
@@ -169,7 +183,7 @@ export class Bridge {
     this.origin = null;
     refreshAll(this.wb);                           // computed columns follow their inputs first
 
-    for (const book of [MAIN_BOOK, LOG_BOOK]) {
+    for (const book of this.books()) {
       const sheets: Record<string, { cells: Record<string, any> }> = {};
       const fix: Record<string, { cells: Record<string, any> }> = {};
       let any = false, reload = false, fixes = 0;
@@ -248,7 +262,7 @@ export class Bridge {
 
   private applyMeta(tab: Tab, meta: any): void {
     if (!meta || typeof meta !== 'object') return;
-    if (typeof meta.name === 'string' && meta.name.trim() && meta.name !== tab.name && !hasComputed(tab.name)) {
+    if (typeof meta.name === 'string' && meta.name.trim() && meta.name !== tab.name && !(tab.book === MAIN && hasComputed(tab.name))) {
       try { this.wb.renameTab(tab, meta.name); } catch { /* name taken: keep ours */ }
     }
     if (meta.hidden !== undefined && !!meta.hidden !== tab.hidden) { tab.hidden = !!meta.hidden; tab.dirtyMeta = true; }
@@ -361,15 +375,16 @@ export class Bridge {
     sheets.forEach((sheet, i) => {
       let tab = this.tabBySheet(book, String(sheet.id));
       if (!tab) {
-        if (book !== MAIN_BOOK) return;
+        if (book === LOG_BOOK) return;
+        const home = this.storeBook(book);
         let name = String(sheet.name || 'Sheet').trim() || 'Sheet';
-        for (let n = 2; this.wb.rawTab(name); n++) name = String(sheet.name || 'Sheet') + ' ' + n;
-        tab = this.wb.createTab(name);
+        for (let n = 2; this.wb.rawTab(name, home); n++) name = String(sheet.name || 'Sheet') + ' ' + n;
+        tab = this.wb.createTab(name, home);
         tab.mono.id = String(sheet.id);
         changes.push({ tab: name, row: 0, col: 0, old: '', neu: 'tab added' });
       }
       this.applyWhole(tab, sheet, changes, origin);
-      if (book === MAIN_BOOK && tab.position !== i) { tab.position = i; tab.dirtyMeta = true; }
+      if (book !== LOG_BOOK && tab.position !== i) { tab.position = i; tab.dirtyMeta = true; }
     });
     const bm = this.bookMeta.get(book) || {};
     if (json && json.namedRanges) bm.namedRanges = json.namedRanges;

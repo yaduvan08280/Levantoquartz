@@ -17,6 +17,10 @@ import {
   type Cell, type StoredCell, decodeCell, encodeCell, displayValue, parseEntered, isEmpty
 } from './values.js';
 
+/** The production workbook, "New Base". */
+export const MAIN = 'newbase';
+const key = (book: string, name: string) => book + '\u0000' + name;
+
 export type RowFormats = Record<number, string>;      // 0-based column -> number format
 
 export interface ComputedRange {
@@ -27,6 +31,8 @@ export interface ComputedRange {
 export class Tab {
   id: number | null = null;
   name: string;
+  /** Which workbook this tab belongs to. */
+  book = MAIN;
   position = 0;
   hidden = false;
   frozenRows = 0;
@@ -337,15 +343,18 @@ export class Workbook {
 
   /* ------------------------------------------------------------ tabs -- */
 
-  tab(name: string): Tab | null {
-    const t = this.byName.get(name);
+  tab(name: string, book: string = MAIN): Tab | null {
+    const t = this.byName.get(key(book, name));
     if (!t) return null;
     if (this.freshHook) this.freshHook(this, t);
     return t;
   }
 
   /** The tab without recomputing — for code that is itself computing. */
-  rawTab(name: string): Tab | null { return this.byName.get(name) || null; }
+  rawTab(name: string, book: string = MAIN): Tab | null { return this.byName.get(key(book, name)) || null; }
+
+  tabsOf(book: string): Tab[] { return this.tabs.filter((t) => t.book === book); }
+  books(): string[] { return Array.from(new Set(this.tabs.map((t) => t.book))); }
 
   tabById(id: number): Tab | null {
     const t = this.tabs.find((x) => x.id === id) || null;
@@ -353,31 +362,32 @@ export class Workbook {
     return t;
   }
 
-  createTab(name: string): Tab {
-    if (this.byName.has(name)) throw new Error('A tab named "' + name + '" already exists.');
+  createTab(name: string, book: string = MAIN): Tab {
+    if (this.byName.has(key(book, name))) throw new Error('A tab named "' + name + '" already exists.');
     const t = new Tab(name);
-    t.position = this.tabs.reduce((m, x) => Math.max(m, x.position), -1) + 1;
+    t.book = book;
+    t.position = this.tabsOf(book).reduce((m, x) => Math.max(m, x.position), -1) + 1;
     t.dirtyMeta = true;
     this.tabs.push(t);
-    this.byName.set(name, t);
+    this.byName.set(key(book, name), t);
     return t;
   }
 
   renameTab(tab: Tab, name: string): void {
     name = String(name || '').trim();
     if (!name) throw new Error('A tab needs a name.');
-    if (this.byName.has(name) && this.byName.get(name) !== tab) {
+    if (this.byName.has(key(tab.book, name)) && this.byName.get(key(tab.book, name)) !== tab) {
       throw new Error('A tab named "' + name + '" already exists.');
     }
-    this.byName.delete(tab.name);
+    this.byName.delete(key(tab.book, tab.name));
     tab.name = name;
     tab.dirtyMeta = true;
-    this.byName.set(name, tab);
+    this.byName.set(key(tab.book, name), tab);
   }
 
   deleteTab(tab: Tab): void {
     this.tabs = this.tabs.filter((t) => t !== tab);
-    this.byName.delete(tab.name);
+    this.byName.delete(key(tab.book, tab.name));
     tab.deleted = true;
     if (tab.id !== null) this.removedTabs.push(tab.id);
   }
@@ -419,6 +429,7 @@ export class Workbook {
     for (const r of tabs.rows) {
       const t = new Tab(r.name);
       t.id = r.id;
+      t.book = r.book || MAIN;
       t.position = r.position;
       t.hidden = r.hidden;
       t.frozenRows = r.frozen_rows;
@@ -454,7 +465,7 @@ export class Workbook {
     }
 
     this.tabs = list;
-    this.byName = new Map(list.map((t) => [t.name, t]));
+    this.byName = new Map(list.map((t) => [key(t.book, t.name), t]));
     this.kv = map;
     this.dirtyKv.clear();
     this.removedTabs = [];
@@ -524,10 +535,10 @@ export class Workbook {
         const t = w.tab;
         if (t.id === null) {
           const r = await client.query(
-            `INSERT INTO tabs(name, position, hidden, frozen_rows, frozen_cols, max_cols, col_formats, col_widths, meta)
-             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+            `INSERT INTO tabs(name, position, hidden, frozen_rows, frozen_cols, max_cols, col_formats, col_widths, meta, book)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING id`,
             [t.name, t.position, t.hidden, t.frozenRows, t.frozenCols, t.maxCols,
-             JSON.stringify(t.colFmt), JSON.stringify(t.colWidths), JSON.stringify({ headerBg: t.headerBg, mono: t.mono })]);
+             JSON.stringify(t.colFmt), JSON.stringify(t.colWidths), JSON.stringify({ headerBg: t.headerBg, mono: t.mono }), t.book]);
           t.id = r.rows[0].id;
         } else if (w.meta) {
           await client.query(
@@ -582,11 +593,11 @@ export class Workbook {
     this.removedTabs = removed.concat(this.removedTabs);
   }
 
-  /** Replace every tab (used by the importer). */
-  replaceAll(tabs: Tab[]): void {
-    for (const t of this.tabs) if (t.id !== null) this.removedTabs.push(t.id);
-    this.tabs = tabs;
-    this.byName = new Map(tabs.map((t) => [t.name, t]));
-    tabs.forEach((t, i) => { t.id = null; t.position = i; t.dirtyAll = true; t.dirtyMeta = true; });
+  /** Replace every tab of one workbook (used by the importer). The others are untouched. */
+  replaceAll(tabs: Tab[], book: string = MAIN): void {
+    for (const t of this.tabs) if (t.book === book && t.id !== null) this.removedTabs.push(t.id);
+    tabs.forEach((t, i) => { t.id = null; t.book = book; t.position = i; t.dirtyAll = true; t.dirtyMeta = true; });
+    this.tabs = this.tabs.filter((t) => t.book !== book).concat(tabs);
+    this.byName = new Map(this.tabs.map((t) => [key(t.book, t.name), t]));
   }
 }

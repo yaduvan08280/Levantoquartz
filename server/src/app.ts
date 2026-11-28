@@ -8,17 +8,24 @@ import { Workbook } from './store/workbook.js';
 import { installComputed, refreshAll } from './store/computed.js';
 import { Runtime } from './gas/runtime.js';
 import { Bridge } from './mono/bridge.js';
+import { AppRuntime } from './gas/appRuntime.js';
+import { config } from './config.js';
 import { listTriggers } from './gas/services.js';
 
 export const wb = new Workbook(pool);
 export const rt = new Runtime(wb);
 export const bridge = new Bridge(wb, () => String((rt.global('FORMS_CFG') || {}).LOG_TAB || ''));
 
+/** Further apps, each with its own workbook and settings. */
+export const marketing = new AppRuntime(wb, { id: 'marketing', title: 'Domestic Marketing', dir: config.marketingDir });
+export const apps: AppRuntime[] = [marketing];
+
 export async function boot(): Promise<void> {
   await wb.load();
   installComputed(wb);
   refreshAll(wb);
   rt.load();
+  for (const a of apps) { a.load(); bridge.titles[a.id] = a.opts.title; }
   await firstRun();
   await ensureJobs();
   bridge.settle();
@@ -75,6 +82,13 @@ export async function run<T = any>(fn: string, args: unknown[] = []): Promise<T>
     await wb.flush();
     bridge.publish();                 // open sheets hear about it
   }
+  return out;
+}
+
+/** Call one of the further apps, then commit. */
+export async function runApp<T = any>(app: AppRuntime, fn: string, args: unknown[] = []): Promise<T> {
+  let out: T;
+  try { out = app.call(fn, args) as T; } finally { await wb.flush(); bridge.publish(); }
   return out;
 }
 

@@ -3,7 +3,7 @@
  * Script triggers ("alertScan every 5 minutes", "telegramPoll every minute");
  * this runs whatever is registered, on time, one at a time.
  */
-import { rt, wb, run } from './app.js';
+import { rt, wb, run, runApp, apps } from './app.js';
 import { listTriggers } from './gas/services.js';
 
 const lastRun = new Map<string, number>();
@@ -23,6 +23,18 @@ async function tick(log: { warn: (o: any, m: string) => void }): Promise<void> {
       lastRun.set(t.id, now);
       try { await run(t.handler, []); }
       catch (e: any) { log.warn({ job: t.handler, err: String((e && e.message) || e) }, 'scheduled job failed'); }
+    }
+    for (const app of apps) {
+      if (!app.installed || !wb.tabsOf(app.id).length) continue;
+      app.cache.sweep();
+      for (const t of app.triggers()) {
+        if (!(t.everyMinutes > 0) || !app.has(t.handler)) continue;
+        const key = app.id + ':' + t.id;
+        if (now < (lastRun.get(key) || 0) + t.everyMinutes * 60000 - 2000) continue;
+        lastRun.set(key, now);
+        try { await runApp(app, t.handler, []); }
+        catch (e: any) { log.warn({ app: app.id, job: t.handler, err: String((e && e.message) || e) }, 'scheduled job failed'); }
+      }
     }
   } finally { busy = false; }
 }

@@ -13,7 +13,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { config } from '../config.js';
 import { pool } from '../db.js';
-import { rt, run, commit, bridge } from '../app.js';
+import { rt, run, commit, bridge, apps, runApp } from '../app.js';
 import { BridgeError, MAIN_BOOK, type Change } from '../mono/bridge.js';
 import { isSuper } from '../super.js';
 
@@ -85,16 +85,17 @@ async function afterEdit(changes: Change[]): Promise<void> {
 
 /* Mono Sheets opens in dashboard mode with an empty workspace on a new
    browser. This runs first and points it at the sheet and the data. */
-const BOOT = `<script>
+const bootSnippet = (books: string[]) => `<script>
 (function () {
   try {
     localStorage.setItem('mono.mode', 'sheet');
     var s = {}; try { s = JSON.parse(localStorage.getItem('mono.settings') || '{}') || {}; } catch (e) {}
     var ws = s.workspace && Array.isArray(s.workspace.order) ? s.workspace : { order: [], activeWorkbookId: null };
-    var known = { ${JSON.stringify(MAIN_BOOK)}: 1, applog: 1 };
-    ws.order = ws.order.filter(function (id) { return known[id]; });
-    if (ws.order.indexOf(${JSON.stringify(MAIN_BOOK)}) < 0) ws.order.unshift(${JSON.stringify(MAIN_BOOK)});
-    if (!ws.activeWorkbookId || !known[ws.activeWorkbookId]) ws.activeWorkbookId = ${JSON.stringify(MAIN_BOOK)};
+    var books = ${JSON.stringify(books)}, main = ${JSON.stringify(MAIN_BOOK)};
+    ws.order = ws.order.filter(function (id) { return books.indexOf(id) >= 0; });
+    /* The submission log is large and rarely wanted: it opens only when asked for. */
+    books.forEach(function (id) { if (id !== 'applog' && ws.order.indexOf(id) < 0) ws.order.push(id); });
+    if (!ws.activeWorkbookId || books.indexOf(ws.activeWorkbookId) < 0) ws.activeWorkbookId = main;
     s.workspace = ws; s.dataHome = 'server'; s.serverUrl = '';
     localStorage.setItem('mono.settings', JSON.stringify(s));
   } catch (e) {}
@@ -107,7 +108,7 @@ export async function monoRoutes(app: FastifyInstance): Promise<void> {
   /* ------------------------------------------------------- the app -- */
   const page = async (_req: FastifyRequest, reply: FastifyReply) => {
     const html = fs.readFileSync(path.join(config.monoDir, 'index.html'), 'utf8')
-      .replace(/<head([^>]*)>/i, (m) => m + BOOT);
+      .replace(/<head([^>]*)>/i, (m) => m + bootSnippet(bridge.books()));
     return reply.header('Cache-Control', 'no-cache').type('text/html; charset=utf-8').send(html);
   };
   app.get('/sheets', async (_req, reply) => reply.redirect('/sheets/'));
@@ -229,7 +230,13 @@ export async function monoRoutes(app: FastifyInstance): Promise<void> {
     }
     const version = bridge.version(id);
     await audit(who.username, changes);
-    await afterEdit(changes);
+    const owner = apps.find((a) => a.id === id && a.installed);
+    if (owner) {
+      /* That app caches its tables; a hand edit means it must read them again. */
+      if (changes.length && owner.has('reloadAll_')) { try { await runApp(owner, 'reloadAll_', []); } catch { /* next sync */ } }
+    } else {
+      await afterEdit(changes);
+    }
     return { ok: true, version };
   };
   app.patch('/api/workbook/:id', big, write(false));

@@ -6,7 +6,7 @@
 import ExcelJS from 'exceljs';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { pool } from '../db.js';
-import { rt, wb, run, commit, bridge } from '../app.js';
+import { rt, wb, run, commit, bridge, apps, runApp } from '../app.js';
 import { refreshAll } from '../store/computed.js';
 import { editValue, formatDate, isEmpty, isTimeOnly } from '../store/values.js';
 import { Tab } from '../store/workbook.js';
@@ -368,27 +368,33 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     let parsed;
     try { parsed = await readXlsx(buf); }
     catch (e: any) { throw new HttpError(400, 'That file could not be read as an Excel workbook: ' + (e.message || e)); }
-    const usersName = String(rt.global('FORMS_CFG').USERS_TAB);
+    /* Which workbook the file replaces: New Base, or another app's. */
+    const book = String(((req.query || {}) as any).book || 'newbase');
+    const owner = apps.find((a) => a.id === book && a.installed);
+    if (book !== 'newbase' && !owner) throw new HttpError(400, 'There is no workbook called "' + book + '".');
+    const usersName = owner ? 'Users' : String(rt.global('FORMS_CFG').USERS_TAB);
     const incoming = parsed.tabs.find((t) => t.name === usersName);
-    if (!incoming) throw new HttpError(400, 'The workbook has no "' + usersName + '" tab, so nobody could sign in afterwards. Nothing was imported.');
+    if (!incoming) throw new HttpError(400, 'The workbook has no "' + usersName + '" tab, so nobody could sign in afterwards. Is this the right file? Nothing was imported.');
     await commit(() => {
-      wb.replaceAll(parsed.tabs);
+      wb.replaceAll(parsed.tabs, book);
       refreshAll(wb);
     });
     rt.cache.clearData();
     bridge.reloadAll();
     /* Open dashboards must drop what they hold and load the new data. */
     try { if (rt.has('noteFullChange_')) await run('noteFullChange_', []); } catch { /* next rebuild catches up */ }
-    await audit(me.username, 'import', { detail: { file: file.filename, tabs: parsed.summary } });
+    if (owner && owner.has('reloadAll_')) { try { await runApp(owner, 'reloadAll_', []); } catch { /* it reloads on next use */ } }
+    await audit(me.username, 'import', { detail: { file: file.filename, book, tabs: parsed.summary } });
     return { ok: true, tabs: parsed.summary };
   });
 
   app.get('/api/admin/export', async (req, reply) => {
     await requireSuper(req);
+    const bookId = String(((req.query || {}) as any).book || 'newbase');
     const book = new ExcelJS.Workbook();
     const used = new Set<string>();
-    for (const tab of wb.tabs) {
-      const t = wb.tab(tab.name)!;
+    for (const tab of wb.tabsOf(bookId).sort((a, b) => a.position - b.position)) {
+      const t = wb.tab(tab.name, bookId)!;
       let name = t.name.replace(/[\\/?*\[\]:]/g, ' ').slice(0, 31) || 'Sheet';
       while (used.has(name.toLowerCase())) name = name.slice(0, 28) + ' ' + (used.size + 1);
       used.add(name.toLowerCase());
@@ -421,7 +427,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
     const d = new Date();
     const stamp = d.getFullYear() + ('0' + (d.getMonth() + 1)).slice(-2) + ('0' + d.getDate()).slice(-2);
     reply.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-      .header('Content-Disposition', 'attachment; filename="levanto-data-' + stamp + '.xlsx"');
+      .header('Content-Disposition', 'attachment; filename="' + (bookId === 'newbase' ? 'levanto-data' : bookId) + '-' + stamp + '.xlsx"');
     return Buffer.from(buf as ArrayBuffer);
   });
 

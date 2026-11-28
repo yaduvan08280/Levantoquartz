@@ -64,6 +64,7 @@ export function App() {
           <div className="who"><b>{me.display}</b><span>{me.username}</span></div>
           <a className="nav" href="/"><span className="chip">FM</span>Forms app</a>
           <a className="nav" href="/dashboard"><span className="chip">DB</span>Dashboard</a>
+          <a className="nav" href="/marketing"><span className="chip">MK</span>Marketing</a>
           <button className="nav" onClick={signOut}><span className="chip">&#8592;</span>Sign out</button>
         </div>
       </aside>

@@ -161,15 +161,18 @@ export interface Blob {
   getDataAsString(): string;
 }
 
-function makeBlob(buf: Buffer, contentType: string, name: string): Blob {
+export function makeBlob(buf: Buffer, contentType: string, name: string): Blob {
   const b: Blob = {
     _buf: buf,
     getBytes: () => Array.from(buf).map((x) => (x > 127 ? x - 256 : x)),
     getContentType: () => contentType,
     getName: () => name,
     setName(n: string) { name = n; return b; },
-    getDataAsString: () => buf.toString('utf8')
-  };
+    getDataAsString: () => buf.toString('utf8'),
+    /* No converter here: an HTML document asked for as a PDF stays HTML and
+       is marked to open the browser's print dialog, which saves it as one. */
+    getAs(type: string) { const o: any = makeBlob(buf, contentType, name); o._printAs = type; return o; }
+  } as any;
   return b;
 }
 
@@ -208,7 +211,7 @@ parentPort.on('message', async (job) => {
 
 let fetchWorker: Worker | null = null;
 
-function fetchSync(url: string, opts: any) {
+export function fetchSync(url: string, opts: any) {
   if (!fetchWorker) {
     fetchWorker = new Worker(WORKER_SOURCE, { eval: true });
     fetchWorker.unref();
@@ -344,14 +347,14 @@ export const DriveApp = {
 
 export interface Trigger { handler: string; everyMinutes: number; id: string }
 
-export function listTriggers(wb: Workbook): Trigger[] {
-  const all = wb.kvAll('trigger');
+export function listTriggers(wb: Workbook, scope = 'trigger'): Trigger[] {
+  const all = wb.kvAll(scope);
   return Object.keys(all).map((k) => {
     try { return JSON.parse(all[k]) as Trigger; } catch { return null; }
   }).filter((t): t is Trigger => !!t);
 }
 
-export function makeScriptApp(wb: Workbook) {
+export function makeScriptApp(wb: Workbook, scope = 'trigger', url: () => string = () => config.publicUrl + '/exec') {
   const wrap = (t: Trigger) => ({
     getHandlerFunction: () => t.handler,
     getUniqueId: () => t.id,
@@ -359,17 +362,18 @@ export function makeScriptApp(wb: Workbook) {
     _t: t
   });
   return {
-    getService: () => ({ getUrl: () => config.publicUrl + '/exec' }),
+    getService: () => ({ getUrl: url }),
+    getOAuthToken: () => 'local',
     getScriptId: () => 'levanto',
-    getProjectTriggers: () => listTriggers(wb).map(wrap),
-    deleteTrigger(t: any) { if (t && t._t) wb.kvDelete('trigger', t._t.id); },
+    getProjectTriggers: () => listTriggers(wb, scope).map(wrap),
+    deleteTrigger(t: any) { if (t && t._t) wb.kvDelete(scope, t._t.id); },
     newTrigger(handler: string) {
       let minutes = 60;
       const b: any = {
         timeBased: () => b,
         /* Sheet-event triggers have nothing to fire them here; they are
            recorded so the logic's own "is it installed" checks pass. */
-        forSpreadsheet() { minutes = 0; return b; },
+        forSpreadsheet() { minutes = 0; return b; }, forDocument() { minutes = 0; return b; },
         onFormSubmit: () => b, onEdit: () => b, onOpen: () => b, onChange: () => b,
         everyMinutes(n: number) { minutes = n; return b; },
         everyHours(n: number) { minutes = n * 60; return b; },
@@ -377,7 +381,7 @@ export function makeScriptApp(wb: Workbook) {
         atHour: () => b, nearMinute: () => b, inTimezone: () => b,
         create() {
           const t: Trigger = { handler, everyMinutes: minutes, id: handler + ':' + crypto.randomBytes(4).toString('hex') };
-          wb.kvSet('trigger', t.id, JSON.stringify(t));
+          wb.kvSet(scope, t.id, JSON.stringify(t));
           return wrap(t);
         }
       };

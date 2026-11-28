@@ -12,7 +12,7 @@
  * raw-data view but is never stored and cannot be edited.
  */
 import { type Cell, displayValue, isEmpty } from './values.js';
-import { Tab, Workbook, type ComputedRange } from './workbook.js';
+import { MAIN, Tab, Workbook, type ComputedRange } from './workbook.js';
 
 interface Provider {
   tab: string;
@@ -330,6 +330,7 @@ function versionOf(tab: Tab | null, self: Tab): string {
 
 /** Bring one tab's computed columns up to date. Installed as Workbook.freshHook. */
 export function ensureFresh(wb: Workbook, tab: Tab): void {
+  if (tab.book !== MAIN) return;                 // these are New Base's formulas
   const list = byTab.get(tab.name);
   if (!list || running.has(tab)) return;
   running.add(tab);

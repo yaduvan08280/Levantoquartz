@@ -10,8 +10,8 @@
  * written "14:30" becoming a time and getLastRow() meaning the last row with
  * anything in it.
  */
-import { type Cell, colNumber, isEmpty } from '../store/values.js';
-import { Tab, Workbook } from '../store/workbook.js';
+import { type Cell, colNumber, isEmpty, normaliseDateFormat } from '../store/values.js';
+import { MAIN, Tab, Workbook } from '../store/workbook.js';
 
 /** Formatting calls are accepted and ignored: looks are the admin grid's job now. */
 const COSMETIC = [
@@ -124,6 +124,9 @@ export class Range {
   clear(): this { return this.setValue(''); }
 
   setNumberFormat(fmt: string): this {
+    /* Sheets' own pattern language ("dd-mmm-yyyy hh:mm") says month and minute
+       with the same letter; store the unambiguous form. */
+    if (fmt && fmt !== '@' && /[dmyhs]/i.test(fmt) && !/[0#]/.test(fmt)) fmt = normaliseDateFormat(fmt);
     if (this.wholeCols) {
       for (let c = 0; c < this.numCols; c++) this.tab.setColFormat(this.col + c, fmt);
       return this;
@@ -220,9 +223,24 @@ export class Sheet {
     const hasEnd = m[3] !== undefined;
     const c2 = hasEnd ? (m[3] ? colNumber(m[3]) : this.getMaxColumns()) : c1;
     const r2 = hasEnd ? (m[4] ? parseInt(m[4], 10) : this.getMaxRows()) : r1;
-    const whole = hasEnd && !m[2] && !m[4];
+    /* "A:A" and "C2:C" both mean the column to the bottom: a format set on
+       one is the column's format, so rows added later take it too. */
+    const whole = hasEnd && !m[4];
     return new Range(this.tab, r1, c1, Math.max(1, r2 - r1 + 1), Math.max(1, c2 - c1 + 1), whole);
   }
+
+  getRangeList(a1s: string[]) {
+    const ranges = (a1s || []).map((a) => this.getRange(a));
+    const list: any = {
+      getRanges: () => ranges,
+      setNumberFormat(f: string) { ranges.forEach((r) => r.setNumberFormat(f)); return list; }
+    };
+    for (const n of COSMETIC) if (!list[n]) list[n] = () => list;
+    return list;
+  }
+  /* Sheet protection was a warning shown in Google Sheets; nothing to enforce here. */
+  getProtections(): any[] { return [{}]; }
+  protect(): any { const p: any = { setDescription: () => p, setWarningOnly: () => p, remove: () => p }; return p; }
 
   getDataRange(): Range {
     return new Range(this.tab, 1, 1, Math.max(1, this.tab.lastRow()), Math.max(1, this.tab.lastCol()));
@@ -272,31 +290,35 @@ class DataValidationBuilder {
 }
 
 export class Spreadsheet {
-  constructor(private wb: Workbook, private id: string) {}
+  constructor(private wb: Workbook, private id: string, private book: string = MAIN, private title = 'New Base') {}
   getId(): string { return this.id; }
-  getName(): string { return 'New Base'; }
+  getName(): string { return this.title; }
+  setSpreadsheetTimeZone(): this { return this; }
+  rename(): this { return this; }
   getUrl(): string { return ''; }
   getSpreadsheetTimeZone(): string { return process.env.TZ || 'Asia/Kolkata'; }
   getSheetByName(name: string): Sheet | null {
-    const t = this.wb.tab(name);
+    const t = this.wb.tab(name, this.book);
     return t ? new Sheet(t, this.wb) : null;
   }
   getSheets(): Sheet[] {
-    return this.wb.tabs.map((t) => new Sheet(this.wb.tab(t.name)!, this.wb));
+    return this.wb.tabsOf(this.book).sort((a, b) => a.position - b.position).map((t) => new Sheet(this.wb.tab(t.name, this.book)!, this.wb));
   }
   insertSheet(name: string): Sheet {
-    return new Sheet(this.wb.createTab(name), this.wb);
+    return new Sheet(this.wb.createTab(name, this.book), this.wb);
   }
   deleteSheet(sheet: Sheet): void { this.wb.deleteTab(sheet._tab()); }
   toast(): void { /* no editor to show it in */ }
 }
 
-export function makeSpreadsheetApp(wb: Workbook) {
-  const open = (id?: string) => new Spreadsheet(wb, id || 'levanto');
+export function makeSpreadsheetApp(wb: Workbook, book: string = MAIN, title = 'New Base') {
+  const open = (id?: string) => new Spreadsheet(wb, id || book, book, title);
   return {
     openById: open,
     getActiveSpreadsheet: () => open(),
     getActive: () => open(),
+    create: () => open(),
+    ProtectionType: { SHEET: 'SHEET', RANGE: 'RANGE' },
     flush() { /* nothing is buffered */ },
     newDataValidation: () => new DataValidationBuilder(),
     Direction: { UP: 'UP', DOWN: 'DOWN', PREVIOUS: 'PREVIOUS', NEXT: 'NEXT' },

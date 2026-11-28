@@ -10,7 +10,7 @@
  * shows each person their own forms.
  */
 import type { FastifyInstance } from 'fastify';
-import { rt, run, commit } from '../app.js';
+import { rt, run, commit, marketing } from '../app.js';
 
 /** Runs before the page's own scripts. `want` is the sign-in this page uses. */
 export function ssoSnippet(want: 'forms' | 'dash' | 'admin'): string {
@@ -50,13 +50,14 @@ export function ssoSnippet(want: 'forms' | 'dash' | 'admin'): string {
  * screens their role may open, and a link opens in the same tab, so the
  * browser's Back button goes back to where they were.
  */
-export function switcherSnippet(here: 'forms' | 'dash'): string {
+export function switcherSnippet(here: 'forms' | 'dash' | 'mkt'): string {
   return `<script>
 (function () {
   var here = ${JSON.stringify(here)}, last = null;
   var APPS = {
     forms: { url: '/', label: 'Forms app', hint: 'Enter production data', chip: 'FM', ic: '✎' },
     dash:  { url: '/dashboard', label: 'Dashboard', hint: 'Production overview and reports', chip: 'DB', ic: '▦' },
+    mkt:   { url: '/marketing', label: 'Marketing', hint: 'Field sales: visits, customers, orders', chip: 'MK', ic: '◈' },
     admin: { url: '/admin/', label: 'Admin panel', hint: 'Users, raw data and backups', chip: 'AD', ic: '⚙' }
   };
   function get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
@@ -86,6 +87,15 @@ export function switcherSnippet(here: 'forms' | 'dash'): string {
         var x = APPS[a];
         if (foot) foot.insertBefore(make('button', 'navitem', '<span class="chip">' + x.chip + '</span>' + x.label, x.url), before);
         if (sheet) sheet.insertBefore(make('button', 'menurow', '<b>' + x.label + '</b><i>' + x.hint + '</i>', x.url), out);
+      });
+    } else if (here === 'mkt') {
+      var mfoot = document.querySelector('.side-foot'), pill = mfoot && mfoot.querySelector('.src-pill');
+      if (!mfoot) return;
+      list.forEach(function (a) {
+        var x = APPS[a];
+        var b = make('button', '', '<span style="width:18px;text-align:center;opacity:.8">' + x.ic + '</span> ' + x.label, x.url);
+        b.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%;background:none;border:0;color:#C9C5B7;font:inherit;font-size:13px;padding:8px 4px;cursor:pointer;text-align:left';
+        mfoot.insertBefore(b, pill);
       });
     } else {
       /* Under the person's name at the foot of the menu, where the forms
@@ -136,6 +146,8 @@ export async function ssoRoutes(app: FastifyInstance): Promise<void> {
     if ((rt.call('fAssigned_', [u.assigned]) as string[]).length) apps.push('forms');
     const dashRoles: string[] = (rt.global('DASH_AUTH') || {}).ROLES || [];
     if (rt.has('doGet') && dashRoles.indexOf(u.role) !== -1) apps.push('dash');
+    /* Marketing keeps its own accounts; the link is offered to admins, who sign in there. */
+    if (u.role === 'admin' && marketing.installed) apps.push('mkt');
     if (u.role === 'admin') apps.push('admin');
     return { ok: true, role: u.role, apps };
   });
