@@ -20,9 +20,9 @@ services:
       db: { condition: service_healthy }
     environment:
       DATABASE_URL: postgres://levanto:levanto@db:5432/levanto
-      PUBLIC_URL: http://localhost:8080
+      PUBLIC_URL: http://localhost:8090
       ADMIN_PASSWORD: admin1234
-    ports: ["8080:8080"]
+    ports: ["8090:8080"]
     volumes:
       - localmedia:/data
 
