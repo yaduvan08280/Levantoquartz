@@ -9,7 +9,7 @@ panel for users and data.
 | `/` | The forms app operators use. The same page as before. |
 | `/dashboard` | The production dashboard (Overview, Live, Quality, Costing, Reports…). The same page as before; admins and supervisors sign in. |
 | `/admin/` | Admin panel: users, raw data, change log, import and backup. Admin accounts only. |
-| `/sheets/` | Mono Sheets on the live data (also shown inside the admin panel under Raw data). Admins only. |
+| `/sheets/` | Mono Sheets on the live data (also shown inside the admin panel under Raw data). Super admins only. |
 
 ## How it is put together
 
@@ -43,6 +43,14 @@ milliseconds.
 rows — in two tables (`tabs`, `tab_rows`), so the raw-data view shows exactly
 what the Google Sheet held. `kv` holds settings and sign-in sessions;
 `audit_log` records every change made from the admin panel.
+
+## Admins and super admins
+
+An **admin** manages users and reads the change log. A **super admin** is an admin
+who can also open Raw data (Mono Sheets), import a workbook, download a backup and
+reload from the database. The username in `SUPER_ADMINS` (default `admin`) is always
+one; a super admin can tick "Super admin" on other admins under Users. An admin
+cannot change, reset the password of, or delete a super admin.
 
 ## Raw data: Mono Sheets and the database
 

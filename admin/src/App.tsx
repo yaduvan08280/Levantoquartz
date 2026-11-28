@@ -6,13 +6,14 @@ import { Data } from './pages/Data';
 import { Audit } from './pages/Audit';
 import { Backup } from './pages/Backup';
 
+interface Me { username: string; display: string; super: boolean }
 type Page = 'overview' | 'users' | 'data' | 'audit' | 'backup';
-const PAGES: { id: Page; label: string; chip: string }[] = [
+const PAGES: { id: Page; label: string; chip: string; superOnly?: boolean }[] = [
   { id: 'overview', label: 'Overview', chip: 'OV' },
   { id: 'users', label: 'Users', chip: 'US' },
-  { id: 'data', label: 'Raw data', chip: 'DT' },
+  { id: 'data', label: 'Raw data', chip: 'DT', superOnly: true },
   { id: 'audit', label: 'Change log', chip: 'LG' },
-  { id: 'backup', label: 'Import & backup', chip: 'BK' }
+  { id: 'backup', label: 'Import & backup', chip: 'BK', superOnly: true }
 ];
 
 function pageFromHash(): Page {
@@ -21,7 +22,7 @@ function pageFromHash(): Page {
 }
 
 export function App() {
-  const [me, setMe] = useState<{ username: string; display: string } | null>(null);
+  const [me, setMe] = useState<Me | null>(null);
   const [checking, setChecking] = useState(!!getToken());
   const [page, setPage] = useState<Page>(pageFromHash());
 
@@ -37,6 +38,8 @@ export function App() {
 
   if (checking) return <div className="center muted">Loading…</div>;
   if (!me) return <Login onDone={setMe} />;
+  const pages = PAGES.filter((p) => !p.superOnly || me.super);
+  const shown: Page = pages.some((p) => p.id === page) ? page : 'overview';
 
   const go = (p: Page) => { location.hash = '#/' + p; };
 
@@ -51,8 +54,8 @@ export function App() {
       <aside className="side">
         <div className="brand"><div className="mark">//</div><div><b>Levanto</b><span>Admin</span></div></div>
         <nav>
-          {PAGES.map((p) => (
-            <button key={p.id} className={'nav' + (page === p.id ? ' on' : '')} onClick={() => go(p.id)}>
+          {pages.map((p) => (
+            <button key={p.id} className={'nav' + (shown === p.id ? ' on' : '')} onClick={() => go(p.id)}>
               <span className="chip">{p.chip}</span>{p.label}
             </button>
           ))}
@@ -64,18 +67,18 @@ export function App() {
           <button className="nav" onClick={signOut}><span className="chip">&#8592;</span>Sign out</button>
         </div>
       </aside>
-      <main className={'main' + (page === 'data' ? ' wide' : '')}>
-        {page === 'overview' && <Overview go={go} />}
-        {page === 'users' && <Users me={me.username} />}
-        {page === 'data' && <Data />}
-        {page === 'audit' && <Audit />}
-        {page === 'backup' && <Backup />}
+      <main className={'main' + (shown === 'data' ? ' wide' : '')}>
+        {shown === 'overview' && <Overview go={go} isSuper={me.super} />}
+        {shown === 'users' && <Users me={me.username} isSuper={me.super} />}
+        {shown === 'data' && <Data />}
+        {shown === 'audit' && <Audit />}
+        {shown === 'backup' && <Backup />}
       </main>
     </div>
   );
 }
 
-function Login({ onDone }: { onDone: (u: { username: string; display: string }) => void }) {
+function Login({ onDone }: { onDone: (u: Me) => void }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -87,7 +90,7 @@ function Login({ onDone }: { onDone: (u: { username: string; display: string }) 
     try {
       const r = await api('/login', { method: 'POST', json: { username, password } });
       setToken(r.token);
-      onDone({ username: r.user.username, display: r.user.name });
+      onDone((await api('/me')).user);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Could not sign in.');
     } finally { setBusy(false); }

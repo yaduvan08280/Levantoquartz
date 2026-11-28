@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../api';
 
-export function Overview({ go }: { go: (p: any) => void }) {
+export function Overview({ go, isSuper }: { go: (p: any) => void; isSuper: boolean }) {
   const [d, setD] = useState<any>(null);
   const [error, setError] = useState('');
   useEffect(() => { api('/overview').then(setD).catch((e) => setError(e.message)); }, []);
@@ -20,7 +20,7 @@ export function Overview({ go }: { go: (p: any) => void }) {
           <span>Users</span><b>{d.users.active}</b>
           <i>{d.users.total - d.users.active} inactive · {d.users.admins} admin{d.users.admins === 1 ? '' : 's'}</i>
         </button>
-        <button className="tile" onClick={() => go('data')}>
+        <button className={'tile' + (isSuper ? '' : ' flat')} onClick={() => isSuper && go('data')}>
           <span>Data</span><b>{n(d.rows)}</b>
           <i>rows across {d.tabs} tabs</i>
         </button>

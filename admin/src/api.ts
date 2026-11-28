@@ -38,6 +38,7 @@ export interface FormInfo { key: string; no: number; title: string; abbr: string
 export interface User {
   row: number; username: string; display: string; assigned: string; all: boolean; forms: string[];
   active: boolean; hasPassword: boolean; lastLogin: string; role: string; telegramLinked: boolean;
+  super: boolean; superFixed: boolean;
 }
 export interface AuditEntry {
   id: string; at: string; actor: string; action: string; tab: string | null; row_no: number | null;

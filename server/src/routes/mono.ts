@@ -4,7 +4,7 @@
  * /sheets/ is the Mono Sheets app (server/monosheets, an untouched copy of
  * the monosheets project's public folder). The /api routes below are the ones
  * that app calls; they are answered from the data store by mono/bridge.ts.
- * Administrators only, on the same accounts as everything else.
+ * Super admins only (see super.ts), on the same accounts as everything else.
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
@@ -15,6 +15,7 @@ import { config } from '../config.js';
 import { pool } from '../db.js';
 import { rt, run, commit, bridge } from '../app.js';
 import { BridgeError, MAIN_BOOK, type Change } from '../mono/bridge.js';
+import { isSuper } from '../super.js';
 
 const COOKIE = 'levanto_sheets';
 
@@ -40,7 +41,7 @@ async function whoIs(token: string): Promise<Who | null> {
   try {
     const s: any = await run('fRequireSession_', [token]);
     const u: any = rt.call('fFindUser_', [s.username]);
-    return u && u.active && u.role === 'admin' ? { username: u.username, token } : null;
+    return u && isSuper(u.username) ? { username: u.username, token } : null;
   } catch { return null; }
 }
 
@@ -142,9 +143,9 @@ export async function monoRoutes(app: FastifyInstance): Promise<void> {
     await new Promise((r) => setTimeout(r, 250));
     const res: any = await run('api_login', [String(b.username || ''), String(b.password || '')]);
     if (!res || !res.ok) return reply.status(401).send({ ok: false, error: (res && res.error) || 'Could not sign in.' });
-    if (res.user.role !== 'admin') {
+    if (!isSuper(res.user.username)) {
       await run('api_logout', [res.token]);
-      return reply.status(403).send({ ok: false, error: 'The data sheets are for administrators.' });
+      return reply.status(403).send({ ok: false, error: 'The data sheets are for super admins.' });
     }
     setCookie(reply, res.token);
     return { ok: true, user: { userId: res.user.username, username: res.user.username, admin: true }, csrf: csrfFor(res.token) };

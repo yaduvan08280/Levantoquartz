@@ -4,6 +4,7 @@ import { api, type FormInfo, type User } from '../api';
 interface Draft {
   username: string; display: string; role: string; active: boolean; all: boolean; forms: string[];
   password: string; isNew: boolean; telegramLinked: boolean; unlinkTelegram: boolean;
+  super: boolean; superFixed: boolean;
 }
 
 const ROLE_HELP: Record<string, string> = {
@@ -12,7 +13,7 @@ const ROLE_HELP: Record<string, string> = {
   operator: 'Their own forms only'
 };
 
-export function Users({ me }: { me: string }) {
+export function Users({ me, isSuper }: { me: string; isSuper: boolean }) {
   const [users, setUsers] = useState<User[]>([]);
   const [forms, setForms] = useState<FormInfo[]>([]);
   const [roles, setRoles] = useState<string[]>([]);
@@ -34,11 +35,12 @@ export function Users({ me }: { me: string }) {
 
   const edit = (u: User) => setDraft({
     username: u.username, display: u.display, role: u.role, active: u.active, all: u.all,
-    forms: u.all ? [] : u.forms, password: '', isNew: false, telegramLinked: u.telegramLinked, unlinkTelegram: false
+    forms: u.all ? [] : u.forms, password: '', isNew: false, telegramLinked: u.telegramLinked, unlinkTelegram: false,
+    super: u.super, superFixed: u.superFixed
   });
   const add = () => setDraft({
     username: '', display: '', role: 'operator', active: true, all: false, forms: [], password: '',
-    isNew: true, telegramLinked: false, unlinkTelegram: false
+    isNew: true, telegramLinked: false, unlinkTelegram: false, super: false, superFixed: false
   });
 
   return (
@@ -62,7 +64,7 @@ export function Users({ me }: { me: string }) {
             {list.map((u) => (
               <tr key={u.username} className={u.active ? '' : 'off'} onClick={() => edit(u)}>
                 <td><b>{u.display}</b><div className="sub">{u.username}{u.username.toLowerCase() === me.toLowerCase() ? ' · you' : ''}</div></td>
-                <td><span className={'pill ' + u.role}>{u.role}</span>{!u.active && <span className="pill gone">inactive</span>}{!u.hasPassword && <span className="pill warn">no password</span>}</td>
+                <td>{u.super ? <span className="pill admin">super admin</span> : <span className={'pill ' + u.role}>{u.role}</span>}{!u.active && <span className="pill gone">inactive</span>}{!u.hasPassword && <span className="pill warn">no password</span>}</td>
                 <td className="wrap">{u.all ? 'All forms' : u.forms.length ? u.forms.map((k) => title[k] || k).join(', ') : <span className="muted">None</span>}</td>
                 <td className="num">{u.lastLogin || <span className="muted">Never</span>}</td>
                 <td className="right"><button className="btn sm" onClick={(e) => { e.stopPropagation(); edit(u); }}>Edit</button></td>
@@ -72,14 +74,14 @@ export function Users({ me }: { me: string }) {
           </tbody>
         </table>
       </section>
-      {draft && <Editor draft={draft} me={me} forms={forms} roles={roles}
+      {draft && <Editor draft={draft} me={me} isSuper={isSuper} forms={forms} roles={roles}
         onClose={() => setDraft(null)} onSaved={(list) => { setUsers(list); setDraft(null); }} />}
     </>
   );
 }
 
-function Editor({ draft, me, forms, roles, onClose, onSaved }: {
-  draft: Draft; me: string; forms: FormInfo[]; roles: string[];
+function Editor({ draft, me, isSuper, forms, roles, onClose, onSaved }: {
+  draft: Draft; me: string; isSuper: boolean; forms: FormInfo[]; roles: string[];
   onClose: () => void; onSaved: (users: User[]) => void;
 }) {
   const [d, setD] = useState<Draft>(draft);
@@ -102,6 +104,7 @@ function Editor({ draft, me, forms, roles, onClose, onSaved }: {
       const body: any = { display: d.display, role: d.role, active: d.active, all: d.all, forms: d.forms };
       if (d.password) body.password = d.password;
       if (d.unlinkTelegram) body.unlinkTelegram = true;
+      if (isSuper && d.super !== draft.super) body.super = d.super;
       const r = d.isNew
         ? await api('/users', { method: 'POST', json: { ...body, username: d.username, password: d.password } })
         : await api('/users/' + encodeURIComponent(d.username), { method: 'PATCH', json: body });
@@ -146,6 +149,14 @@ function Editor({ draft, me, forms, roles, onClose, onSaved }: {
                 <span><b>{r}</b><i>{ROLE_HELP[r] || ''}</i></span>
               </label>
             ))}
+            {isSuper && d.role === 'admin' && (
+              <label className="check" style={{ marginTop: 4, paddingTop: 8, borderTop: '1px solid var(--line)' }}>
+                <input type="checkbox" checked={d.super} disabled={d.superFixed || isSelf}
+                  onChange={(e) => set({ super: e.target.checked })} />
+                <span><b>Super admin</b><i style={{ display: 'block', fontStyle: 'normal', color: 'var(--ink2)', fontSize: 12 }}>
+                  {d.superFixed ? 'Always a super admin (set on the server).' : 'Also sees Raw data, and Import & backup'}</i></span>
+              </label>
+            )}
           </fieldset>
 
           <fieldset>

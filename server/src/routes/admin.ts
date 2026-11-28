@@ -12,8 +12,9 @@ import { editValue, formatDate, isEmpty, isTimeOnly } from '../store/values.js';
 import { Tab } from '../store/workbook.js';
 import { readXlsx } from '../importer/xlsx.js';
 import { listTriggers } from '../gas/services.js';
+import { isSuper, isNamedSuper, superColumn, SUPER_HEADER } from '../super.js';
 
-interface Admin { username: string; display: string }
+interface Admin { username: string; display: string; super: boolean }
 
 class HttpError extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -30,7 +31,14 @@ async function requireAdmin(req: FastifyRequest): Promise<Admin> {
      admin away from someone takes effect on their very next click. */
   const u: any = rt.call('fFindUser_', [s.username]);
   if (!u || !u.active || u.role !== 'admin') throw new HttpError(403, 'This area is for administrators.');
-  return { username: u.username, display: u.display };
+  return { username: u.username, display: u.display, super: isSuper(u.username) };
+}
+
+/** Raw data, import and backup: super admins only. */
+async function requireSuper(req: FastifyRequest): Promise<Admin> {
+  const me = await requireAdmin(req);
+  if (!me.super) throw new HttpError(403, 'Only a super admin can do this.');
+  return me;
 }
 
 /* ------------------------------------------------------------ users -- */
@@ -95,7 +103,9 @@ function listUsers() {
       hasPassword: !!String(t.get(r, 5) || '').trim() || !!String(t.get(r, 4) || '').trim(),
       lastLogin: t.get(r, 7) instanceof Date ? formatDate(t.get(r, 7) as Date, 'dd MMM yyyy, HH:mm') : t.display(r, 7),
       role,
-      telegramLinked: !!String(t.get(r, cols['Telegram Chat ID']) || '').trim()
+      telegramLinked: !!String(t.get(r, cols['Telegram Chat ID']) || '').trim(),
+      super: isSuper(username),
+      superFixed: isNamedSuper(username)
     });
   }
   return out;
@@ -107,6 +117,16 @@ function findUserRow(t: Tab, username: string): number {
     if (String(t.get(r, 1)).trim().toLowerCase() === u) return r;
   }
   return 0;
+}
+
+function setSuper(t: Tab, row: number, on: boolean): void {
+  let col = superColumn();
+  if (!col) {
+    if (!on) return;
+    col = Math.max(t.lastCol(), 10) + 1;
+    t.set(1, col, SUPER_HEADER);
+  }
+  t.set(row, col, on ? 'YES' : '');
 }
 
 function assignedText(forms: unknown, all: unknown): string {
@@ -240,6 +260,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       t.set(r, 5, rt.call('fHash_', [password]) as string);
       t.set(r, 6, b.active === false ? 'NO' : 'YES');
       t.set(r, cols['Role'], role);
+      if (b.super === true && me.super && role === 'admin') setSuper(t, r, true);
     });
     await audit(me.username, 'user.create', { detail: { username, role, forms: assigned } });
     return { ok: true, users: listUsers() };
@@ -258,6 +279,8 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       const current = listUsers().find((u) => u.row === r)!;
       const isSelf = current.username.toLowerCase() === me.username.toLowerCase();
       const roles: string[] = rt.global('FORMS_ROLES');
+      /* Otherwise an admin could reset a super admin's password and sign in as them. */
+      if (current.super && !me.super) throw new HttpError(403, 'Only a super admin can change a super admin.');
 
       const newRole = b.role === undefined ? current.role : (roles.indexOf(String(b.role)) === -1 ? 'operator' : String(b.role));
       const newActive = b.active === undefined ? current.active : !!b.active;
@@ -280,6 +303,14 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
         t.set(r, 5, rt.call('fHash_', [checkPassword(b.password)]) as string);
         t.set(r, 4, '');
         changed.password = 'changed';
+      }
+      if (b.super !== undefined && !!b.super !== current.super) {
+        if (!me.super) throw new HttpError(403, 'Only a super admin can make someone a super admin.');
+        if (current.superFixed) throw new HttpError(400, 'This account is a super admin by the server\'s settings (SUPER_ADMINS) and stays one.');
+        if (b.super && newRole !== 'admin') throw new HttpError(400, 'A super admin must have the role admin.');
+        if (!b.super && isSelf) throw new HttpError(400, 'You cannot take super admin away from yourself.');
+        setSuper(t, r, !!b.super);
+        changed.super = !!b.super;
       }
       if (b.unlinkTelegram) {
         t.set(r, cols['Telegram Chat ID'], '');
@@ -305,6 +336,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
       if (!r) throw new HttpError(404, 'No user called "' + target + '".');
       if (target.toLowerCase() === me.username.toLowerCase()) throw new HttpError(400, 'You cannot delete your own account.');
       const u = listUsers().find((x) => x.row === r)!;
+      if (u.super && !me.super) throw new HttpError(403, 'Only a super admin can delete a super admin.');
       if (u.role === 'admin' && u.active && activeAdmins(u.username) === 0) {
         throw new HttpError(400, 'This is the last administrator.');
       }
@@ -329,7 +361,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
 
   /* ---------------------------------------------------- import / backup */
   app.post('/api/admin/import', async (req) => {
-    const me = await requireAdmin(req);
+    const me = await requireSuper(req);
     const file = await (req as any).file();
     if (!file) throw new HttpError(400, 'Choose the .xlsx file to import.');
     const buf: Buffer = await file.toBuffer();
@@ -352,7 +384,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.get('/api/admin/export', async (req, reply) => {
-    await requireAdmin(req);
+    await requireSuper(req);
     const book = new ExcelJS.Workbook();
     const used = new Set<string>();
     for (const tab of wb.tabs) {
@@ -394,7 +426,7 @@ export async function adminRoutes(app: FastifyInstance): Promise<void> {
   });
 
   app.post('/api/admin/reload', async (req) => {
-    const me = await requireAdmin(req);
+    const me = await requireSuper(req);
     await wb.flush();
     await wb.load();
     refreshAll(wb);

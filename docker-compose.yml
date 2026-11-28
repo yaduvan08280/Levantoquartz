@@ -24,6 +24,7 @@ services:
       DATABASE_URL: postgres://levanto:${POSTGRES_PASSWORD}@db:5432/levanto
       PUBLIC_URL: https://${DOMAIN:?set DOMAIN in .env}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      SUPER_ADMINS: ${SUPER_ADMINS:-admin}
       TRUST_PROXY: "1"
     volumes:
       - media:/data
