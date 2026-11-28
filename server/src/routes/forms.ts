@@ -11,7 +11,7 @@ import path from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { config } from '../config.js';
 import { rt, run } from '../app.js';
-import { ssoSnippet } from './sso.js';
+import { ssoSnippet, switcherSnippet } from './sso.js';
 
 const BRIDGE = `<script>
 /* google.script.run, over HTTP. Same calling convention, same callbacks. */
@@ -54,7 +54,7 @@ function buildTemplate(): { head: string; tail: string } {
   let page = read('FormsPage.html');
   const title = String((rt.global('FORMS_CFG') || {}).APP_TITLE || 'Slabworks Production Forms');
   page = page.replace(/<\?!=\s*formsInclude\('FormsCss'\);?\s*\?>/, () => '<title>' + escHtml(title) + '</title>\n' + read('FormsCss.html'));
-  page = page.replace(/<\?!=\s*formsInclude\('FormsJs'\);?\s*\?>/, () => ssoSnippet('forms') + '\n' + BRIDGE + '\n' + read('FormsJs.html'));
+  page = page.replace(/<\?!=\s*formsInclude\('FormsJs'\);?\s*\?>/, () => ssoSnippet('forms') + '\n' + switcherSnippet('forms') + '\n' + BRIDGE + '\n' + read('FormsJs.html'));
   const marker = /<\?!=\s*deepLink\s*\?>/;
   const m = marker.exec(page);
   if (!m) throw new Error('FormsPage.html: deep-link marker not found');

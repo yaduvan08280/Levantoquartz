@@ -44,7 +44,100 @@ export function ssoSnippet(want: 'forms' | 'dash' | 'admin'): string {
 </script>`;
 }
 
+/**
+ * Links between the screens, added to the forms app and the dashboard as
+ * they are served (their files are untouched). Each person sees only the
+ * screens their role may open, and a link opens in the same tab, so the
+ * browser's Back button goes back to where they were.
+ */
+export function switcherSnippet(here: 'forms' | 'dash'): string {
+  return `<script>
+(function () {
+  var here = ${JSON.stringify(here)}, last = null;
+  var APPS = {
+    forms: { url: '/', label: 'Forms app', hint: 'Enter production data', chip: 'FM', ic: '✎' },
+    dash:  { url: '/dashboard', label: 'Dashboard', hint: 'Production overview and reports', chip: 'DB', ic: '▦' },
+    admin: { url: '/admin/', label: 'Admin panel', hint: 'Users, raw data and backups', chip: 'AD', ic: '⚙' }
+  };
+  function get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+  function creds() {
+    var d = get('slabworksKey');
+    return { token: get('sw_tok') || get('levanto.admin.token') || '', key: (d && d.key) || '' };
+  }
+  function clear() {
+    var old = document.querySelectorAll('[data-lev-switch]');
+    for (var i = 0; i < old.length; i++) old[i].parentNode.removeChild(old[i]);
+  }
+  function go(url) { return function (e) { e.preventDefault(); e.stopPropagation(); location.href = url; }; }
+  function make(tag, cls, html, url) {
+    var n = document.createElement(tag);
+    n.className = cls; n.setAttribute('data-lev-switch', '1'); n.innerHTML = html;
+    if (url) { n.type = 'button'; n.addEventListener('click', go(url), true); }
+    return n;
+  }
+  function render(apps) {
+    clear();
+    var list = apps.filter(function (a) { return a !== here && APPS[a]; });
+    if (!list.length) return;
+    if (here === 'forms') {
+      var foot = document.querySelector('.sidebar .foot'), before = document.getElementById('notifyBtnD');
+      var sheet = document.querySelector('#menuSheet .sheet-body'), out = document.getElementById('mLogout');
+      list.forEach(function (a) {
+        var x = APPS[a];
+        if (foot) foot.insertBefore(make('button', 'navitem', '<span class="chip">' + x.chip + '</span>' + x.label, x.url), before);
+        if (sheet) sheet.insertBefore(make('button', 'menurow', '<b>' + x.label + '</b><i>' + x.hint + '</i>', x.url), out);
+      });
+    } else {
+      var nav = document.getElementById('nav');
+      if (!nav) return;
+      nav.appendChild(make('div', 'nav-label', 'Go to'));
+      list.forEach(function (a) {
+        var x = APPS[a];
+        nav.appendChild(make('button', 'nav-item', '<span class="ic">' + x.ic + '</span> ' + x.label, x.url));
+      });
+    }
+  }
+  function check() {
+    var c = creds(), sig = c.token + '|' + c.key;
+    if (sig === last) return;
+    last = sig;
+    if (!c.token && !c.key) { clear(); return; }
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/apps', true);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.onload = function () {
+      try { var r = JSON.parse(x.responseText || '{}'); render(r && r.ok ? r.apps : []); } catch (e) { clear(); }
+    };
+    x.send(JSON.stringify(c));
+  }
+  document.addEventListener('DOMContentLoaded', function () { check(); setInterval(check, 1500); });
+})();
+</script>`;
+}
+
 export async function ssoRoutes(app: FastifyInstance): Promise<void> {
+  /** Which screens this person's role may open. */
+  app.post('/api/apps', async (req, reply) => {
+    reply.header('Cache-Control', 'no-store');
+    const b = (req.body || {}) as { token?: string; key?: string };
+    let username = '';
+    if (b.token) {
+      try { username = String(((await run('fRequireSession_', [String(b.token)])) as any).username || ''); } catch { /* expired */ }
+    }
+    if (!username && b.key && rt.has('dashCheck_')) {
+      const who: any = rt.call('dashCheck_', [String(b.key)]);
+      if (who && who.ok) username = who.user.username;
+    }
+    const u: any = username ? rt.call('fFindUser_', [username]) : null;
+    if (!u || !u.active) return { ok: false, apps: [] };
+    const apps: string[] = [];
+    if ((rt.call('fAssigned_', [u.assigned]) as string[]).length) apps.push('forms');
+    const dashRoles: string[] = (rt.global('DASH_AUTH') || {}).ROLES || [];
+    if (rt.has('doGet') && dashRoles.indexOf(u.role) !== -1) apps.push('dash');
+    if (u.role === 'admin') apps.push('admin');
+    return { ok: true, role: u.role, apps };
+  });
+
   app.post('/api/sso', async (req, reply) => {
     reply.header('Cache-Control', 'no-store');
     const b = (req.body || {}) as { want?: string; token?: string; key?: string };

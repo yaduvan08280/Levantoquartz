@@ -7,11 +7,11 @@
  */
 import type { FastifyInstance, FastifyReply } from 'fastify';
 import { rt, run } from '../app.js';
-import { ssoSnippet } from './sso.js';
+import { ssoSnippet, switcherSnippet } from './sso.js';
 
 /* Added to the page as it is served; the file itself is untouched. The style
    lets the side menu scroll on a short screen instead of spilling out of it. */
-const HEAD_EXTRA = '<style>.side{overflow-y:auto;overscroll-behavior:contain}.side>*{flex-shrink:0}</style>' + ssoSnippet('dash');
+const HEAD_EXTRA = '<style>.side{overflow-y:auto;overscroll-behavior:contain}.side>*{flex-shrink:0}</style>' + ssoSnippet('dash') + switcherSnippet('dash');
 
 function send(reply: FastifyReply, out: any) {
   reply.header('Cache-Control', 'no-store');
