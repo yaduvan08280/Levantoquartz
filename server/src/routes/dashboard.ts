@@ -10,8 +10,11 @@ import { rt, run } from '../app.js';
 import { ssoSnippet, switcherSnippet } from './sso.js';
 
 /* Added to the page as it is served; the file itself is untouched. The style
-   lets the side menu scroll on a short screen instead of spilling out of it. */
-const HEAD_EXTRA = '<style>.side{overflow-y:auto;overscroll-behavior:contain}.side>*{flex-shrink:0}</style>' + ssoSnippet('dash') + switcherSnippet('dash');
+   keeps the brand and the foot of the side menu in place and scrolls only the
+   list of views between them, as the forms app and admin panel do. */
+const HEAD_EXTRA = '<style>.side{overflow:hidden}.side>*{flex-shrink:0}' +
+  '.side>.nav>*{flex-shrink:0}.side>.nav{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.18) transparent}' +
+  '.side-foot .nav-item[data-lev-switch]{color:#C9C5B7;padding-left:0}</style>' + ssoSnippet('dash') + switcherSnippet('dash');
 
 function send(reply: FastifyReply, out: any) {
   reply.header('Cache-Control', 'no-store');

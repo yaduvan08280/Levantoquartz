@@ -88,12 +88,14 @@ export function switcherSnippet(here: 'forms' | 'dash'): string {
         if (sheet) sheet.insertBefore(make('button', 'menurow', '<b>' + x.label + '</b><i>' + x.hint + '</i>', x.url), out);
       });
     } else {
-      var nav = document.getElementById('nav');
-      if (!nav) return;
-      nav.appendChild(make('div', 'nav-label', 'Go to'));
+      /* Under the person's name at the foot of the menu, where the forms
+         app and the admin panel have them. */
+      var dfoot = document.querySelector('.side-foot'), user = document.getElementById('sideUser');
+      if (!dfoot) return;
+      var after = user && user.parentNode === dfoot ? user.nextSibling : dfoot.firstChild;
       list.forEach(function (a) {
         var x = APPS[a];
-        nav.appendChild(make('button', 'nav-item', '<span class="ic">' + x.ic + '</span> ' + x.label, x.url));
+        dfoot.insertBefore(make('button', 'nav-item', '<span class="ic">' + x.ic + '</span> ' + x.label, x.url), after);
       });
     }
   }
